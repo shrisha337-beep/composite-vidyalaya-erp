@@ -1,0 +1,118 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------ */
+/* SHADCN/UI CSS variables — required by every ui/* component.         */
+/* Palette chosen to match the TC register book identity:             */
+/*   Primary = Maroon  |  Accent = Warm Amber  |  Background = Cream  */
+/* ------------------------------------------------------------------ */
+
+:root {
+  --background: 44 30% 96%;        /* warm cream */
+  --foreground: 0 0% 9%;
+
+  --card: 44 25% 98%;
+  --card-foreground: 0 0% 9%;
+
+  --popover: 44 25% 98%;
+  --popover-foreground: 0 0% 9%;
+
+  --primary: 345 72% 30%;          /* maroon */
+  --primary-foreground: 44 30% 96%;
+
+  --secondary: 44 50% 88%;         /* parchment */
+  --secondary-foreground: 345 72% 25%;
+
+  --muted: 44 20% 90%;
+  --muted-foreground: 0 0% 45%;
+
+  --accent: 35 90% 52%;            /* warm amber */
+  --accent-foreground: 0 0% 9%;
+
+  --destructive: 0 84% 60%;
+  --border: 44 20% 82%;
+  --input: 44 20% 82%;
+  --ring: 345 72% 30%;
+
+  --radius: 0.5rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: 0 0% 8%;
+    --foreground: 44 20% 90%;
+
+    --card: 0 0% 11%;
+    --card-foreground: 44 20% 90%;
+
+    --popover: 0 0% 11%;
+    --popover-foreground: 44 20% 90%;
+
+    --primary: 345 60% 48%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 16%;
+    --secondary-foreground: 44 20% 90%;
+
+    --muted: 0 0% 16%;
+    --muted-foreground: 0 0% 55%;
+
+    --accent: 35 90% 52%;
+    --accent-foreground: 0 0% 9%;
+
+    --destructive: 0 62% 55%;
+    --border: 0 0% 18%;
+    --input: 0 0% 18%;
+    --ring: 345 60% 48%;
+  }
+}
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+
+  --color-destructive: hsl(var(--destructive));
+
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
+
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+*,
+*::before,
+*::after {
+  border-color: hsl(var(--border));
+}
+
+body {
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

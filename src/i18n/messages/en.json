@@ -1,0 +1,21 @@
+{
+  "common": {
+    "schoolName": "Composite Vidyalaya Chandpur Tarhar",
+    "login": "Login",
+    "logout": "Logout"
+  },
+  "login": {
+    "heading": "Welcome back",
+    "subheading": "Sign in to your school portal",
+    "phoneLabel": "Mobile / Admission Number",
+    "phonePlaceholder": "Enter mobile or admission number",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "forgotPassword": "Forgot password?",
+    "submit": "Sign in",
+    "submitting": "Signing in…",
+    "errorInvalidCredentials": "Incorrect mobile/admission number or password.",
+    "errorAccountLocked": "Too many failed attempts. Your account is temporarily locked — please try again in 15 minutes.",
+    "errorGeneric": "Something went wrong. Please try again."
+  }
+}

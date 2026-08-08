@@ -1,0 +1,889 @@
+// ============================================================
+// COMPOSITE VIDYALAYA CHANDPUR TARHAR — ERP PORTAL
+// schema.prisma
+// ============================================================
+
+// Prisma 7: generator is now "prisma-client" (not "prisma-client-js"), output
+// is required (code no longer generates into node_modules), and the DB
+// connection URL moves out of this file entirely and into prisma.config.ts
+// + the driver adapter passed to PrismaClient. See src/lib/prisma.ts.
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================
+// ENUMS
+// ============================================================
+
+enum Role {
+  ADMIN     // Principal / Headmaster
+  TEACHER
+  STUDENT
+  PARENT
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  HALF_DAY
+  LEAVE
+  HOLIDAY
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum LeaveApplicantType {
+  STUDENT
+  TEACHER
+}
+
+enum MealType {
+  BREAKFAST
+  LUNCH
+  MILK
+  FRUIT
+  SNACK
+}
+
+enum StockItemUnit {
+  KG
+  LITRE
+  PIECE
+  PACKET
+}
+
+enum StockTransactionType {
+  PURCHASE_IN   // stock received from vendor / govt supply
+  CONSUMPTION   // used in a meal
+  WASTAGE
+  ADJUSTMENT    // manual correction after physical count
+}
+
+enum NoticeAudience {
+  ALL
+  STUDENTS
+  TEACHERS
+  PARENTS
+  CLASS_SPECIFIC
+}
+
+enum NotificationChannel {
+  IN_APP
+  SMS
+  EMAIL
+  WHATSAPP
+}
+
+enum NotificationStatus {
+  QUEUED
+  SENT
+  FAILED
+  DELIVERED
+}
+
+enum DocumentType {
+  AADHAAR
+  BIRTH_CERTIFICATE
+  CASTE_CERTIFICATE
+  INCOME_CERTIFICATE
+  TRANSFER_CERTIFICATE
+  BANK_PASSBOOK
+  PHOTO
+  OTHER
+}
+
+enum TCStatus {
+  ISSUED
+  VOID // if a TC is cancelled/reissued, keep the old row for audit instead of deleting
+}
+
+enum ReportCardStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum AdmissionFormType {
+  NEW_ADMISSION
+  PROMOTION
+}
+
+enum AdmissionFormStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
+enum RelationType {
+  FATHER
+  MOTHER
+  GUARDIAN
+  SIBLING
+}
+
+enum RationCardType {
+  APL
+  BPL
+  ANTYODAYA
+}
+
+enum SiblingRelation {
+  BROTHER
+  SISTER
+}
+
+/// Matches your report card structure: UT1 (10) + UT2 (10) + Half-Yearly (30)
+/// + Annual (50) = 100. Enum instead of free text so "Unit Test 1" vs "UT1"
+/// typos across different teachers can't fragment the data.
+enum ExamTerm {
+  UNIT_TEST_1
+  UNIT_TEST_2
+  HALF_YEARLY
+  ANNUAL
+}
+
+// ============================================================
+// CORE AUTH / USER
+// ============================================================
+
+/// Base auth identity for every human in the system.
+/// Student, Teacher, Admin all point back to this via 1:1 relations.
+model User {
+  id            String   @id @default(cuid())
+  role          Role
+  email         String?  @unique
+  phone         String   @unique // primary login + SMS OTP target
+  passwordHash  String?
+  isActive      Boolean  @default(true)
+  lastLoginAt   DateTime?
+  failedLoginAttempts Int @default(0)
+  lockedUntil   DateTime? // set when failedLoginAttempts crosses the threshold; null = not locked
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // NextAuth relations
+  accounts      Account[]
+  sessions      Session[]
+  otpCodes      OtpCode[]
+
+  // Role-specific profile relations (only one will be non-null in practice)
+  student       Student?
+  teacher       Teacher?
+  adminProfile  AdminProfile?
+
+  notificationsReceived Notification[] @relation("NotificationRecipient")
+  auditLogs     AuditLog[]
+
+  @@index([role])
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expires      DateTime
+
+  @@map("sessions")
+}
+
+/// SMS OTP for login / password reset (MFA requirement)
+model OtpCode {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  code      String
+  purpose   String   // "LOGIN" | "PASSWORD_RESET" | "PHONE_VERIFY"
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId, purpose])
+  @@map("otp_codes")
+}
+
+/// Secure token for email-based password reset (teachers / admins only).
+/// Token is a random UUID; single-use; expires in 1 hour.
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([token])
+  @@map("password_reset_tokens")
+}
+
+model AdminProfile {
+  id         String  @id @default(cuid())
+  userId     String  @unique
+  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName   String
+  designation String @default("Principal") // Principal / Headmaster / Clerk
+  employeeCode String?
+
+  @@map("admin_profiles")
+}
+
+// ============================================================
+// ACADEMIC STRUCTURE
+// ============================================================
+
+model AcademicSession {
+  id        String   @id @default(cuid())
+  label     String   @unique // "2026-2027"
+  startDate DateTime
+  endDate   DateTime
+  isCurrent Boolean  @default(false)
+
+  classes       Class[]
+  attendances   Attendance[]
+  marks         Mark[]
+  mdmLogs       MDMDailyLog[]
+  reportCards   ReportCard[]
+
+  @@map("academic_sessions")
+}
+
+model Class {
+  id         String   @id @default(cuid())
+  name       String   // "1", "2", ... "8"
+  sessionId  String
+  session    AcademicSession @relation(fields: [sessionId], references: [id])
+
+  sections   Section[]
+  subjects   Subject[]
+
+  @@unique([name, sessionId])
+  @@map("classes")
+}
+
+model Section {
+  id        String  @id @default(cuid())
+  name      String  // "A", "B"
+  classId   String
+  class     Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  classTeacherId String?
+  classTeacher   Teacher? @relation("ClassTeacherOf", fields: [classTeacherId], references: [id])
+
+  students   Student[]
+  timetable  TimetableSlot[]
+
+  @@unique([name, classId])
+  @@map("sections")
+}
+
+model Subject {
+  id       String  @id @default(cuid())
+  name     String
+  code     String?
+  classId  String
+  class    Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  marks         Mark[]
+  homework      Homework[]
+  timetableSlots TimetableSlot[]
+  teacherLinks  TeacherSubject[]
+
+  @@unique([name, classId])
+  @@map("subjects")
+}
+
+model TimetableSlot {
+  id         String   @id @default(cuid())
+  sectionId  String
+  section    Section  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  subjectId  String
+  subject    Subject  @relation(fields: [subjectId], references: [id])
+  teacherId  String
+  teacher    Teacher  @relation(fields: [teacherId], references: [id])
+  dayOfWeek  Int      // 0=Sunday ... 6=Saturday
+  startTime  String   // "09:00"
+  endTime    String   // "09:40"
+
+  @@index([sectionId, dayOfWeek])
+  @@map("timetable_slots")
+}
+
+// ============================================================
+// STUDENT DOMAIN
+// (Guardian / Sibling / BankDetails split out — minors + sensitive
+//  national-ID fields kept in dedicated tables, not flattened onto Student)
+// ============================================================
+
+model Student {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  admissionNo    String   @unique
+  udiseCode      String?  // UDISE+ student code once allotted
+  penNumber      String?  @unique // P.E.N. Number — shown on both TC and report card
+  apaarId        String?  @unique // APAAR ID — shown on both TC and report card
+
+  fullName       String
+  dob            DateTime
+  dobInWords     String?  // form asks for this explicitly, govt docs quote it verbatim
+  gender         Gender
+  aadhaarNumber  String?  @unique // sensitive — encrypt at application layer
+  category       String?  // जाति — General/OBC/SC/ST/EWS for govt reporting
+  subCaste       String?  // उपजाति
+  religion       String?
+  rationCardType RationCardType?
+  disabilityType String?  // दिव्यांग है तो प्रकार — null/blank = not applicable
+
+  // Structured address — the admission form asks for these as separate
+  // fields (village/mohalla, post, block, district, pincode), not one blob,
+  // and UDISE+ export wants them separate too.
+  villageOrMohalla   String?
+  postOffice         String?
+  developmentBlock   String?
+  district           String?
+  pincode            String?
+  durationOfStayInUP String? // उत्तर प्रदेश में निवास की अवधि
+
+  mobileNumber   String?  // separate from Guardian.phone — form asks for a household contact number
+  whatsappNumber String?
+
+  previousClassPassed String? // पूर्व में उत्तीर्ण कक्षा — admission-time snapshot
+  previousSchoolName  String?
+
+  sectionId      String?
+  section        Section? @relation(fields: [sectionId], references: [id])
+
+  admissionDate  DateTime @default(now())
+  isActive       Boolean  @default(true)
+  transferredOutAt DateTime?
+
+  address        String?
+  photoUrl       String?
+
+  guardians      Guardian[]
+  siblings       Sibling[]
+  bankDetails    BankDetail?
+  documents      StudentDocument[]
+
+  attendances    Attendance[]
+  marks          Mark[]
+  leaveRequests  LeaveRequest[]
+  certificates   Certificate[]
+  mdmAttendance  MDMStudentAttendance[]
+  healthNotes    HealthNote[]
+  behaviourNotes BehaviourNote[]
+
+  transferCertificates   TransferCertificate[]
+  reportCards            ReportCard[]
+  promotionApplications  AdmissionApplication[] @relation("PromotionApplications")
+  newAdmissionApplication AdmissionApplication? @relation("NewAdmissionResult")
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([sectionId])
+  @@map("students")
+}
+
+/// Parent or guardian contact — a student can have Father + Mother + Guardian
+model Guardian {
+  id           String       @id @default(cuid())
+  studentId    String
+  student      Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  relation     RelationType
+  fullName     String
+  phone        String?
+  email        String?
+  occupation   String?
+  aadhaarNumber String?     // sensitive — encrypt at application layer
+  isPrimaryContact Boolean  @default(false)
+
+  @@map("guardians")
+}
+
+model Sibling {
+  id          String  @id @default(cuid())
+  studentId   String
+  student     Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  fullName    String
+  relation    SiblingRelation // भाई/बहन
+  dob         DateTime?
+  relatedStudentId  String?  // link to Student.id if sibling is also enrolled here
+  enrolledSchoolName String? // नामांकित विद्यालय का नाम
+  isEnrolled  Boolean @default(true)
+  reasonNotEnrolled String? // नामांकित नहीं है तो कारण
+
+  @@map("siblings")
+}
+
+/// For scholarship / MDM honorarium / govt benefit transfers.
+/// Fields here mirror the admission form's "बैंक खाता विवरण" section exactly.
+model BankDetail {
+  id                String  @id @default(cuid())
+  studentId         String  @unique
+  student           Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  accountHolder     String
+  relationToStudent RelationType // बालक/बालिका से सम्बन्ध — usually FATHER or MOTHER
+  accountNumber     String  // sensitive — encrypt at application layer
+  ifscCode          String
+  bankName          String
+  branchName        String?
+  accountHolderAadhaar String? // खाता धारक का आधार नम्बर — sensitive, encrypt
+  mobileNumber      String?
+  isAadhaarSeeded   Boolean @default(false) // बायोमेट्रिक आधार लिंग नम्बर (Seed)
+  isSameFamilyMember Boolean @default(true)  // Same Family Member Yes/No
+
+  @@map("bank_details")
+}
+
+model StudentDocument {
+  id        String       @id @default(cuid())
+  studentId String
+  student   Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  type      DocumentType
+  fileUrl   String
+  uploadedAt DateTime    @default(now())
+
+  @@map("student_documents")
+}
+
+model HealthNote {
+  id        String   @id @default(cuid())
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  note      String
+  recordedById String // Teacher/Admin userId
+  createdAt DateTime @default(now())
+
+  @@map("health_notes")
+}
+
+model BehaviourNote {
+  id        String   @id @default(cuid())
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  note      String
+  recordedById String
+  createdAt DateTime @default(now())
+
+  @@map("behaviour_notes")
+}
+
+// ============================================================
+// TEACHER DOMAIN
+// ============================================================
+
+model Teacher {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  employeeCode  String   @unique
+  fullName      String
+  dob           DateTime?
+  gender        Gender?
+  qualification String?
+  designation   String?  // "TGT", "PGT", "Assistant Teacher"
+  dateOfJoining DateTime?
+  photoUrl      String?
+
+  classTeacherOf Section[] @relation("ClassTeacherOf")
+  subjects       TeacherSubject[]
+  timetableSlots TimetableSlot[]
+  leaveRequests  LeaveRequest[]
+  serviceRecords ServiceRecord[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("teachers")
+}
+
+model TeacherSubject {
+  id        String  @id @default(cuid())
+  teacherId String
+  teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  subjectId String
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([teacherId, subjectId])
+  @@map("teacher_subjects")
+}
+
+/// E-Service Book entries (postings, increments, trainings)
+model ServiceRecord {
+  id          String   @id @default(cuid())
+  teacherId   String
+  teacher     Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  eventType   String   // "POSTING" | "INCREMENT" | "TRAINING" | "PROMOTION"
+  description String
+  effectiveDate DateTime
+  documentUrl String?
+
+  @@map("service_records")
+}
+
+// ============================================================
+// ATTENDANCE / MARKS / HOMEWORK
+// ============================================================
+
+model Attendance {
+  id          String   @id @default(cuid())
+  studentId   String
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  sessionId   String
+  session     AcademicSession @relation(fields: [sessionId], references: [id])
+  date        DateTime @db.Date
+  status      AttendanceStatus
+  markedById  String   // teacher userId
+
+  @@unique([studentId, date])
+  @@index([date])
+  @@map("attendance")
+}
+
+model Mark {
+  id         String   @id @default(cuid())
+  studentId  String
+  student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  subjectId  String
+  subject    Subject  @relation(fields: [subjectId], references: [id])
+  sessionId  String
+  session    AcademicSession @relation(fields: [sessionId], references: [id])
+  examTerm   ExamTerm // UNIT_TEST_1 (10) | UNIT_TEST_2 (10) | HALF_YEARLY (30) | ANNUAL (50)
+  marksObtained Float
+  maxMarks   Float    // 10 / 10 / 30 / 50 respectively — enforce in app layer, not DB
+  enteredById String  // teacher userId
+
+  @@unique([studentId, subjectId, sessionId, examTerm])
+  @@map("marks")
+}
+
+model Homework {
+  id          String   @id @default(cuid())
+  subjectId   String
+  subject     Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  fileUrl     String?
+  assignedDate DateTime @default(now())
+  dueDate     DateTime
+  assignedById String  // teacher userId
+
+  @@map("homework")
+}
+
+model LeaveRequest {
+  id            String   @id @default(cuid())
+  applicantType LeaveApplicantType
+  studentId     String?
+  student       Student? @relation(fields: [studentId], references: [id])
+  teacherId     String?
+  teacher       Teacher? @relation(fields: [teacherId], references: [id])
+  fromDate      DateTime
+  toDate        DateTime
+  reason        String
+  status        LeaveStatus @default(PENDING)
+  reviewedById  String?
+  reviewedAt    DateTime?
+  createdAt     DateTime @default(now())
+
+  @@map("leave_requests")
+}
+
+model Certificate {
+  id          String   @id @default(cuid())
+  studentId   String
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  type        String   // "TRANSFER_CERTIFICATE" | "BONAFIDE" | "CHARACTER"
+  fileUrl     String?
+  issuedById  String
+  issuedAt    DateTime @default(now())
+
+  @@map("certificates")
+}
+
+/// Government-format Transfer Certificate. Issuance restricted to ADMIN
+/// with designation = Principal at the application layer — the schema
+/// just records who issued it, for audit. Fields follow the standard
+/// UP govt-school TC register format; adjust once you share the template.
+model TransferCertificate {
+  id                 String   @id @default(cuid())
+  studentId          String
+  student            Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  tcNumber           String   @unique // विद्यालय छोड़ने का क्रमांक — serial register number
+
+  // Snapshotted at issue time — a TC is a legal document and must not
+  // silently change if the Student record is edited afterwards.
+  studentNameSnapshot String
+  fatherNameSnapshot  String?
+  motherNameSnapshot  String?
+  dobSnapshot         DateTime
+  dobWordsSnapshot    String?
+  aadhaarSnapshot     String?  // sensitive — encrypt at application layer
+  penNumberSnapshot   String?
+  apaarIdSnapshot     String?
+  categorySnapshot    String?
+  religionSnapshot    String?
+  addressSnapshot     String?
+
+  dateOfIssue        DateTime @default(now())
+  admissionDateSnapshot DateTime?
+  classOfAdmissionSnapshot String?
+  lastClassStudied   String
+  currentSessionLabel String?
+  dateOfLeaving      DateTime
+  reasonForLeaving   String
+  conduct            String   @default("Good")
+  subjectsStudied    String[]
+  promotedTo         String?
+  workingDaysTotal   Int?
+  workingDaysPresent Int?
+  qualifiedForPromotion Boolean @default(true)
+  remarks            String?
+  fileUrl            String?  // generated PDF
+  status             TCStatus @default(ISSUED)
+  issuedById         String   // AdminProfile userId — enforce Principal designation in app logic
+  createdAt          DateTime @default(now())
+
+  @@map("transfer_certificates")
+}
+
+/// A stable snapshot of one exam term's result — deliberately NOT computed
+/// live from Mark on every page view. Admin generates it once after the
+/// annual exam and publishes it; if marks get corrected later, Admin must
+/// explicitly re-generate + re-publish rather than it silently drifting.
+model ReportCard {
+  id            String   @id @default(cuid())
+  studentId     String
+  student       Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  sessionId     String
+  session       AcademicSession @relation(fields: [sessionId], references: [id])
+  examTerm      String   // report cards are issued once per session (annual), aggregating all 4 Mark rows per subject
+  fileUrl       String?  // generated PDF, what teachers/students actually download
+  subjectWiseMarks Json? // frozen snapshot: [{ subject, ut1, ut2, halfYearly, annual, total, maxTotal, grade }]
+  totalMarks    Float?
+  maxMarks      Float?
+  percentage    Float?
+  grade         String?
+  rank          Int?
+  status        ReportCardStatus @default(DRAFT)
+  generatedById String   // admin userId
+  publishedAt   DateTime?
+  createdAt     DateTime @default(now())
+
+  @@unique([studentId, sessionId, examTerm])
+  @@map("report_cards")
+}
+
+/// Covers both of your admission flows under one model:
+///  - NEW_ADMISSION: filled by Admin for a fresh applicant. On APPROVED,
+///    app logic auto-creates a new User + Student from formData and links
+///    it via resultingStudentId — this is what gives the student their account.
+///  - PROMOTION: filled by the class teacher for an existing student moving
+///    up a class. formData only needs to hold the delta (new class/section,
+///    last year's marks summary) — personal/address details are read from
+///    the existing Student record, never re-entered.
+model AdmissionApplication {
+  id             String   @id @default(cuid())
+  type           AdmissionFormType
+  status         AdmissionFormStatus @default(DRAFT)
+
+  existingStudentId  String?  // set only for PROMOTION
+  existingStudent    Student? @relation("PromotionApplications", fields: [existingStudentId], references: [id])
+
+  resultingStudentId String?  @unique // set only once a NEW_ADMISSION is APPROVED
+  resultingStudent   Student? @relation("NewAdmissionResult", fields: [resultingStudentId], references: [id])
+
+  targetClassId   String?
+  targetSectionId String?
+
+  formData       Json     // flexible payload matching your uploaded form template's fields
+  fileUrl        String?  // scanned or generated filled PDF
+
+  submittedById  String   // teacher userId (PROMOTION) or admin userId (NEW_ADMISSION)
+  reviewedById   String?
+  reviewedAt     DateTime?
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("admission_applications")
+}
+
+// ============================================================
+// MID-DAY MEAL (MDM) MODULE
+// ============================================================
+
+model MDMDailyLog {
+  id               String   @id @default(cuid())
+  sessionId        String
+  session          AcademicSession @relation(fields: [sessionId], references: [id])
+  date             DateTime @db.Date
+  mealType         MealType
+  menuDescription  String   // "Rice + Dal + Sabzi"
+  eligibleStudents Int
+  presentStudents  Int
+  mealsServed      Int
+  loggedById       String   // teacher/admin userId
+
+  studentAttendance MDMStudentAttendance[]
+
+  @@unique([date, mealType])
+  @@index([date])
+  @@map("mdm_daily_logs")
+}
+
+/// Per-student MDM attendance, separate from academic Attendance
+/// since a student can be academically present but skip the meal.
+model MDMStudentAttendance {
+  id           String       @id @default(cuid())
+  dailyLogId   String
+  dailyLog     MDMDailyLog  @relation(fields: [dailyLogId], references: [id], onDelete: Cascade)
+  studentId    String
+  student      Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  didEat       Boolean      @default(true)
+
+  @@unique([dailyLogId, studentId])
+  @@map("mdm_student_attendance")
+}
+
+model MDMStockItem {
+  id        String        @id @default(cuid())
+  name      String        @unique // "Rice", "Wheat", "Fruits", "Pulses"
+  unit      StockItemUnit
+  currentQty Float        @default(0) // denormalized running balance, reconciled by transactions
+
+  transactions MDMStockTransaction[]
+
+  @@map("mdm_stock_items")
+}
+
+model MDMStockTransaction {
+  id            String   @id @default(cuid())
+  stockItemId   String
+  stockItem     MDMStockItem @relation(fields: [stockItemId], references: [id], onDelete: Cascade)
+  type          StockTransactionType
+  quantity      Float
+  date          DateTime @db.Date
+  vendorId      String?
+  vendor        MDMVendor? @relation(fields: [vendorId], references: [id])
+  note          String?
+  recordedById  String
+
+  @@index([stockItemId, date])
+  @@map("mdm_stock_transactions")
+}
+
+model MDMVendor {
+  id           String   @id @default(cuid())
+  name         String
+  contactPhone String?
+  address      String?
+
+  purchases    MDMStockTransaction[]
+
+  @@map("mdm_vendors")
+}
+
+// ============================================================
+// NOTICES / NOTIFICATIONS
+// ============================================================
+
+model Notice {
+  id          String          @id @default(cuid())
+  title       String
+  body        String
+  audience    NoticeAudience
+  sectionId   String?         // used when audience = CLASS_SPECIFIC
+  isEmergency Boolean         @default(false)
+  postedById  String
+  postedAt    DateTime        @default(now())
+  expiresAt   DateTime?
+
+  notifications Notification[]
+
+  @@index([audience, postedAt])
+  @@map("notices")
+}
+
+model Notification {
+  id          String              @id @default(cuid())
+  noticeId    String?
+  notice      Notice?             @relation(fields: [noticeId], references: [id])
+  recipientId String
+  recipient   User                @relation("NotificationRecipient", fields: [recipientId], references: [id])
+  channel     NotificationChannel
+  status      NotificationStatus  @default(QUEUED)
+  sentAt      DateTime?
+  createdAt   DateTime            @default(now())
+
+  @@index([recipientId, status])
+  @@map("notifications")
+}
+
+// ============================================================
+// SETTINGS / AUDIT
+// ============================================================
+
+model SchoolSettings {
+  id            String  @id @default("singleton")
+  schoolName    String  @default("Composite Vidyalaya Chandpur Tarhar")
+  udiseCode     String?
+  address       String?
+  logoUrlSamagra String?
+  logoUrlSarvaShiksha String?
+  defaultLocale String  @default("hi") // "hi" | "en"
+  themeConfig   Json?
+
+  @@map("school_settings")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String   // "STUDENT_CREATE", "MARK_UPDATE", etc.
+  entityType String
+  entityId  String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@map("audit_logs")
+}
