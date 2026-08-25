@@ -1,10 +1,4 @@
-/**
- * Seeds one AcademicSession, one Class/Section, and one ADMIN user
- * (Principal) so there's something to log in with on first run.
- *
- * Run with: npx prisma db seed  (after adding "prisma": { "seed": "tsx prisma/seed.ts" } to package.json)
- */
-import "dotenv/config";
+ import "dotenv/config";
 import { PrismaClient, Role } from "../src/generated/prisma/client";
 import { PrismaNeon } from "@prisma/adapter-neon";
 import bcrypt from "bcryptjs";
@@ -28,10 +22,11 @@ async function main() {
 
   const adminUser = await prisma.user.upsert({
     where: { phone: "9999999999" },
-    update: {},
+    update: {passwordHash, email: "durga.anmol@gmail.com"},
     create: {
       role: Role.ADMIN,
       phone: "9999999999",
+      email: "durga.anmol@gmail.com",
       passwordHash,
       adminProfile: {
         create: {
@@ -47,7 +42,7 @@ async function main() {
     update: {},
     create: {
       id: "singleton",
-      schoolName: "Composite Vidyalaya Chandpur Tarhar",
+      schoolName: "Composite Vidyalaya Chandpur Tarahar",
       defaultLocale: "hi",
     },
   });
