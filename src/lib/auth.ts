@@ -17,9 +17,8 @@ const SESSION_MAX_AGE = 8 * 60 * 60; // seconds
 const SESSION_UPDATE_AGE = 30 * 60; // seconds
 
 /**
- * Phone + password credentials login. SMS OTP (login MFA + password reset)
- * is handled by a separate /api/auth/otp route that issues a short-lived
- * OtpCode row — this provider just verifies the final password step.
+ * Phone + password credentials login for Admin and Teacher roles only.
+ * Students and parents do not have portal access.
  */
 export const authOptions: NextAuthOptions = {
   session: {
@@ -45,26 +44,19 @@ export const authOptions: NextAuthOptions = {
           throw new Error("INVALID_CREDENTIALS");
         }
 
-        let user = await prisma.user.findUnique({
+        const user = await prisma.user.findUnique({
           where: { phone: credentials.phone },
         });
-
-        if (!user) {
-          const student = await prisma.student.findUnique({
-            where: { admissionNo: credentials.phone },
-            select: { userId: true },
-          });
-          if (student) {
-            user = await prisma.user.findUnique({
-              where: { id: student.userId },
-            });
-          }
-        }
 
         // Same generic error whether the phone doesn't exist or the
         // password is wrong — don't let the error reveal which one,
         // that's an account-enumeration leak.
         if (!user || !user.passwordHash || !user.isActive) {
+          throw new Error("INVALID_CREDENTIALS");
+        }
+
+        // Only admin and teacher roles can access the portal.
+        if (user.role !== "ADMIN" && user.role !== "TEACHER") {
           throw new Error("INVALID_CREDENTIALS");
         }
 

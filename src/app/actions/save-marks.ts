@@ -41,11 +41,37 @@ export async function saveStudentMarksAction({
   // 1. Fetch active session and verify subject
   const subject = await prisma.subject.findUnique({
     where: { id: subjectId },
-    select: { id: true, class: { select: { sessionId: true } } },
+    select: { id: true, class: { select: { sessionId: true, name: true } } },
   });
 
   if (!subject) {
     return { success: false, message: "Subject not found." };
+  }
+
+  // 2. Verify teacher is assigned to this subject via TeacherSubject
+  const teacher = await prisma.teacher.findUnique({
+    where: { userId: teacherUserId },
+    select: { id: true },
+  });
+
+  if (!teacher) {
+    return { success: false, message: "Teacher record not found." };
+  }
+
+  const teacherSubjectLink = await prisma.teacherSubject.findUnique({
+    where: {
+      teacherId_subjectId: {
+        teacherId: teacher.id,
+        subjectId,
+      },
+    },
+  });
+
+  if (!teacherSubjectLink) {
+    return {
+      success: false,
+      message: `You are not assigned to this subject in Class ${subject.class.name}. Contact the administrator.`,
+    };
   }
 
   const activeSessionId = subject.class.sessionId;

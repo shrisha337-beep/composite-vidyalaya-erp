@@ -15,7 +15,7 @@ export default withAuth(
   {
     callbacks: {
       authorized: ({ token, req }) => {
-        const publicPaths = ["/login", "/forgot-password", "/reset-password", "/verify-otp"];
+        const publicPaths = ["/login"];
         const path = req.nextUrl.pathname;
         const isPublic = publicPaths.some((p) => path.includes(p)) || path === "/" || /^\/(en|hi)\/?$/.test(path);
         if (isPublic) return true;

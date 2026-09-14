@@ -5,17 +5,20 @@ import { requireRole } from "@/lib/rbac";
 import { revalidatePath } from "next/cache";
 
 export async function applyStudentLeaveAction({
+  studentId,
   fromDateString,
   toDateString,
   reason,
   locale,
 }: {
+  studentId: string;
   fromDateString: string;
   toDateString: string;
   reason: string;
   locale: string;
 }): Promise<{ success: boolean; message: string }> {
-  const session = await requireRole(["STUDENT", "PARENT"]);
+  // Class teacher or admin applies leave on behalf of a student
+  const session = await requireRole(["TEACHER", "ADMIN"]);
 
   const fromDate = new Date(fromDateString);
   const toDate = new Date(toDateString);
@@ -32,9 +35,9 @@ export async function applyStudentLeaveAction({
     return { success: false, message: "Reason is required." };
   }
 
-  // Find Student linked to user
+  // Verify student exists
   const student = await prisma.student.findUnique({
-    where: { userId: session.user.id },
+    where: { id: studentId },
     select: { id: true },
   });
 
@@ -54,8 +57,9 @@ export async function applyStudentLeaveAction({
       },
     });
 
-    revalidatePath(`/${locale}/student/leave`);
-    return { success: true, message: "Leave application successfully submitted to your class teacher." };
+    revalidatePath(`/${locale}/teacher/leave-approval`);
+    revalidatePath(`/${locale}/admin/leave-requests`);
+    return { success: true, message: "Student leave application successfully submitted." };
   } catch (err) {
     return {
       success: false,
@@ -188,7 +192,6 @@ export async function reviewLeaveAction({
 
     revalidatePath(`/${locale}/teacher/leave-approval`);
     revalidatePath(`/${locale}/admin/leave-requests`);
-    revalidatePath(`/${locale}/student/leave`);
     revalidatePath(`/${locale}/teacher/leave`);
 
     return { success: true, message: `Leave request successfully ${status.toLowerCase()}.` };

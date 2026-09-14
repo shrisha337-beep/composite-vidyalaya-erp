@@ -5,8 +5,6 @@ import { authOptions } from "@/lib/auth";
 const dashboardByRole: Record<string, string> = {
   ADMIN: "admin/dashboard",
   TEACHER: "teacher/dashboard",
-  STUDENT: "student/dashboard",
-  PARENT: "student/dashboard",
 };
 
 export default async function Home({

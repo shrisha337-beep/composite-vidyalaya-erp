@@ -17,10 +17,14 @@ import {
   Menu,
   X,
   ChevronRight,
+  GraduationCap,
+  BarChart3,
+  User,
 } from "lucide-react";
 
 const navItems = [
   { label: "Dashboard",       href: "/teacher/dashboard",      icon: LayoutDashboard },
+  { label: "My Classes",      href: "/teacher/my-classes",     icon: GraduationCap   },
   { label: "Students",        href: "/teacher/students",       icon: Users           },
   { label: "Attendance",      href: "/teacher/attendance",     icon: CalendarCheck   },
   { label: "Marks Entry",     href: "/teacher/marks-entry",    icon: ClipboardList   },
@@ -28,6 +32,8 @@ const navItems = [
   { label: "Timetable",       href: "/teacher/timetable",      icon: CalendarDays    },
   { label: "Apply Leave",     href: "/teacher/leave",          icon: FileText        },
   { label: "Student Leaves",  href: "/teacher/leave-approval", icon: FileCheck       },
+  { label: "Reports",         href: "/teacher/reports",        icon: BarChart3       },
+  { label: "Profile",         href: "/teacher/profile",        icon: User            },
 ];
 
 function NavLink({

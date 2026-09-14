@@ -33,8 +33,6 @@ const navItems = [
   { label: "Attendance",      href: "/admin/attendance",      icon: CalendarCheck   },
   { label: "Timetable",       href: "/admin/timetable",       icon: Clock           },
   { label: "Marks",           href: "/admin/marks",           icon: BookOpen        },
-  { label: "Mid-Day Meal",    href: "/admin/mdm",             icon: UtensilsCrossed },
-  { label: "Inventory",       href: "/admin/inventory",       icon: Package         },
   { label: "Notices",         href: "/admin/notifications",   icon: Bell            },
   { label: "Reports",         href: "/admin/reports",         icon: FileText        },
   { label: "Settings",        href: "/admin/settings",        icon: Settings        },

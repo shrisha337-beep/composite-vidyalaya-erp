@@ -35,10 +35,10 @@ npm run dev
 Seeded admin login after step 4: phone `9999999999`, password `ChangeMe@123` — change this immediately, it's a placeholder.
 
 ## Known gaps to close before this is real
-- `bcrypt` password hashing is wired up, but there's no actual login *form* yet — `(auth)/login/page.tsx` is a stub.
-- Aadhaar/bank account fields in the schema have a `// sensitive — encrypt at application layer` comment but no encryption is implemented yet. `lib/encryption.ts` doesn't exist yet — build this before any real student data goes in.
-- SMS OTP dispatch (`api/auth/otp`) isn't scaffolded yet — need to pick a provider first (MSG91, Twilio, etc.)
+- `bcrypt` password hashing is wired up, login form and auth flow are functional for admin and teacher roles.
+- Aadhaar/bank account fields in the schema have a `// sensitive — encrypt at application layer` comment but no encryption is implemented yet. `lib/encryption.ts` exists but needs integration before any real student data goes in.
+- Portal access is restricted to ADMIN (Principal) and TEACHER roles only. Students and parents do not have login access.
 - `npm audit` shows some vulnerabilities from transitive deps in the create-next-app template — worth a look before shipping, not urgent for local dev.
 
-## Next module to build
-Your call — Student Management CRUD (admin) or the login flow first, since nothing else works without auth.
+## Portal scope
+Admin (Principal/Headmaster) and Teachers only. Students are data records managed through the admin panel — they do not log in.

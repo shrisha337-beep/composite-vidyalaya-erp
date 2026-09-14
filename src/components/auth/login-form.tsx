@@ -5,8 +5,7 @@ import { signIn } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
 
-import { useRouter, Link } from "@/i18n/navigation";
-import { useLocale } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,7 +13,7 @@ import { Label } from "@/components/ui/label";
 export function LoginForm() {
   const t = useTranslations("login");
   const router = useRouter();
-  const locale = useLocale();
+
 
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
@@ -69,16 +68,7 @@ export function LoginForm() {
       </div>
 
       <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label htmlFor="password">{t("passwordLabel")}</Label>
-          <Link
-            href={`/forgot-password` as any}
-            locale={locale}
-            className="text-xs text-muted-foreground hover:text-primary hover:underline"
-          >
-            {t("forgotPassword")}
-          </Link>
-        </div>
+        <Label htmlFor="password">{t("passwordLabel")}</Label>
         <Input
           id="password"
           name="password"
