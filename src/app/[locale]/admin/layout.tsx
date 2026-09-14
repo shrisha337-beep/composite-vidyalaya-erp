@@ -15,7 +15,7 @@ export default async function AdminLayout({
   const { locale } = await params;
 
   return (
-    <div className="flex min-h-screen bg-[hsl(var(--muted))]">
+    <div className="flex min-h-screen bg-background">
       <AdminSidebar locale={locale} />
 
       {/* Main content area */}

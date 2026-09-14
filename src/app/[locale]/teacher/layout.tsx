@@ -12,7 +12,7 @@ export default async function TeacherLayout({
   const { locale } = await params;
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-background">
       <TeacherSidebar locale={locale} />
       <div className="flex-1 flex flex-col min-w-0 pt-12 lg:pt-0">
         {children}
