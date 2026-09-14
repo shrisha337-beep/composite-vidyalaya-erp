@@ -20,6 +20,7 @@ import {
   Clock,
   ChevronRight,
   Inbox,
+  UtensilsCrossed,
 } from "lucide-react";
 
 const navItems = [
@@ -29,6 +30,7 @@ const navItems = [
   { label: "Teacher Leaves",  href: "/admin/leave-requests",  icon: Inbox           },
   { label: "Classes",         href: "/admin/classes",         icon: GraduationCap   },
   { label: "Attendance",      href: "/admin/attendance",      icon: CalendarCheck   },
+  { label: "Mid-Day Meal",    href: "/admin/mdm",             icon: UtensilsCrossed },
   { label: "Timetable",       href: "/admin/timetable",       icon: Clock           },
   { label: "Marks",           href: "/admin/marks",           icon: BookOpen        },
   { label: "Notices",         href: "/admin/notifications",   icon: Bell            },
