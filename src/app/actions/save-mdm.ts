@@ -73,7 +73,7 @@ export async function saveMDMFruitLogAction({
           sessionId: activeSession.id,
           date: logDate,
           mealType: "LUNCH",
-          menuDescription: "Wheat (100g) + Rice (100g) + Fruit (₹4)",
+          menuDescription: "Primary: 100g + Junior: 150g + Fruit (₹4) + Conversion Cost",
           eligibleStudents: totalStudents,
           presentStudents: presentStudentIds.size,
           mealsServed: presentStudentIds.size,

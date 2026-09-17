@@ -16,6 +16,7 @@ import {
   CheckCircle2,
   Printer,
   CalendarDays,
+  IndianRupee,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { saveMDMFruitLogAction, type StudentFruitEntry } from "@/app/actions/save-mdm";
@@ -45,6 +46,7 @@ export interface MonthlyDayLog {
   riceGrams: number;
   fruitsEaten: number;
   fruitCost: number;
+  conversionCost: number;
   hasAttendance: boolean;
 }
 
@@ -53,7 +55,21 @@ interface MdmDashboardViewProps {
   selectedMonthStr: string;
   locale: string;
   classesData: ClassSectionMDM[];
-  monthlyLogs: MonthlyDayLog[];
+  primaryMonthlyLogs: MonthlyDayLog[];
+  juniorMonthlyLogs: MonthlyDayLog[];
+}
+
+// ── Constants ────────────────────────────────────────────────────────────────
+const PRIMARY_CLASSES = ["1", "2", "3", "4", "5"];
+const JUNIOR_CLASSES = ["6", "7", "8"];
+const GRAIN_PER_STUDENT_PRIMARY = 100; // grams
+const GRAIN_PER_STUDENT_JUNIOR = 150; // grams
+const FRUIT_COST_PER_STUDENT = 4; // ₹
+const CONVERSION_COST_PRIMARY = 6.78; // ₹
+const CONVERSION_COST_JUNIOR = 10.17; // ₹
+
+function isPrimaryClass(className: string): boolean {
+  return PRIMARY_CLASSES.includes(className);
 }
 
 export function MdmDashboardView({
@@ -61,10 +77,12 @@ export function MdmDashboardView({
   selectedMonthStr,
   locale,
   classesData,
-  monthlyLogs,
+  primaryMonthlyLogs,
+  juniorMonthlyLogs,
 }: MdmDashboardViewProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"daily" | "monthly">("daily");
+  const [schoolLevel, setSchoolLevel] = useState<"primary" | "junior">("primary");
   const [dateInput, setDateInput] = useState(selectedDateStr);
   const [monthInput, setMonthInput] = useState(selectedMonthStr);
 
@@ -145,19 +163,30 @@ export function MdmDashboardView({
     });
   }
 
-  // ─── Calculate daily totals ─────────────────────────────────────────────────
+  // ─── Split classes by school level ──────────────────────────────────────────
+  const primaryClasses = classesData.filter((c) => isPrimaryClass(c.className));
+  const juniorClasses = classesData.filter((c) => !isPrimaryClass(c.className));
+
+  const currentClasses = schoolLevel === "primary" ? primaryClasses : juniorClasses;
+  const grainPerStudent = schoolLevel === "primary" ? GRAIN_PER_STUDENT_PRIMARY : GRAIN_PER_STUDENT_JUNIOR;
+  const conversionCostPerStudent = schoolLevel === "primary" ? CONVERSION_COST_PRIMARY : CONVERSION_COST_JUNIOR;
+  const currentMonthlyLogs = schoolLevel === "primary" ? primaryMonthlyLogs : juniorMonthlyLogs;
+
+  // ─── Calculate daily totals for current school level ────────────────────────
   let totalEnrolled = 0;
   let totalPresent = 0;
   let totalWheatGrams = 0;
   let totalRiceGrams = 0;
   let totalFruitEaten = 0;
+  let totalConversionCost = 0;
 
-  classesData.forEach((c) => {
+  currentClasses.forEach((c) => {
     totalEnrolled += c.totalStudents;
     const presentCount = c.presentStudents.length;
     totalPresent += presentCount;
-    totalWheatGrams += presentCount * 100;
-    totalRiceGrams += presentCount * 100;
+    totalWheatGrams += presentCount * grainPerStudent;
+    totalRiceGrams += presentCount * grainPerStudent;
+    totalConversionCost += presentCount * conversionCostPerStudent;
 
     c.presentStudents.forEach((s) => {
       if (fruitState[s.id] !== false) {
@@ -167,7 +196,7 @@ export function MdmDashboardView({
   });
 
   const totalFruitDidNotEat = totalPresent - totalFruitEaten;
-  const totalFruitRupees = totalFruitEaten * 4;
+  const totalFruitRupees = totalFruitEaten * FRUIT_COST_PER_STUDENT;
 
   const totalWheatKg = (totalWheatGrams / 1000).toFixed(2);
   const totalRiceKg = (totalRiceGrams / 1000).toFixed(2);
@@ -180,6 +209,12 @@ export function MdmDashboardView({
     year: "numeric",
   });
 
+  const schoolLevelLabel = schoolLevel === "primary"
+    ? "Primary School / प्राथमिक विद्यालय (कक्षा 1–5)"
+    : "Junior School / जूनियर विद्यालय (कक्षा 6–8)";
+
+  const grainLabel = `${grainPerStudent}g`;
+
   return (
     <div className="space-y-6">
       {/* Top Header & Tab Controls */}
@@ -190,7 +225,7 @@ export function MdmDashboardView({
           </h1>
           <div className="w-12 h-1 bg-[#6B1D30] rounded-full mt-2 mb-2" />
           <p className="text-sm font-medium text-[#7A7267]">
-            Daily grain consumption (100g/student) & fruit distribution (₹4/student)
+            Grain consumption & fruit distribution with conversion cost (परिवर्तन लागत)
           </p>
         </div>
 
@@ -219,6 +254,36 @@ export function MdmDashboardView({
             Monthly Summary (मासिक)
           </button>
         </div>
+      </div>
+
+      {/* School Level Switcher — Primary / Junior */}
+      <div className="inline-flex bg-white rounded-xl p-1 border border-[#E8E0D4] shadow-2xs">
+        <button
+          onClick={() => setSchoolLevel("primary")}
+          className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+            schoolLevel === "primary"
+              ? "bg-[#3D5A80] text-white shadow-xs"
+              : "text-[#7A7267] hover:text-[#2D2A26] hover:bg-[#F3EDE4]/50"
+          }`}
+        >
+          🏫 Primary (कक्षा 1–5)
+          <span className="ml-2 text-xs opacity-80">
+            {grainPerStudent === GRAIN_PER_STUDENT_PRIMARY ? `${GRAIN_PER_STUDENT_PRIMARY}g · ₹${CONVERSION_COST_PRIMARY}` : ""}
+          </span>
+        </button>
+        <button
+          onClick={() => setSchoolLevel("junior")}
+          className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+            schoolLevel === "junior"
+              ? "bg-[#3D5A80] text-white shadow-xs"
+              : "text-[#7A7267] hover:text-[#2D2A26] hover:bg-[#F3EDE4]/50"
+          }`}
+        >
+          🎓 Junior (कक्षा 6–8)
+          <span className="ml-2 text-xs opacity-80">
+            {grainPerStudent === GRAIN_PER_STUDENT_JUNIOR ? `${GRAIN_PER_STUDENT_JUNIOR}g · ₹${CONVERSION_COST_JUNIOR}` : ""}
+          </span>
+        </button>
       </div>
 
       {/* Alert toast if message exists */}
@@ -279,8 +344,16 @@ export function MdmDashboardView({
             </div>
           </div>
 
-          {/* 4 Stat Badges */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* School Level Badge */}
+          <div className="bg-[#3D5A80]/5 border border-[#3D5A80]/20 rounded-xl px-5 py-3">
+            <p className="text-sm font-bold text-[#3D5A80]">{schoolLevelLabel}</p>
+            <p className="text-xs text-[#3D5A80]/70 mt-0.5">
+              Wheat & Rice: {grainLabel}/student · Conversion Cost (परिवर्तन लागत): ₹{conversionCostPerStudent}/student · Fruit: ₹{FRUIT_COST_PER_STUDENT}/student
+            </p>
+          </div>
+
+          {/* 5 Stat Badges */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             {/* Present Students */}
             <div className="bg-white rounded-2xl border border-[#E8E0D4] p-5 shadow-xs flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-[#E8EDF2] text-[#3D5A80]">
@@ -291,12 +364,12 @@ export function MdmDashboardView({
                   {totalPresent} <span className="text-xs font-normal text-[#7A7267]">/ {totalEnrolled}</span>
                 </p>
                 <p className="text-xs font-medium text-[#7A7267]">
-                  Present Students (उपस्थित छात्र)
+                  Present (उपस्थित)
                 </p>
               </div>
             </div>
 
-            {/* Wheat (100g / student) */}
+            {/* Wheat */}
             <div className="bg-white rounded-2xl border border-[#E8E0D4] p-5 shadow-xs flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-[#FBF5E5] text-[#B8860B]">
                 <Wheat className="h-6 w-6" />
@@ -306,12 +379,12 @@ export function MdmDashboardView({
                   {totalWheatKg} <span className="text-xs font-bold text-[#7A7267]">kg</span>
                 </p>
                 <p className="text-xs font-medium text-[#7A7267]">
-                  Wheat: {totalWheatGrams.toLocaleString("en-IN")} gm (गेहूं)
+                  Wheat (गेहूं) · {grainLabel}/छात्र
                 </p>
               </div>
             </div>
 
-            {/* Rice (100g / student) */}
+            {/* Rice */}
             <div className="bg-white rounded-2xl border border-[#E8E0D4] p-5 shadow-xs flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-[#E6F4F1] text-[#2A9D8F]">
                 <Utensils className="h-6 w-6" />
@@ -321,12 +394,12 @@ export function MdmDashboardView({
                   {totalRiceKg} <span className="text-xs font-bold text-[#7A7267]">kg</span>
                 </p>
                 <p className="text-xs font-medium text-[#7A7267]">
-                  Rice: {totalRiceGrams.toLocaleString("en-IN")} gm (चावल)
+                  Rice (चावल) · {grainLabel}/छात्र
                 </p>
               </div>
             </div>
 
-            {/* Fruit (₹4 / student) */}
+            {/* Fruit */}
             <div className="bg-white rounded-2xl border border-[#E8E0D4] p-5 shadow-xs flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-[#FBECE9] text-[#E76F51]">
                 <Apple className="h-6 w-6" />
@@ -337,6 +410,21 @@ export function MdmDashboardView({
                 </p>
                 <p className="text-xs font-medium text-[#7A7267]">
                   Fruit: {totalFruitEaten} ate · {totalFruitDidNotEat} skipped
+                </p>
+              </div>
+            </div>
+
+            {/* Conversion Cost */}
+            <div className="bg-white rounded-2xl border border-[#E8E0D4] p-5 shadow-xs flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-[#F0E6FF] text-[#7E22CE]">
+                <IndianRupee className="h-6 w-6" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-2xl font-bold text-[#2D2A26] leading-none mb-1">
+                  ₹{totalConversionCost.toFixed(2)}
+                </p>
+                <p className="text-xs font-medium text-[#7A7267]">
+                  Conversion Cost (परिवर्तन लागत)
                 </p>
               </div>
             </div>
@@ -378,26 +466,28 @@ export function MdmDashboardView({
                   <tr className="border-b border-[#E8E0D4] bg-[#F3EDE4]/50 text-xs font-bold text-[#2D2A26] uppercase tracking-wider">
                     <th className="px-5 py-3.5">Class / कक्षा</th>
                     <th className="px-5 py-3.5 text-center">Present / उपस्थित</th>
-                    <th className="px-5 py-3.5 text-right">Wheat / गेहूं (100g)</th>
-                    <th className="px-5 py-3.5 text-right">Rice / चावल (100g)</th>
-                    <th className="px-5 py-3.5 text-right">Fruit / फल (₹4/छात्र)</th>
+                    <th className="px-5 py-3.5 text-right">Wheat / गेहूं ({grainLabel})</th>
+                    <th className="px-5 py-3.5 text-right">Rice / चावल ({grainLabel})</th>
+                    <th className="px-5 py-3.5 text-right">Fruit / फल (₹{FRUIT_COST_PER_STUDENT}/छात्र)</th>
+                    <th className="px-5 py-3.5 text-right">Conversion Cost / परिवर्तन लागत</th>
                     <th className="px-5 py-3.5 text-center">Student Checklist</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#E8E0D4]/70">
-                  {classesData.length === 0 ? (
+                  {currentClasses.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="px-6 py-12 text-center text-sm text-[#7A7267]">
-                        No classes configured for this session yet.
+                      <td colSpan={7} className="px-6 py-12 text-center text-sm text-[#7A7267]">
+                        No classes configured for this level in the current session.
                       </td>
                     </tr>
                   ) : (
-                    classesData.map((cls) => {
+                    currentClasses.map((cls) => {
                       const presentCount = cls.presentStudents.length;
-                      const wheatGm = presentCount * 100;
+                      const wheatGm = presentCount * grainPerStudent;
                       const wheatKg = (wheatGm / 1000).toFixed(2);
-                      const riceGm = presentCount * 100;
+                      const riceGm = presentCount * grainPerStudent;
                       const riceKg = (riceGm / 1000).toFixed(2);
+                      const classCost = presentCount * conversionCostPerStudent;
 
                       let fruitAteInClass = 0;
                       cls.presentStudents.forEach((s) => {
@@ -406,7 +496,7 @@ export function MdmDashboardView({
                         }
                       });
                       const fruitDidNotEatInClass = presentCount - fruitAteInClass;
-                      const fruitCostInClass = fruitAteInClass * 4;
+                      const fruitCostInClass = fruitAteInClass * FRUIT_COST_PER_STUDENT;
 
                       return (
                         <tr key={cls.sectionId} className="hover:bg-[#F3EDE4]/25 transition-colors">
@@ -431,23 +521,31 @@ export function MdmDashboardView({
                             </span>
                           </td>
 
-                          {/* Wheat Column: 100g / student */}
+                          {/* Wheat Column */}
                           <td className="px-5 py-4 text-right font-medium text-[#2D2A26]">
                             <span className="font-bold text-[#6B1D30]">{wheatGm.toLocaleString("en-IN")} gm</span>
                             <span className="block text-xs text-[#7A7267]">({wheatKg} kg)</span>
                           </td>
 
-                          {/* Rice Column: 100g / student */}
+                          {/* Rice Column */}
                           <td className="px-5 py-4 text-right font-medium text-[#2D2A26]">
                             <span className="font-bold text-[#2A9D8F]">{riceGm.toLocaleString("en-IN")} gm</span>
                             <span className="block text-xs text-[#7A7267]">({riceKg} kg)</span>
                           </td>
 
-                          {/* Fruit Column: ₹4 / student */}
+                          {/* Fruit Column */}
                           <td className="px-5 py-4 text-right">
                             <span className="font-bold text-[#E76F51]">₹{fruitCostInClass}</span>
                             <span className="block text-xs text-[#7A7267]">
                               {fruitAteInClass} ate · {fruitDidNotEatInClass} skipped
+                            </span>
+                          </td>
+
+                          {/* Conversion Cost Column */}
+                          <td className="px-5 py-4 text-right">
+                            <span className="font-bold text-[#7E22CE]">₹{classCost.toFixed(2)}</span>
+                            <span className="block text-xs text-[#7A7267]">
+                              ₹{conversionCostPerStudent} × {presentCount}
                             </span>
                           </td>
 
@@ -471,11 +569,11 @@ export function MdmDashboardView({
                 </tbody>
 
                 {/* Summary Total Row */}
-                {classesData.length > 0 && (
+                {currentClasses.length > 0 && (
                   <tfoot>
                     <tr className="border-t-2 border-[#6B1D30] bg-[#F3EDE4]/70 font-bold text-[#2D2A26]">
                       <td className="px-5 py-4 text-sm font-bold">
-                        School Total (कुल योग)
+                        {schoolLevel === "primary" ? "Primary Total (प्राथमिक कुल)" : "Junior Total (जूनियर कुल)"}
                       </td>
                       <td className="px-5 py-4 text-center text-sm font-bold">
                         {totalPresent} / {totalEnrolled}
@@ -493,6 +591,9 @@ export function MdmDashboardView({
                         <span className="block text-xs font-normal text-[#7A7267]">
                           {totalFruitEaten} ate · {totalFruitDidNotEat} skipped
                         </span>
+                      </td>
+                      <td className="px-5 py-4 text-right text-sm font-bold text-[#7E22CE]">
+                        ₹{totalConversionCost.toFixed(2)}
                       </td>
                       <td className="px-5 py-4 text-center">
                         <Button
@@ -543,6 +644,14 @@ export function MdmDashboardView({
             </Button>
           </div>
 
+          {/* School Level Badge */}
+          <div className="bg-[#3D5A80]/5 border border-[#3D5A80]/20 rounded-xl px-5 py-3">
+            <p className="text-sm font-bold text-[#3D5A80]">{schoolLevelLabel}</p>
+            <p className="text-xs text-[#3D5A80]/70 mt-0.5">
+              Wheat & Rice: {grainLabel}/student · Conversion Cost: ₹{conversionCostPerStudent}/student
+            </p>
+          </div>
+
           {/* Monthly Table */}
           <div className="bg-white rounded-2xl border border-[#E8E0D4] overflow-hidden shadow-xs">
             <div className="px-6 py-4 border-b border-[#E8E0D4]">
@@ -550,7 +659,7 @@ export function MdmDashboardView({
                 Monthly Mid-Day Meal Register / मासिक एम.डी.एम. पंजी
               </h2>
               <p className="text-xs text-[#7A7267] mt-0.5">
-                Consolidated daily log of attendance, grain consumption (Wheat & Rice), and fruit distribution
+                Consolidated daily log — {schoolLevel === "primary" ? "Primary (1–5)" : "Junior (6–8)"}
               </p>
             </div>
 
@@ -565,11 +674,12 @@ export function MdmDashboardView({
                     <th className="px-4 py-3 text-right">Rice / चावल (kg)</th>
                     <th className="px-4 py-3 text-right">Fruits Eaten</th>
                     <th className="px-4 py-3 text-right">Fruit Cost / फल (₹)</th>
+                    <th className="px-4 py-3 text-right">Conversion Cost / परिवर्तन लागत (₹)</th>
                     <th className="px-4 py-3 text-center">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#E8E0D4]/70">
-                  {monthlyLogs.map((log) => {
+                  {currentMonthlyLogs.map((log) => {
                     const wheatKg = (log.wheatGrams / 1000).toFixed(2);
                     const riceKg = (log.riceGrams / 1000).toFixed(2);
 
@@ -605,6 +715,9 @@ export function MdmDashboardView({
                         <td className="px-4 py-3 text-right font-bold text-[#E76F51]">
                           {log.hasAttendance ? `₹${log.fruitCost}` : "—"}
                         </td>
+                        <td className="px-4 py-3 text-right font-bold text-[#7E22CE]">
+                          {log.hasAttendance ? `₹${log.conversionCost.toFixed(2)}` : "—"}
+                        </td>
                         <td className="px-4 py-3 text-center">
                           <button
                             onClick={() => {
@@ -624,11 +737,12 @@ export function MdmDashboardView({
                 {/* Monthly Totals */}
                 <tfoot>
                   {(() => {
-                    const monthTotalPresent = monthlyLogs.reduce((s, l) => s + l.totalPresent, 0);
-                    const monthTotalWheatGrams = monthlyLogs.reduce((s, l) => s + l.wheatGrams, 0);
-                    const monthTotalRiceGrams = monthlyLogs.reduce((s, l) => s + l.riceGrams, 0);
-                    const monthTotalFruitCost = monthlyLogs.reduce((s, l) => s + l.fruitCost, 0);
-                    const monthTotalFruitsEaten = monthlyLogs.reduce((s, l) => s + l.fruitsEaten, 0);
+                    const monthTotalPresent = currentMonthlyLogs.reduce((s, l) => s + l.totalPresent, 0);
+                    const monthTotalWheatGrams = currentMonthlyLogs.reduce((s, l) => s + l.wheatGrams, 0);
+                    const monthTotalRiceGrams = currentMonthlyLogs.reduce((s, l) => s + l.riceGrams, 0);
+                    const monthTotalFruitCost = currentMonthlyLogs.reduce((s, l) => s + l.fruitCost, 0);
+                    const monthTotalFruitsEaten = currentMonthlyLogs.reduce((s, l) => s + l.fruitsEaten, 0);
+                    const monthTotalConvCost = currentMonthlyLogs.reduce((s, l) => s + l.conversionCost, 0);
 
                     return (
                       <tr className="border-t-2 border-[#6B1D30] bg-[#F3EDE4]/80 font-bold text-[#2D2A26]">
@@ -649,6 +763,9 @@ export function MdmDashboardView({
                         </td>
                         <td className="px-4 py-4 text-right text-sm font-bold text-[#E76F51]">
                           ₹{monthTotalFruitCost.toLocaleString("en-IN")}
+                        </td>
+                        <td className="px-4 py-4 text-right text-sm font-bold text-[#7E22CE]">
+                          ₹{monthTotalConvCost.toFixed(2)}
                         </td>
                         <td className="px-4 py-4" />
                       </tr>
@@ -692,7 +809,7 @@ export function MdmDashboardView({
             {/* Quick Bulk Toggle Buttons */}
             <div className="px-6 py-3 bg-[#F3EDE4]/50 border-b border-[#E8E0D4] flex items-center justify-between">
               <span className="text-xs font-semibold text-[#7A7267]">
-                Rate: ₹4 per student who ate fruit
+                Rate: ₹{FRUIT_COST_PER_STUDENT} per student who ate fruit
               </span>
               <div className="flex items-center gap-2">
                 <button
@@ -746,7 +863,7 @@ export function MdmDashboardView({
                           ateFruit ? "bg-emerald-100 text-emerald-800" : "bg-red-100 text-red-700"
                         }`}
                       >
-                        {ateFruit ? "Ate Fruit (₹4)" : "Didn't Eat (₹0)"}
+                        {ateFruit ? `Ate Fruit (₹${FRUIT_COST_PER_STUDENT})` : "Didn't Eat (₹0)"}
                       </span>
                       {ateFruit ? (
                         <CheckSquare className="h-5 w-5 text-[#6B1D30]" />
@@ -765,7 +882,7 @@ export function MdmDashboardView({
                 const ateCount = selectedClassForChecklist.presentStudents.filter(
                   (s) => fruitState[s.id] !== false
                 ).length;
-                const cost = ateCount * 4;
+                const cost = ateCount * FRUIT_COST_PER_STUDENT;
                 return (
                   <div>
                     <span className="text-sm font-bold text-[#2D2A26]">

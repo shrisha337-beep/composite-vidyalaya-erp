@@ -2,6 +2,18 @@ import { requireRole } from "@/lib/rbac";
 import { prisma } from "@/lib/prisma";
 import { MdmDashboardView, type ClassSectionMDM, type MonthlyDayLog } from "@/components/admin/mdm-dashboard-view";
 
+// ── Constants matching the client component ──────────────────────────────────
+const PRIMARY_CLASSES = ["1", "2", "3", "4", "5"];
+const GRAIN_PRIMARY = 100;
+const GRAIN_JUNIOR = 150;
+const FRUIT_COST = 4;
+const CONVERSION_COST_PRIMARY = 6.78;
+const CONVERSION_COST_JUNIOR = 10.17;
+
+function isPrimary(className: string) {
+  return PRIMARY_CLASSES.includes(className);
+}
+
 export default async function AdminMDMPage({
   params,
   searchParams,
@@ -118,7 +130,7 @@ export default async function AdminMDMPage({
     });
   });
 
-  // 7. Generate monthly log data
+  // 7. Generate monthly log data — split by primary / junior
   const [yearStr, monthNumStr] = selectedMonthStr.split("-");
   const year = parseInt(yearStr, 10);
   const month = parseInt(monthNumStr, 10); // 1-12
@@ -127,78 +139,142 @@ export default async function AdminMDMPage({
   const monthEnd = new Date(year, month, 1);
   const daysInMonth = new Date(year, month, 0).getDate();
 
-  // Query month's present attendance grouped by day
-  const monthAttendance = await prisma.attendance.groupBy({
-    by: ["date"],
+  // Query month's present attendance grouped by day AND student, so we can
+  // split by class level. We need to join with Student -> Section -> Class.
+  const monthAttendanceRaw = await prisma.attendance.findMany({
     where: {
       date: { gte: monthStart, lt: monthEnd },
       status: "PRESENT",
     },
-    _count: { studentId: true },
+    select: {
+      date: true,
+      studentId: true,
+      student: {
+        select: {
+          section: {
+            select: {
+              class: {
+                select: { name: true },
+              },
+            },
+          },
+        },
+      },
+    },
   });
 
-  const monthAttendanceMap = new Map<string, number>();
-  monthAttendance.forEach((rec) => {
+  // Build per-day, per-level attendance counts
+  // Map<dateStr, { primary: number, junior: number }>
+  const monthAttendanceByLevel = new Map<string, { primary: number; junior: number }>();
+  monthAttendanceRaw.forEach((rec) => {
     const dStr = new Date(rec.date).toISOString().split("T")[0];
-    monthAttendanceMap.set(dStr, rec._count.studentId);
+    if (!monthAttendanceByLevel.has(dStr)) {
+      monthAttendanceByLevel.set(dStr, { primary: 0, junior: 0 });
+    }
+    const entry = monthAttendanceByLevel.get(dStr)!;
+    const className = rec.student?.section?.class?.name;
+    if (className && isPrimary(className)) {
+      entry.primary += 1;
+    } else {
+      entry.junior += 1;
+    }
   });
 
-  // Query month's MDM logs
+  // Query month's MDM logs for fruit data — grouped by day and level
   const monthMdmLogs = await prisma.mDMDailyLog.findMany({
     where: {
       date: { gte: monthStart, lt: monthEnd },
       mealType: "LUNCH",
     },
     include: {
-      studentAttendance: true,
+      studentAttendance: {
+        include: {
+          student: {
+            select: {
+              section: {
+                select: {
+                  class: { select: { name: true } },
+                },
+              },
+            },
+          },
+        },
+      },
     },
   });
 
-  const monthFruitEatenMap = new Map<string, number>();
+  // Map<dateStr, { primaryFruit: number, juniorFruit: number }>
+  const monthFruitByLevel = new Map<string, { primary: number; junior: number }>();
   monthMdmLogs.forEach((log) => {
     const dStr = new Date(log.date).toISOString().split("T")[0];
-    const eaten = log.studentAttendance.filter((s) => s.didEat).length;
-    monthFruitEatenMap.set(dStr, eaten);
+    if (!monthFruitByLevel.has(dStr)) {
+      monthFruitByLevel.set(dStr, { primary: 0, junior: 0 });
+    }
+    const entry = monthFruitByLevel.get(dStr)!;
+    log.studentAttendance.forEach((sa) => {
+      if (sa.didEat) {
+        const className = sa.student?.section?.class?.name;
+        if (className && isPrimary(className)) {
+          entry.primary += 1;
+        } else {
+          entry.junior += 1;
+        }
+      }
+    });
   });
 
-  const monthlyLogs: MonthlyDayLog[] = [];
   const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const primaryMonthlyLogs: MonthlyDayLog[] = [];
+  const juniorMonthlyLogs: MonthlyDayLog[] = [];
 
   for (let day = 1; day <= daysInMonth; day++) {
     const dayDate = new Date(year, month - 1, day);
     const dayStr = `${yearStr}-${monthNumStr.padStart(2, "0")}-${String(day).padStart(2, "0")}`;
     const dayOfWeek = dayNames[dayDate.getDay()];
-    const presentCount = monthAttendanceMap.get(dayStr) ?? 0;
 
-    // If MDM student records exist, use that; otherwise if attendance was marked, default to presentCount
-    const fruitsEaten = monthFruitEatenMap.has(dayStr)
-      ? (monthFruitEatenMap.get(dayStr) ?? 0)
-      : presentCount;
+    const levelCounts = monthAttendanceByLevel.get(dayStr) ?? { primary: 0, junior: 0 };
+    const fruitCounts = monthFruitByLevel.get(dayStr);
 
-    const wheatGrams = presentCount * 100;
-    const riceGrams = presentCount * 100;
-    const fruitCost = fruitsEaten * 4;
-
-    monthlyLogs.push({
+    // Primary
+    const primaryPresent = levelCounts.primary;
+    const primaryFruit = fruitCounts ? fruitCounts.primary : primaryPresent;
+    primaryMonthlyLogs.push({
       dateStr: dayStr,
       dayOfWeek,
-      totalPresent: presentCount,
-      wheatGrams,
-      riceGrams,
-      fruitsEaten,
-      fruitCost,
-      hasAttendance: presentCount > 0,
+      totalPresent: primaryPresent,
+      wheatGrams: primaryPresent * GRAIN_PRIMARY,
+      riceGrams: primaryPresent * GRAIN_PRIMARY,
+      fruitsEaten: primaryFruit,
+      fruitCost: primaryFruit * FRUIT_COST,
+      conversionCost: primaryPresent * CONVERSION_COST_PRIMARY,
+      hasAttendance: primaryPresent > 0,
+    });
+
+    // Junior
+    const juniorPresent = levelCounts.junior;
+    const juniorFruit = fruitCounts ? fruitCounts.junior : juniorPresent;
+    juniorMonthlyLogs.push({
+      dateStr: dayStr,
+      dayOfWeek,
+      totalPresent: juniorPresent,
+      wheatGrams: juniorPresent * GRAIN_JUNIOR,
+      riceGrams: juniorPresent * GRAIN_JUNIOR,
+      fruitsEaten: juniorFruit,
+      fruitCost: juniorFruit * FRUIT_COST,
+      conversionCost: juniorPresent * CONVERSION_COST_JUNIOR,
+      hasAttendance: juniorPresent > 0,
     });
   }
 
   return (
-    <main className="flex-1 p-6 lg:p-10 max-w-6xl mx-auto w-full">
+    <main className="flex-1 p-6 lg:p-10 max-w-7xl mx-auto w-full">
       <MdmDashboardView
         selectedDateStr={selectedDateStr}
         selectedMonthStr={selectedMonthStr}
         locale={locale}
         classesData={classesData}
-        monthlyLogs={monthlyLogs}
+        primaryMonthlyLogs={primaryMonthlyLogs}
+        juniorMonthlyLogs={juniorMonthlyLogs}
       />
     </main>
   );

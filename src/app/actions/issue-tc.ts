@@ -18,7 +18,12 @@ export async function issueTransferCertificate(formData: FormData): Promise<void
 
   // ── Collect TC specific form fields ───────────────────────────────────────
   const tcNumber = (formData.get("tcNumber") as string)?.trim();
-  const reasonForLeaving = (formData.get("reasonForLeaving") as string)?.trim();
+  let reasonForLeaving = (formData.get("reasonForLeaving") as string)?.trim();
+  // If "Other" was selected, use the custom text from the separate field
+  if (reasonForLeaving === "__OTHER__") {
+    const otherReason = (formData.get("reasonForLeavingOther") as string)?.trim();
+    reasonForLeaving = otherReason || "";
+  }
   const conduct = (formData.get("conduct") as string)?.trim() || "Good";
   const lastClassStudied = (formData.get("lastClassStudied") as string)?.trim();
   const dateOfLeavingRaw = (formData.get("dateOfLeaving") as string)?.trim();

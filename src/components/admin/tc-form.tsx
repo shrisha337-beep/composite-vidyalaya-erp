@@ -62,6 +62,7 @@ export function TcForm({
   const error = searchParams.get("error");
 
   const [isEnrolled, setIsEnrolled] = useState(true);
+  const [reasonForLeaving, setReasonForLeaving] = useState("");
 
   return (
     <form action={issueTransferCertificate} className="space-y-6">
@@ -134,8 +135,31 @@ export function TcForm({
             labelHi="विद्यालय छोड़ने का कारण"
             name="reasonForLeaving"
             required
-            placeholder="e.g. Guardian request / अभिभावक की इच्छा से"
-          />
+          >
+            <select
+              name="reasonForLeaving"
+              required
+              value={reasonForLeaving}
+              onChange={(e) => setReasonForLeaving(e.target.value)}
+              className="w-full border border-gray-300 rounded px-2.5 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-[hsl(var(--ring))] focus:border-transparent bg-white"
+            >
+              <option value="">-- Select / चुनें --</option>
+              <option value="कक्षा 8 उत्तीर्ण / Passed 8th">कक्षा 8 उत्तीर्ण / Passed 8th</option>
+              <option value="अभिभावक इच्छा / Guardian's Will">अभिभावक इच्छा / Guardian&apos;s Will</option>
+              <option value="प्रवास / Migrate">प्रवास / Migrate</option>
+              <option value="__OTHER__">अन्य / Other</option>
+            </select>
+          </Field>
+          {reasonForLeaving === "__OTHER__" && (
+            <Field
+              label="Specify Other Reason"
+              labelHi="अन्य कारण लिखें"
+              name="reasonForLeavingOther"
+              required
+              placeholder="Enter reason / कारण लिखें"
+              className="sm:col-span-2"
+            />
+          )}
           <Field
             label="Conduct"
             labelHi="आचरण"

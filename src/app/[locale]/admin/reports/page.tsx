@@ -6,6 +6,7 @@ import {
   CalendarCheck,
   BookOpen,
   Download,
+  ArrowRightLeft,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -58,6 +59,14 @@ export default async function AdminReportsPage({
       icon: FileText,
       color: "#7e22ce",
       href: `/${locale}/admin/reports?export=reportcards`,
+    },
+    {
+      title: "Transfer Certificate / स्थानांतरण प्रमाण पत्र",
+      description:
+        "View all issued TCs. Search by class, student name, or admission number.",
+      icon: ArrowRightLeft,
+      color: "#b91c1c",
+      href: `/${locale}/admin/reports/tc`,
     },
   ];
 
