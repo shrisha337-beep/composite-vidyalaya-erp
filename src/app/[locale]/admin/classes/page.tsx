@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/rbac";
 import { setupAcademicSession } from "@/app/actions/setup-session";
 import { redirect } from "next/navigation";
+import { RepairBanner } from "./repair-banner";
 
 async function getSessionData() {
   const session = await prisma.academicSession.findFirst({
@@ -119,6 +120,11 @@ export default async function ClassesPage({
     );
   }
 
+  // ── Health check: detect missing classes ─────────────────────────────────
+  const existingClassNames = new Set(sessionData.classes.map((c) => c.name));
+  const allExpected = ["1", "2", "3", "4", "5", "6", "7", "8"];
+  const missingClasses = allExpected.filter((n) => !existingClassNames.has(n));
+
   return (
     <main className="flex-1 p-6 lg:p-8 max-w-4xl">
       {/* Header */}
@@ -145,6 +151,11 @@ export default async function ClassesPage({
           </p>
         </div>
       </div>
+
+      {/* Health check warning */}
+      {missingClasses.length > 0 && (
+        <RepairBanner missingClasses={missingClasses} />
+      )}
 
       {/* Class grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
