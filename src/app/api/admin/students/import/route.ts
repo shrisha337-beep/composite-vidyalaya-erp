@@ -88,8 +88,20 @@ export async function POST(req: NextRequest) {
       results.push({ row: rowNum, name: row.fullName, status: "error", reason: "Date of birth is required" });
       continue;
     }
-    if (!["1","2","3","4","5","6","7","8"].includes(String(row.classNumber).trim())) {
-      results.push({ row: rowNum, name: row.fullName, status: "error", reason: `Invalid class "${row.classNumber}" — must be 1 to 8` });
+    // Normalise class: accept "Class 6", "class-6", "Std 6", "VI", or just "6"
+    const rawClass = String(row.classNumber).trim();
+    const romanMap: Record<string, string> = { I: "1", II: "2", III: "3", IV: "4", V: "5", VI: "6", VII: "7", VIII: "8" };
+    let normalised = rawClass
+      .replace(/^(class|std|grade|standard)[\s\-.:]*(\d+)$/i, "$2")  // "Class 6" → "6"
+      .trim();
+    if (romanMap[normalised.toUpperCase()]) {
+      normalised = romanMap[normalised.toUpperCase()];
+    }
+    // Overwrite for downstream use
+    row.classNumber = normalised;
+
+    if (!["1","2","3","4","5","6","7","8"].includes(normalised)) {
+      results.push({ row: rowNum, name: row.fullName, status: "error", reason: `Invalid class "${rawClass}" — must be 1 to 8` });
       continue;
     }
 
