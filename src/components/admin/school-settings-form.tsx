@@ -233,7 +233,7 @@ export function SchoolSettingsForm({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
           <div>
             <label className="block font-semibold text-gray-700 mb-1">
-              Primary (कक्षा 1–5) — ₹ per student
+              Primary (कक्षा 1-5) - ₹ per student
             </label>
             <input
               type="number"
@@ -249,7 +249,7 @@ export function SchoolSettingsForm({
           </div>
           <div>
             <label className="block font-semibold text-gray-700 mb-1">
-              Junior (कक्षा 6–8) — ₹ per student
+              Junior (कक्षा 6-8) - ₹ per student
             </label>
             <input
               type="number"

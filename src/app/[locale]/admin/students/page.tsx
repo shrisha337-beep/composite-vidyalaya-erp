@@ -75,39 +75,38 @@ export default async function StudentsPage({
   const { students, total, pages } = await getStudents(q, classFilter, page);
 
   return (
-    <main className="flex-1 p-6 lg:p-8 max-w-6xl">
+    <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-6xl w-full">
       {/* Page header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">Students</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            {total} student{total !== 1 ? "s" : ""} total
+          <h1 className="text-xl sm:text-2xl font-bold text-[#2D2A26]">Students</h1>
+          <p className="text-xs sm:text-sm text-[#7A7267] mt-0.5">
+            {total} student{total !== 1 ? "s" : ""} enrolled
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {hasSession && (
             <>
               <Link
                 href="students/promote"
-                className="flex items-center gap-1.5 px-3 py-2 rounded-md border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-sm border border-[#E8E0D4] bg-white text-xs font-semibold text-[#2D2A26] hover:bg-[#F3EDE4] transition-colors shadow-xs"
               >
-                <ArrowUpCircle className="h-4 w-4" />
-                Promote Students
+                <ArrowUpCircle className="h-4 w-4 text-[#3D5A80]" />
+                <span>Promote</span>
               </Link>
               <Link
                 href="students/import"
-                className="flex items-center gap-1.5 px-3 py-2 rounded-md border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-sm border border-[#E8E0D4] bg-white text-xs font-semibold text-[#2D2A26] hover:bg-[#F3EDE4] transition-colors shadow-xs"
               >
-                <Upload className="h-4 w-4" />
-                Bulk Import
+                <Upload className="h-4 w-4 text-[#2A9D8F]" />
+                <span>Bulk Import</span>
               </Link>
               <Link
                 href="students/new"
-                className="flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium text-white transition-colors"
-                style={{ background: "hsl(var(--primary))" }}
+                className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-sm text-xs font-semibold text-white bg-[#6B1D30] hover:bg-[#541624] transition-colors shadow-xs"
               >
                 <Plus className="h-4 w-4" />
-                Add Student
+                <span>Add Student</span>
               </Link>
             </>
           )}
@@ -166,12 +165,12 @@ export default async function StudentsPage({
 
       {/* Table */}
       {students.length === 0 ? (
-        <div className="bg-white rounded-lg border border-gray-200 p-16 text-center">
-          <Users className="h-10 w-10 text-gray-300 mx-auto mb-3" />
-          <p className="text-sm font-medium text-gray-600 mb-1">
+        <div className="bg-white rounded-sm border border-[#E8E0D4] p-12 sm:p-16 text-center shadow-xs">
+          <Users className="h-10 w-10 text-[#A89F91] mx-auto mb-3" />
+          <p className="text-sm font-semibold text-[#2D2A26] mb-1">
             {q || classFilter ? "No students found" : "No students yet"}
           </p>
-          <p className="text-xs text-gray-400 mb-4">
+          <p className="text-xs text-[#7A7267] mb-4">
             {q || classFilter
               ? "Try a different search or clear the filters."
               : "Use Bulk Import to add existing students or Add Student for a new admission."}
@@ -179,8 +178,7 @@ export default async function StudentsPage({
           {!q && !classFilter && hasSession && (
             <Link
               href="students/import"
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium text-white"
-              style={{ background: "hsl(var(--primary))" }}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-sm text-xs font-semibold text-white bg-[#6B1D30] hover:bg-[#541624] shadow-xs"
             >
               <Upload className="h-4 w-4" />
               Bulk Import
@@ -188,11 +186,11 @@ export default async function StudentsPage({
           )}
         </div>
       ) : (
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="bg-white rounded-sm border border-[#E8E0D4] overflow-hidden shadow-xs">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm min-w-[650px]">
               <thead>
-                <tr className="border-b border-gray-100 bg-gray-50">
+                <tr className="border-b border-[#E8E0D4] bg-[#F8F5F0]">
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
                     Admission No
                   </th>
@@ -224,16 +222,16 @@ export default async function StudentsPage({
                       {s.fullName}
                     </td>
                     <td className="px-4 py-3 text-gray-600">
-                      {s.section ? `Class ${s.section.class.name}` : "—"}
+                      {s.section ? `Class ${s.section.class.name}` : "-"}
                     </td>
                     <td className="px-4 py-3 text-gray-600 capitalize">
                       {s.gender.toLowerCase()}
                     </td>
                     <td className="px-4 py-3 text-gray-600">
-                      {s.guardians[0]?.fullName ?? "—"}
+                      {s.guardians[0]?.fullName ?? "-"}
                     </td>
                     <td className="px-4 py-3 text-gray-600">
-                      {s.mobileNumber ?? "—"}
+                      {s.mobileNumber ?? "-"}
                     </td>
                     <td className="px-4 py-3">
                       <Link

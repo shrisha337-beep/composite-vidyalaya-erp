@@ -18,6 +18,7 @@
 6. [Architectural Decision Records (ADR Log)](#6-architectural-decision-records-adr-log)
 7. [System Workflows & Visual Diagrams](#7-system-workflows--visual-diagrams)
 8. [Summary & Maintenance Guide](#8-summary--maintenance-guide)
+9. [Active System Logins & Credentials Directory](#9-active-system-logins--credentials-directory)
 
 ---
 
@@ -268,6 +269,8 @@ Below is the chronological log of all critical architectural decisions made duri
 | ADR-010 | Statutory Two-Tier Mid-Day Meal Accounting Engine           | Completed |
 | ADR-011 | Proactive Class Health Check & One-Click Session Repair     | Completed |
 | ADR-012 | Resilient Gemini AI + Regex Heuristic Excel Import Pipeline | Completed |
+| ADR-013 | Mobile-First Layout Hierarchy & Thumb-Friendly Nav Dock      | Completed |
+| ADR-014 | Bento Grid Institutional Dashboard & Strict Anti-Slop Theme  | Completed |
 +---------+-------------------------------------------------------------+-----------+
 ```
 
@@ -332,6 +335,21 @@ Below is the chronological log of all critical architectural decisions made duri
 * **Context:** School received student data files with unordered columns and mixed Hindi/English headings that scrambled imports.
 * **Decision:** Integrated Google Gemini 2.0 Flash for automated semantic column mapping, backed by an offline regex heuristic fallback and an interactive 4-step confirmation wizard.
 * **Consequences:** Staff can upload arbitrary Excel/CSV files without pre-formatting, with zero risk of data misalignment.
+
+#### ADR-013: Mobile-First Layout Hierarchy & Thumb-Friendly Nav Dock
+* **Context:** Headmasters and teachers in Uttar Pradesh access the ERP portal predominantly via smartphones (360px-400px viewports, e.g., Samsung Galaxy devices). Previously, layout containers defaulted to CSS `flex-row`, which squashed mobile header and page content side-by-side into 150px columns.
+* **Decision:** 
+  1. Standardized all outer dashboard containers (`src/app/[locale]/admin/layout.tsx` and `teacher/layout.tsx`) to `flex flex-col lg:flex-row min-h-screen w-full`.
+  2. Fixed mobile top header with `w-full shrink-0 sticky top-0` and added a high-priority, finger-accessible bottom navigation dock with safe-area padding.
+  3. Audited and converted all data grids and tables with horizontal overflow wrappers (`overflow-x-auto min-w-[500px..680px]`) and mobile-friendly stacking for forms and filter dropdowns.
+* **Consequences:** Flawless mobile viewport rendering; zero side-by-side squishing; comfortable single-handed operation on low-cost smartphones.
+
+#### ADR-014: Bento Grid Institutional Dashboard & Strict Anti-Slop Theme
+* **Context:** Standard dashboard templates use generic card walls, purple gradients, pill buttons, and informal web elements unsuited for a government school.
+* **Decision:** 
+  1. Implemented an asymmetric Bento Grid architecture (`grid-cols-1 md:grid-cols-2 lg:grid-cols-4`) organizing school identity, attendance, MDM grain logs, staff actions, and circulars by visual weight.
+  2. Enforced strict anti-slop rules: sharp geometry (`rounded-none` / `rounded-sm`), deep institutional maroon (`#6B1D30`), warm beige background (`#F3EDE4`), crisp borders (`#E8E0D4`), zero purple gradients, zero pill buttons, zero emojis (replaced with Lucide icons), and zero em dashes.
+* **Consequences:** High-density, professional administrative interface that conveys official state authority and optimal contrast on all displays.
 
 ---
 
@@ -475,4 +493,31 @@ Below is the chronological log of all critical architectural decisions made duri
    - Ensure `GEMINI_API_KEY` is populated in production environment variables so administrative staff benefit from automated column recognition on government spreadsheets.
 
 ---
+
+## 9. Active System Logins & Credentials Directory
+
+This directory records all active, verified administrative and instructional test credentials for development, staging, and audit purposes:
+
+### A. Staff Login Directory
+
+| Role | Designatory Title | Registered Name | Mobile Number (Username) | Default Password | Primary Portal URL | Access Scope |
+|---|---|---|---|---|---|---|
+| **ADMIN** | Principal / Headmaster | Principal | `9999999999` | `ChangeMe@123` | `http://localhost:3000/hi/login` | Full institutional authority: sessions, settings, classes, admissions, MDM governance, staff registers, Transfer Certificates, global reports. |
+| **TEACHER** | Assistant Teacher | Ramesh Sharma | `9876543210` | `ChangeMe@123` | `http://localhost:3000/hi/login` | Faculty authority: daily student attendance register, marks & grades entry, student directory inspection, personal leave requests, homework management. |
+
+### B. Security & Credential Rules:
+1. **Phone-Number-First Authentication:**
+   - The primary identifier for all staff accounts is their 10-digit Indian mobile number (e.g. `9999999999`, `9876543210`).
+   - Email is an optional secondary attribute used exclusively for password reset tokens via Resend.
+2. **Account Lockout Policy:**
+   - Exceeding 5 consecutive failed login attempts locks the phone number for 15 minutes.
+   - Lockout status is persisted in the PostgreSQL database (`failedLoginAttempts` and `lockoutUntil` fields on `User`), surviving process restarts and serverless cold boots.
+3. **Password Security:**
+   - Stored using Blowfish-based Bcrypt hashing (10 salt rounds).
+   - Staff passwords must be minimum 8 characters long.
+4. **Student & Parent Exclusion:**
+   - Students and parents have no direct login access. They exist strictly as administrative data records linked to academic sessions.
+
+---
 *Document officially generated and archived for Composite Vidyalaya Chandpur Tarhar ERP Portal.*
+

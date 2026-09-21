@@ -76,7 +76,7 @@ export function TeacherHomeworkList({
                 <div>
                   <div className="flex items-center justify-between gap-2 border-b border-gray-50 pb-2 mb-3">
                     <span className="text-xs px-2.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-100 font-semibold">
-                      Class {hw.subject.class.name} — {hw.subject.name}
+                      Class {hw.subject.class.name}: {hw.subject.name}
                     </span>
                     <button
                       onClick={() => handleDelete(hw.id)}

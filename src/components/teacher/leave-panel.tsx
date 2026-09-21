@@ -175,7 +175,7 @@ export function TeacherLeavePanel({
 
                       <span
                         className={[
-                          "px-2.5 py-0.5 rounded-full font-bold text-[10px]",
+                          "px-2.5 py-0.5 rounded-sm font-bold text-[10px]",
                           isApproved
                             ? "bg-green-50 text-green-700 border border-green-100"
                             : isPending

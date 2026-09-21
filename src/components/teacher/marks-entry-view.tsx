@@ -251,27 +251,27 @@ export function MarksEntryView({
           ) : (
             <div className="space-y-4">
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full text-sm min-w-[520px]">
                   <thead>
-                    <tr className="border-b border-gray-100 bg-gray-50 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                      <th className="py-2.5 px-4 w-40">Adm No</th>
+                    <tr className="border-b border-[#E8E0D4] bg-[#F8F5F0] text-left text-xs font-semibold text-[#5A534A] uppercase tracking-wider">
+                      <th className="py-2.5 px-4 w-32">Adm No</th>
                       <th className="py-2.5 px-4">Student Name</th>
                       <th className="py-2.5 px-4">Gender</th>
                       <th className="py-2.5 px-4 w-40 text-center">
-                        Marks Obtained (Max: {activeMaxLimit})
+                        Marks (Max: {activeMaxLimit})
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-50">
+                  <tbody className="divide-y divide-[#E8E0D4]">
                     {students.map((s) => (
-                      <tr key={s.id} className="hover:bg-gray-50/50 transition-colors">
-                        <td className="py-2.5 px-4 font-mono text-xs text-gray-600">
+                      <tr key={s.id} className="hover:bg-[#F3EDE4]/40 transition-colors">
+                        <td className="py-2.5 px-4 font-mono text-xs text-[#7A7267]">
                           {s.admissionNo}
                         </td>
-                        <td className="py-2.5 px-4 font-medium text-gray-800">
+                        <td className="py-2.5 px-4 font-medium text-[#2D2A26]">
                           {s.fullName}
                         </td>
-                        <td className="py-2.5 px-4 text-gray-600 capitalize">
+                        <td className="py-2.5 px-4 text-xs text-[#7A7267] capitalize">
                           {s.gender.toLowerCase()}
                         </td>
                         <td className="py-2.5 px-4">
@@ -284,7 +284,7 @@ export function MarksEntryView({
                               value={marks[s.id] ?? ""}
                               placeholder={`0 - ${activeMaxLimit}`}
                               onChange={(e) => updateMarksValue(s.id, e.target.value)}
-                              className="border border-gray-300 rounded px-2.5 py-1 text-sm text-center focus:outline-none w-28"
+                              className="border border-[#D5CCC1] rounded-sm px-2.5 py-1 text-sm text-center font-bold text-[#2D2A26] bg-[#FAF8F5] focus:outline-none focus:ring-1 focus:ring-[#6B1D30] w-28"
                             />
                           </div>
                         </td>
@@ -295,19 +295,19 @@ export function MarksEntryView({
               </div>
 
               {/* Action Buttons */}
-              <div className="pt-6 border-t border-gray-100 flex items-center gap-3">
+              <div className="pt-6 border-t border-[#E8E0D4] flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 <button
                   type="button"
                   onClick={handleSaveMarks}
                   disabled={loading}
-                  className="flex items-center gap-2 px-6 py-2 rounded-md text-sm font-medium text-white transition-colors bg-green-600 hover:bg-green-700 disabled:opacity-65"
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 rounded-sm text-sm font-bold text-white transition-colors bg-[#6B1D30] hover:bg-[#541624] disabled:opacity-65 shadow-xs"
                 >
                   {loading && <Loader className="h-4 w-4 animate-spin" />}
-                  Save Student Marks / अंक सहेजें
+                  <span>Save Student Marks / अंक सहेजें</span>
                 </button>
                 <Link
                   href={`/${locale}/teacher/dashboard`}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+                  className="w-full sm:w-auto flex items-center justify-center px-4 py-2.5 border border-[#D5CCC1] rounded-sm text-xs font-semibold text-[#5A534A] hover:bg-[#F3EDE4] transition-colors"
                 >
                   Back to Dashboard
                 </Link>
@@ -316,7 +316,7 @@ export function MarksEntryView({
           )}
         </div>
       ) : (
-        <div className="bg-white rounded-lg border border-gray-200 p-12 text-center text-sm text-gray-400">
+        <div className="bg-white rounded-sm border border-[#E8E0D4] p-12 text-center text-sm text-[#7A7267] shadow-xs">
           Select Class, Subject, and Exam Term from the dropdown filter above to load the gradesheet register.
         </div>
       )}

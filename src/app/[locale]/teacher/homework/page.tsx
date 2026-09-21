@@ -39,20 +39,19 @@ export default async function TeacherHomeworkPage({
   });
 
   return (
-    <main className="flex-1 p-6 lg:p-8 max-w-5xl">
+    <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-5xl w-full">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">
+          <h1 className="text-xl sm:text-2xl font-bold text-[#2D2A26]">
             गृहकार्य असाइनमेंट
           </h1>
-          <p className="text-sm text-gray-500 mt-0.5">Assign and Manage Student Homework</p>
+          <p className="text-xs sm:text-sm text-[#7A7267] mt-0.5">Assign and Manage Student Homework</p>
         </div>
         <div>
           <Link
             href="homework/new"
-            className="flex items-center gap-1.5 px-3 py-2 rounded text-sm font-medium text-white transition-colors"
-            style={{ background: "hsl(var(--primary))" }}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-sm text-xs font-semibold text-white bg-[#6B1D30] hover:bg-[#541624] transition-colors shadow-xs"
           >
             <Plus className="h-4 w-4" />
             Assign Homework

@@ -1,9 +1,25 @@
 import { prisma } from "@/lib/prisma";
-import { Users, UserCheck, CalendarCheck, FileText, Bell, PlusCircle, ArrowRight } from "lucide-react";
+import {
+  Users,
+  UserCheck,
+  CalendarCheck,
+  FileText,
+  Bell,
+  PlusCircle,
+  ArrowRight,
+  UtensilsCrossed,
+  Clock,
+  BarChart3,
+  UserPlus,
+  Building2,
+  CheckCircle2,
+  AlertTriangle,
+} from "lucide-react";
 import { requireRole } from "@/lib/rbac";
 import Link from "next/link";
+import { getSchoolSettings } from "@/app/actions/school-settings";
 
-// ─── Data fetching ────────────────────────────────────────────────────────────
+// --- Data fetching ---
 
 async function getDashboardStats() {
   const today = new Date();
@@ -17,6 +33,9 @@ async function getDashboardStats() {
     attendanceToday,
     pendingLeaves,
     recentNotices,
+    activeSession,
+    schoolSettings,
+    totalClasses,
   ] = await Promise.all([
     prisma.student.count(),
     prisma.teacher.count(),
@@ -39,6 +58,12 @@ async function getDashboardStats() {
         isEmergency: true,
       },
     }),
+    prisma.academicSession.findFirst({
+      where: { isCurrent: true },
+      select: { label: true },
+    }),
+    getSchoolSettings(),
+    prisma.class.count(),
   ]);
 
   const presentCount =
@@ -52,45 +77,11 @@ async function getDashboardStats() {
     totalMarked,
     pendingLeaves,
     recentNotices,
+    activeSession,
+    schoolSettings,
+    totalClasses,
   };
 }
-
-// ─── Stat card component matching mockup ──────────────────────────────────────
-
-function StatCard({
-  label,
-  value,
-  icon: Icon,
-  badgeBg,
-  badgeColor,
-}: {
-  label: string;
-  value: string | number;
-  icon: React.ElementType;
-  badgeBg: string;
-  badgeColor: string;
-}) {
-  return (
-    <div className="bg-white rounded-2xl border border-[#E8E0D4] p-5 shadow-xs flex items-center gap-4 transition-all duration-150 hover:shadow-sm">
-      <div
-        className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
-        style={{ backgroundColor: badgeBg }}
-      >
-        <Icon className="h-6 w-6" style={{ color: badgeColor }} />
-      </div>
-      <div className="min-w-0">
-        <p className="text-2xl lg:text-3xl font-bold text-[#2D2A26] leading-none mb-1">
-          {value}
-        </p>
-        <p className="text-xs lg:text-sm font-medium text-[#7A7267] truncate">
-          {label}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-// ─── Page component ───────────────────────────────────────────────────────────
 
 export default async function AdminDashboardPage({
   params,
@@ -104,10 +95,10 @@ export default async function AdminDashboardPage({
 
   const attendancePct =
     stats.totalMarked > 0
-      ? `${Math.round((stats.presentCount / stats.totalMarked) * 100)}%`
-      : "—";
+      ? Math.round((stats.presentCount / stats.totalMarked) * 100)
+      : null;
 
-  const todayStr = new Date().toLocaleDateString("en-IN", {
+  const todayEnglish = new Date().toLocaleDateString("en-IN", {
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -115,147 +106,400 @@ export default async function AdminDashboardPage({
   });
 
   return (
-    <main className="flex-1 p-6 lg:p-10 max-w-6xl mx-auto w-full">
-      {/* Page header with maroon accent underline */}
-      <div className="mb-8">
-        <h1 className="text-2xl lg:text-3xl font-bold text-[#2D2A26] tracking-tight">
-          Dashboard
-        </h1>
-        <div className="w-12 h-1 bg-[#6B1D30] rounded-full mt-2 mb-2" />
-        <p className="text-sm font-medium text-[#7A7267]">{todayStr}</p>
+    <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
+      {/* Header bar */}
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-[#E8E0D4] pb-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold uppercase tracking-widest text-[#6B1D30] bg-[#6B1D30]/10 px-2 py-0.5 rounded-sm">
+              UP Basic Shiksha
+            </span>
+            <span className="text-xs text-[#7A7267]">Official ERP Portal</span>
+          </div>
+          <h1 className="text-2xl font-bold text-[#2D2A26] tracking-tight mt-1">
+            Admin Overview / प्रशासनिक डैशबोर्ड
+          </h1>
+        </div>
+        <div className="text-left sm:text-right">
+          <p className="text-xs font-semibold text-[#2D2A26]">{todayEnglish}</p>
+          <p className="text-xs text-[#7A7267]">
+            Session: {stats.activeSession?.label || "2026-2027"}
+          </p>
+        </div>
       </div>
 
-      {/* 4 Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-        <StatCard
-          label="Total Students"
-          value={stats.totalStudents}
-          icon={Users}
-          badgeBg="#E8EDF2"
-          badgeColor="#3D5A80"
-        />
-        <StatCard
-          label="Teachers"
-          value={stats.totalTeachers}
-          icon={UserCheck}
-          badgeBg="#E6F4F1"
-          badgeColor="#2A9D8F"
-        />
-        <StatCard
-          label="Attendance Today"
-          value={attendancePct}
-          icon={CalendarCheck}
-          badgeBg="#FBF5E5"
-          badgeColor="#B8860B"
-        />
-        <StatCard
-          label="Pending Leaves"
-          value={stats.pendingLeaves}
-          icon={FileText}
-          badgeBg="#FBECE9"
-          badgeColor="#E76F51"
-        />
-      </div>
-
-      {/* Main Grid: Notices (Left) + Quick Actions (Right) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Notices */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-[#E8E0D4] p-6 shadow-xs flex flex-col justify-between">
+      {/* Bento Grid layout */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Bento 1: Institutional Identity & Session (2 cols on desktop) */}
+        <div className="md:col-span-2 bg-white rounded-sm border border-[#E8E0D4] p-5 shadow-2xs flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between pb-4 border-b border-[#E8E0D4] mb-4">
+            <div className="flex items-start justify-between gap-4 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-sm bg-[#6B1D30] text-white flex items-center justify-center font-bold text-base shrink-0">
+                  CV
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-[#2D2A26] leading-tight">
+                    {stats.schoolSettings.schoolName || "Composite Vidyalaya Chandpur Tarhar"}
+                  </h2>
+                  <p className="text-xs text-[#7A7267] font-medium mt-0.5">
+                    कम्पोजिट विद्यालय चांदपुर तरहर
+                  </p>
+                </div>
+              </div>
+              <span className="shrink-0 text-xs font-semibold px-2 py-0.5 rounded-sm bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1">
+                <CheckCircle2 className="h-3 w-3" /> Active Session
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-3 border-t border-[#E8E0D4]">
+              <div className="p-2 bg-[#F3EDE4]/50 rounded-sm border border-[#E8E0D4]/60">
+                <p className="text-[10px] uppercase font-bold text-[#7A7267]">UDISE Code</p>
+                <p className="text-xs font-bold text-[#2D2A26] mt-0.5 font-mono">
+                  {stats.schoolSettings.udiseCode || "09511105401"}
+                </p>
+              </div>
+              <div className="p-2 bg-[#F3EDE4]/50 rounded-sm border border-[#E8E0D4]/60">
+                <p className="text-[10px] uppercase font-bold text-[#7A7267]">Block / ब्लॉक</p>
+                <p className="text-xs font-bold text-[#2D2A26] mt-0.5">Paraspur</p>
+              </div>
+              <div className="p-2 bg-[#F3EDE4]/50 rounded-sm border border-[#E8E0D4]/60">
+                <p className="text-[10px] uppercase font-bold text-[#7A7267]">District / जनपद</p>
+                <p className="text-xs font-bold text-[#2D2A26] mt-0.5">Gonda</p>
+              </div>
+              <div className="p-2 bg-[#F3EDE4]/50 rounded-sm border border-[#E8E0D4]/60">
+                <p className="text-[10px] uppercase font-bold text-[#7A7267]">Classes / कक्षाएं</p>
+                <p className="text-xs font-bold text-[#2D2A26] mt-0.5">1 to 8 (Composite)</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 pt-3 border-t border-[#E8E0D4] flex items-center justify-between text-xs text-[#7A7267]">
+            <span>Govt. of Uttar Pradesh - Basic Education Dept.</span>
+            <Link
+              href={`/${locale}/admin/settings`}
+              className="text-[#6B1D30] font-semibold hover:underline flex items-center gap-1"
+            >
+              School Settings <ArrowRight className="h-3 w-3" />
+            </Link>
+          </div>
+        </div>
+
+        {/* Bento 2: Attendance Pulse (1 col) */}
+        <div className="bg-white rounded-sm border border-[#E8E0D4] p-5 shadow-2xs flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <Bell className="h-5 w-5 text-[#6B1D30]" />
-                <h2 className="text-base font-bold text-[#2D2A26]">
-                  Recent Notices / हाल की सूचनाएं
-                </h2>
+                <CalendarCheck className="h-4 w-4 text-[#3D5A80]" />
+                <h3 className="text-xs font-bold uppercase tracking-wider text-[#7A7267]">
+                  Today Attendance
+                </h3>
+              </div>
+              <span className="text-[10px] text-[#7A7267] font-medium">Daily</span>
+            </div>
+
+            <div className="my-2">
+              <div className="text-3xl font-bold text-[#2D2A26] tracking-tight">
+                {attendancePct !== null ? `${attendancePct}%` : "Not Marked"}
+              </div>
+              <p className="text-xs text-[#7A7267] mt-1 font-medium">
+                {stats.totalMarked > 0
+                  ? `${stats.presentCount} of ${stats.totalMarked} students present`
+                  : "Daily register pending"}
+              </p>
+            </div>
+
+            {attendancePct !== null && (
+              <div className="w-full bg-[#E8E0D4] h-2 rounded-xs overflow-hidden mt-3">
+                <div
+                  className="bg-[#2A9D8F] h-full"
+                  style={{ width: `${attendancePct}%` }}
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="mt-4 pt-3 border-t border-[#E8E0D4]">
+            <Link
+              href={`/${locale}/admin/attendance`}
+              className="w-full py-2 px-3 rounded-sm bg-[#F3EDE4] hover:bg-[#E8E0D4] text-[#2D2A26] text-xs font-semibold transition-colors flex items-center justify-center gap-1 border border-[#E8E0D4]"
+            >
+              Open Daily Register <ArrowRight className="h-3 w-3" />
+            </Link>
+          </div>
+        </div>
+
+        {/* Bento 3: Staff & Faculty Overview (1 col) */}
+        <div className="bg-white rounded-sm border border-[#E8E0D4] p-5 shadow-2xs flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-[#B8860B]" />
+                <h3 className="text-xs font-bold uppercase tracking-wider text-[#7A7267]">
+                  Staff & Leaves
+                </h3>
+              </div>
+              {stats.pendingLeaves > 0 ? (
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-sm bg-amber-100 text-amber-800 border border-amber-200 flex items-center gap-1">
+                  <AlertTriangle className="h-2.5 w-2.5" /> {stats.pendingLeaves} Review
+                </span>
+              ) : (
+                <span className="text-[10px] font-medium text-emerald-700">Clear</span>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 my-2">
+              <div className="p-2.5 bg-[#F3EDE4]/50 rounded-sm border border-[#E8E0D4]/60">
+                <p className="text-[10px] uppercase font-bold text-[#7A7267]">Total Teachers</p>
+                <p className="text-2xl font-bold text-[#2D2A26] mt-0.5">
+                  {stats.totalTeachers}
+                </p>
+              </div>
+              <div className="p-2.5 bg-[#F3EDE4]/50 rounded-sm border border-[#E8E0D4]/60">
+                <p className="text-[10px] uppercase font-bold text-[#7A7267]">Total Enrolled</p>
+                <p className="text-2xl font-bold text-[#2D2A26] mt-0.5">
+                  {stats.totalStudents}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 pt-3 border-t border-[#E8E0D4]">
+            <Link
+              href={`/${locale}/admin/leave-requests`}
+              className="w-full py-2 px-3 rounded-sm bg-[#F3EDE4] hover:bg-[#E8E0D4] text-[#2D2A26] text-xs font-semibold transition-colors flex items-center justify-center gap-1 border border-[#E8E0D4]"
+            >
+              {stats.pendingLeaves > 0
+                ? `Review ${stats.pendingLeaves} Pending Leaves`
+                : "Staff Leave Ledger"}{" "}
+              <ArrowRight className="h-3 w-3" />
+            </Link>
+          </div>
+        </div>
+
+        {/* Bento 4: Mid-Day Meal (PM-POSHAN) Daily Tracker (2 cols) */}
+        <div className="md:col-span-2 bg-white rounded-sm border border-[#E8E0D4] p-5 shadow-2xs flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between pb-3 border-b border-[#E8E0D4] mb-3">
+              <div className="flex items-center gap-2">
+                <UtensilsCrossed className="h-4 w-4 text-[#6B1D30]" />
+                <h3 className="text-sm font-bold text-[#2D2A26]">
+                  Mid-Day Meal (PM-POSHAN) / मध्याह्न भोजन योजना
+                </h3>
               </div>
               <Link
-                href={`/${locale}/admin/notifications`}
+                href={`/${locale}/admin/mdm`}
                 className="text-xs font-semibold text-[#6B1D30] hover:underline flex items-center gap-1"
               >
-                View all <ArrowRight className="h-3 w-3" />
+                MDM Console <ArrowRight className="h-3 w-3" />
               </Link>
             </div>
 
-            {stats.recentNotices.length === 0 ? (
-              <div className="py-12 text-center">
-                <p className="text-sm text-[#7A7267]">No notices posted yet.</p>
-                <Link
-                  href={`/${locale}/admin/notifications`}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#6B1D30] hover:underline mt-2"
-                >
-                  <PlusCircle className="h-3.5 w-3.5" /> Post first notice
-                </Link>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 my-2">
+              <div className="p-3 bg-[#F3EDE4]/40 rounded-sm border border-[#E8E0D4]">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-bold text-[#2D2A26]">Primary (Classes 1 to 5)</span>
+                  <span className="text-xs font-semibold text-[#6B1D30]">
+                    ₹{stats.schoolSettings.conversionCostPrimary.toFixed(2)}
+                  </span>
+                </div>
+                <p className="text-[11px] text-[#7A7267]">
+                  Conversion cost per meal: Food grains 100g (Wheat/Rice)
+                </p>
               </div>
-            ) : (
-              <ul className="divide-y divide-[#E8E0D4]/60">
-                {stats.recentNotices.map((n) => (
-                  <li key={n.id} className="py-3 flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      {n.isEmergency && (
-                        <span className="shrink-0 text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+
+              <div className="p-3 bg-[#F3EDE4]/40 rounded-sm border border-[#E8E0D4]">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-bold text-[#2D2A26]">Upper Primary (Classes 6 to 8)</span>
+                  <span className="text-xs font-semibold text-[#6B1D30]">
+                    ₹{stats.schoolSettings.conversionCostJunior.toFixed(2)}
+                  </span>
+                </div>
+                <p className="text-[11px] text-[#7A7267]">
+                  Conversion cost per meal: Food grains 150g (Wheat/Rice)
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-3 pt-3 border-t border-[#E8E0D4] flex items-center justify-between text-xs">
+            <span className="text-[#7A7267]">
+              Track daily consumption, monthly grain balance, and cost registers.
+            </span>
+            <Link
+              href={`/${locale}/admin/mdm`}
+              className="py-1.5 px-3 rounded-sm bg-[#6B1D30] text-white font-medium hover:bg-[#581726] transition-colors shrink-0"
+            >
+              Update Today Meal Entry
+            </Link>
+          </div>
+        </div>
+
+        {/* Bento 5: Administrative Action Hub (2 cols) */}
+        <div className="md:col-span-2 bg-white rounded-sm border border-[#E8E0D4] p-5 shadow-2xs">
+          <div className="flex items-center justify-between pb-3 border-b border-[#E8E0D4] mb-3">
+            <div className="flex items-center gap-2">
+              <Building2 className="h-4 w-4 text-[#3D5A80]" />
+              <h3 className="text-sm font-bold text-[#2D2A26]">
+                Quick Operations / त्वरित कार्रवाई
+              </h3>
+            </div>
+            <span className="text-xs text-[#7A7267]">Direct Portal Actions</span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+            <Link
+              href={`/${locale}/admin/students/new`}
+              className="p-3 rounded-sm border border-[#E8E0D4] hover:border-[#6B1D30] hover:bg-[#6B1D30]/5 text-left transition-all group flex flex-col justify-between"
+            >
+              <UserPlus className="h-4 w-4 text-[#6B1D30] mb-2" />
+              <div>
+                <p className="text-xs font-bold text-[#2D2A26] leading-tight group-hover:text-[#6B1D30]">
+                  New Admission
+                </p>
+                <p className="text-[10px] text-[#7A7267] mt-0.5">नया छात्र प्रवेश</p>
+              </div>
+            </Link>
+
+            <Link
+              href={`/${locale}/admin/teachers/new`}
+              className="p-3 rounded-sm border border-[#E8E0D4] hover:border-[#6B1D30] hover:bg-[#6B1D30]/5 text-left transition-all group flex flex-col justify-between"
+            >
+              <UserCheck className="h-4 w-4 text-[#3D5A80] mb-2" />
+              <div>
+                <p className="text-xs font-bold text-[#2D2A26] leading-tight group-hover:text-[#6B1D30]">
+                  Add Teacher
+                </p>
+                <p className="text-[10px] text-[#7A7267] mt-0.5">शिक्षक पंजीकरण</p>
+              </div>
+            </Link>
+
+            <Link
+              href={`/${locale}/admin/reports/tc`}
+              className="p-3 rounded-sm border border-[#E8E0D4] hover:border-[#6B1D30] hover:bg-[#6B1D30]/5 text-left transition-all group flex flex-col justify-between"
+            >
+              <FileText className="h-4 w-4 text-[#2A9D8F] mb-2" />
+              <div>
+                <p className="text-xs font-bold text-[#2D2A26] leading-tight group-hover:text-[#6B1D30]">
+                  Issue TC
+                </p>
+                <p className="text-[10px] text-[#7A7267] mt-0.5">स्थानांतरण प्रमाण पत्र</p>
+              </div>
+            </Link>
+
+            <Link
+              href={`/${locale}/admin/attendance`}
+              className="p-3 rounded-sm border border-[#E8E0D4] hover:border-[#6B1D30] hover:bg-[#6B1D30]/5 text-left transition-all group flex flex-col justify-between"
+            >
+              <CalendarCheck className="h-4 w-4 text-[#B8860B] mb-2" />
+              <div>
+                <p className="text-xs font-bold text-[#2D2A26] leading-tight group-hover:text-[#6B1D30]">
+                  Attendance
+                </p>
+                <p className="text-[10px] text-[#7A7267] mt-0.5">दैनिक उपस्थिति</p>
+              </div>
+            </Link>
+
+            <Link
+              href={`/${locale}/admin/timetable`}
+              className="p-3 rounded-sm border border-[#E8E0D4] hover:border-[#6B1D30] hover:bg-[#6B1D30]/5 text-left transition-all group flex flex-col justify-between"
+            >
+              <Clock className="h-4 w-4 text-[#7A7267] mb-2" />
+              <div>
+                <p className="text-xs font-bold text-[#2D2A26] leading-tight group-hover:text-[#6B1D30]">
+                  Timetable
+                </p>
+                <p className="text-[10px] text-[#7A7267] mt-0.5">समय सारणी</p>
+              </div>
+            </Link>
+
+            <Link
+              href={`/${locale}/admin/reports`}
+              className="p-3 rounded-sm border border-[#E8E0D4] hover:border-[#6B1D30] hover:bg-[#6B1D30]/5 text-left transition-all group flex flex-col justify-between"
+            >
+              <BarChart3 className="h-4 w-4 text-[#E76F51] mb-2" />
+              <div>
+                <p className="text-xs font-bold text-[#2D2A26] leading-tight group-hover:text-[#6B1D30]">
+                  Reports Hub
+                </p>
+                <p className="text-[10px] text-[#7A7267] mt-0.5">समग्र रिपोर्ट</p>
+              </div>
+            </Link>
+          </div>
+        </div>
+
+        {/* Bento 6: Official Circulars & Notices (4 cols / full-width) */}
+        <div className="md:col-span-2 lg:col-span-4 bg-white rounded-sm border border-[#E8E0D4] p-5 shadow-2xs">
+          <div className="flex items-center justify-between pb-3 border-b border-[#E8E0D4] mb-3">
+            <div className="flex items-center gap-2">
+              <Bell className="h-4 w-4 text-[#6B1D30]" />
+              <h3 className="text-sm font-bold text-[#2D2A26]">
+                Official Circulars & Notices / प्रशासनिक सूचनाएं
+              </h3>
+            </div>
+            <div className="flex items-center gap-3">
+              <Link
+                href={`/${locale}/admin/notifications`}
+                className="inline-flex items-center gap-1 text-xs font-semibold text-[#6B1D30] hover:underline"
+              >
+                <PlusCircle className="h-3.5 w-3.5" /> Post Notice
+              </Link>
+              <span className="text-gray-300">|</span>
+              <Link
+                href={`/${locale}/admin/notifications`}
+                className="text-xs font-semibold text-[#7A7267] hover:underline flex items-center gap-1"
+              >
+                View All <ArrowRight className="h-3 w-3" />
+              </Link>
+            </div>
+          </div>
+
+          {stats.recentNotices.length === 0 ? (
+            <div className="py-8 text-center">
+              <p className="text-xs text-[#7A7267]">No active circulars or announcements posted.</p>
+              <Link
+                href={`/${locale}/admin/notifications`}
+                className="inline-flex items-center gap-1 text-xs font-semibold text-[#6B1D30] hover:underline mt-1.5"
+              >
+                Create first announcement
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {stats.recentNotices.map((n) => (
+                <div
+                  key={n.id}
+                  className="p-3 bg-[#F3EDE4]/30 rounded-sm border border-[#E8E0D4] flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-2 mb-1.5">
+                      {n.isEmergency ? (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-sm bg-red-100 text-red-800 border border-red-200 uppercase">
                           Urgent
                         </span>
+                      ) : (
+                        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-sm bg-[#E8EDF2] text-[#3D5A80]">
+                          Notice
+                        </span>
                       )}
-                      <span className="text-sm font-medium text-[#2D2A26] truncate">
-                        {n.title}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3 shrink-0">
-                      <span className="text-xs font-medium text-[#7A7267] capitalize">
-                        {n.audience.toLowerCase().replace("_", " ")}
-                      </span>
-                      <span className="text-xs text-[#7A7267]">
+                      <span className="text-[10px] text-[#7A7267]">
                         {new Date(n.postedAt).toLocaleDateString("en-IN", {
                           day: "numeric",
                           month: "short",
                         })}
                       </span>
                     </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="bg-white rounded-2xl border border-[#E8E0D4] p-6 shadow-xs">
-          <h2 className="text-base font-bold text-[#2D2A26] mb-4 pb-3 border-b border-[#E8E0D4]">
-            Quick Actions / त्वरित कार्रवाई
-          </h2>
-          <div className="space-y-3">
-            <Link
-              href={`/${locale}/admin/students/new`}
-              className="w-full py-2.5 px-4 rounded-xl border border-[#2D2A26]/20 hover:border-[#6B1D30] hover:bg-[#6B1D30]/5 text-[#2D2A26] font-medium text-sm transition-all duration-150 flex items-center justify-center text-center shadow-2xs"
-            >
-              Admit Student / नया छात्र प्रवेश
-            </Link>
-            <Link
-              href={`/${locale}/admin/teachers/new`}
-              className="w-full py-2.5 px-4 rounded-xl border border-[#2D2A26]/20 hover:border-[#6B1D30] hover:bg-[#6B1D30]/5 text-[#2D2A26] font-medium text-sm transition-all duration-150 flex items-center justify-center text-center shadow-2xs"
-            >
-              Add Teacher / नया शिक्षक जोड़ें
-            </Link>
-            <Link
-              href={`/${locale}/admin/leave-requests`}
-              className="w-full py-2.5 px-4 rounded-xl border border-[#2D2A26]/20 hover:border-[#6B1D30] hover:bg-[#6B1D30]/5 text-[#2D2A26] font-medium text-sm transition-all duration-150 flex items-center justify-center text-center shadow-2xs"
-            >
-              Pending Leaves / अवकाश समीक्षा
-            </Link>
-            <Link
-              href={`/${locale}/admin/attendance`}
-              className="w-full py-2.5 px-4 rounded-xl border border-[#2D2A26]/20 hover:border-[#6B1D30] hover:bg-[#6B1D30]/5 text-[#2D2A26] font-medium text-sm transition-all duration-150 flex items-center justify-center text-center shadow-2xs"
-            >
-              School Attendance / दैनिक उपस्थिति
-            </Link>
-            <Link
-              href={`/${locale}/admin/reports`}
-              className="w-full py-2.5 px-4 rounded-xl border border-[#2D2A26]/20 hover:border-[#6B1D30] hover:bg-[#6B1D30]/5 text-[#2D2A26] font-medium text-sm transition-all duration-150 flex items-center justify-center text-center shadow-2xs"
-            >
-              Reports Hub / रिपोर्ट पोर्टल
-            </Link>
-          </div>
+                    <p className="text-xs font-bold text-[#2D2A26] line-clamp-2 leading-snug">
+                      {n.title}
+                    </p>
+                  </div>
+                  <p className="text-[10px] text-[#7A7267] mt-2 pt-2 border-t border-[#E8E0D4]/60 capitalize">
+                    Audience: {n.audience.toLowerCase().replace("_", " ")}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </main>

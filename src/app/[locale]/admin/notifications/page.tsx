@@ -46,14 +46,14 @@ export default async function AdminNotificationsPage({
   });
 
   return (
-    <main className="flex-1 p-6 lg:p-8 max-w-4xl">
+    <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-4xl w-full">
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">
+          <h1 className="text-xl sm:text-2xl font-bold text-[#2D2A26]">
             Notices / सूचनाएं
           </h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            Post announcements for teachers and staff.
+          <p className="text-xs sm:text-sm text-[#7A7267] mt-0.5">
+            Post announcements for teachers and institutional staff
           </p>
         </div>
       </div>

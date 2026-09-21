@@ -1,9 +1,10 @@
 @import "tailwindcss";
 
 /* ------------------------------------------------------------------ */
-/* Design System — Composite Vidyalaya ERP                            */
+/* Design System - Composite Vidyalaya ERP                            */
 /* Palette: Maroon sidebar + Warm Beige content + White cards          */
-/* Light-only theme — no dark mode for institutional simplicity.       */
+/* Light-only theme - no dark mode for institutional simplicity.       */
+/* Geometry: Sharp, crisp corners (rounded-none / rounded-sm)          */
 /* ------------------------------------------------------------------ */
 
 :root {
@@ -34,7 +35,7 @@
   --input: 36 25% 85%;
   --ring: 345 57% 27%;
 
-  --radius: 0.75rem;
+  --radius: 0.125rem;               /* 2px sharp corners */
 
   --sidebar: 345 57% 27%;           /* #6B1D30 maroon sidebar */
   --sidebar-foreground: 0 0% 100%;
@@ -73,10 +74,11 @@
   --font-sans: var(--font-geist-sans), system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), monospace;
 
-  --radius-sm: calc(var(--radius) - 2px);
-  --radius-md: var(--radius);
-  --radius-lg: calc(var(--radius) + 2px);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-xs: 0px;
+  --radius-sm: 0px;
+  --radius-md: 2px;
+  --radius-lg: 3px;
+  --radius-xl: 4px;
 }
 
 *,

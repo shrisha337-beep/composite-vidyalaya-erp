@@ -335,7 +335,7 @@ export default function ImportPage() {
               <div className="w-6 h-px bg-gray-200" />
             )}
             <div
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full font-medium ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-sm font-medium ${
                 step === key
                   ? "bg-gray-800 text-white"
                   : ["upload", "mapping", "preview", "done"].indexOf(step) >
@@ -344,7 +344,7 @@ export default function ImportPage() {
                   : "bg-gray-100 text-gray-400"
               }`}
             >
-              <span className="w-4 h-4 flex items-center justify-center rounded-full text-[10px] font-bold">
+              <span className="w-4 h-4 flex items-center justify-center rounded-xs text-[10px] font-bold">
                 {i + 1}
               </span>
               {label}
@@ -353,13 +353,13 @@ export default function ImportPage() {
         ))}
       </div>
 
-      {/* ── Step 1: Upload ──────────────────────────────────────────────── */}
+      {/* -- Step 1: Upload ------------------------------------------------ */}
       {step === "upload" && (
         <div className="space-y-6">
           {/* Download template */}
-          <div className="bg-white rounded-lg border border-gray-200 p-5">
+          <div className="bg-white rounded-sm border border-gray-200 p-5">
             <div className="flex items-start gap-4">
-              <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-sm font-semibold text-gray-600 shrink-0">
+              <div className="w-8 h-8 rounded-sm bg-gray-100 flex items-center justify-center text-sm font-semibold text-gray-600 shrink-0">
                 1
               </div>
               <div className="flex-1">
@@ -368,11 +368,11 @@ export default function ImportPage() {
                 </p>
                 <p className="text-xs text-gray-500 mb-3">
                   You can use our template, or upload your school&apos;s own
-                  Excel file — we&apos;ll auto-detect the columns.
+                  Excel file - we&apos;ll auto-detect the columns.
                 </p>
                 <button
                   onClick={downloadTemplate}
-                  className="flex items-center gap-2 px-3 py-2 rounded-md border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  className="flex items-center gap-2 px-3 py-2 rounded-sm border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50"
                 >
                   <Download className="h-4 w-4" />
                   Download template (.xlsx)
@@ -382,9 +382,9 @@ export default function ImportPage() {
           </div>
 
           {/* Upload file */}
-          <div className="bg-white rounded-lg border border-gray-200 p-5">
+          <div className="bg-white rounded-sm border border-gray-200 p-5">
             <div className="flex items-start gap-4">
-              <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-sm font-semibold text-gray-600 shrink-0">
+              <div className="w-8 h-8 rounded-sm bg-gray-100 flex items-center justify-center text-sm font-semibold text-gray-600 shrink-0">
                 2
               </div>
               <div className="flex-1">
@@ -392,7 +392,7 @@ export default function ImportPage() {
                   Upload your Excel file
                 </p>
                 <p className="text-xs text-gray-500 mb-3">
-                  Any .xlsx file with student data — columns can be in any
+                  Any .xlsx file with student data - columns can be in any
                   order, even with Hindi headers.
                 </p>
 

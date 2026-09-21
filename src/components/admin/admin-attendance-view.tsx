@@ -176,19 +176,19 @@ export function AdminAttendanceView({
         </div>
 
         {/* Attendance Rate */}
-        <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center gap-3">
-          <div className="p-2.5 rounded-lg bg-purple-50 text-purple-600">
+        <div className="bg-white border border-gray-200 rounded-sm p-4 flex items-center gap-3">
+          <div className="p-2.5 rounded-sm bg-[#3D5A80]/10 text-[#3D5A80]">
             <Percent className="h-5 w-5" />
           </div>
           <div>
             <p className="text-gray-400 font-medium">Attendance Rate</p>
-            <p className="text-lg font-bold text-purple-700">{overallRate}%</p>
+            <p className="text-lg font-bold text-[#3D5A80]">{overallRate}%</p>
           </div>
         </div>
       </div>
 
       {/* Class-by-Class Attendance Matrix */}
-      <div className="bg-white border border-gray-200 rounded-lg p-5">
+      <div className="bg-white border border-gray-200 rounded-sm p-5">
         <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
           <h3 className="text-sm font-bold text-gray-800">
             Class Register Status / कक्षावार उपस्थिति रजिस्टर ({classesMarkedCount}/{classesSummary.length} Marked)
@@ -196,7 +196,7 @@ export function AdminAttendanceView({
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
+          <table className="w-full text-left text-xs border-collapse min-w-[680px]">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200 text-gray-600 font-bold uppercase tracking-wider">
                 <th className="py-3 px-4">Class & Section</th>
@@ -225,11 +225,11 @@ export function AdminAttendanceView({
                     <td className="py-3 px-4 text-center font-bold text-gray-800">{c.totalStudents}</td>
                     <td className="py-3 px-4 text-center font-bold text-green-600">{c.presentCount}</td>
                     <td className="py-3 px-4 text-center font-bold text-red-600">{c.absentCount}</td>
-                    <td className="py-3 px-4 text-center font-semibold text-purple-700">{classRate}%</td>
+                    <td className="py-3 px-4 text-center font-semibold text-[#3D5A80]">{classRate}%</td>
                     <td className="py-3 px-4 text-center">
                       <span
                         className={[
-                          "px-2.5 py-0.5 rounded-full font-bold text-[10px] inline-flex items-center gap-1",
+                          "px-2.5 py-0.5 rounded-sm font-bold text-[10px] inline-flex items-center gap-1",
                           c.isMarked
                             ? "bg-green-50 text-green-700 border border-green-200"
                             : "bg-yellow-50 text-yellow-700 border border-yellow-200",

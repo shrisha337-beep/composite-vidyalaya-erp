@@ -76,7 +76,7 @@ export function RepairBanner({
           ) : (
             <>
               <Wrench className="h-3.5 w-3.5" />
-              Repair — create missing classes
+              Repair: create missing classes
             </>
           )}
         </button>

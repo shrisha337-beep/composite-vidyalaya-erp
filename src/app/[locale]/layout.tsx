@@ -7,7 +7,8 @@ import { Providers } from "@/components/provider";
 import "../globals.css";
 
 export const metadata: Metadata = {
-  title: "Composite Vidyalaya Chandpur Tarhar — ERP",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://cvchandpurtarhar.in"),
+  title: "Composite Vidyalaya Chandpur Tarhar - ERP",
   description:
     "Government school ERP portal for Composite Vidyalaya Chandpur Tarhar. Manage students, attendance, marks, mid-day meals, and more.",
 };

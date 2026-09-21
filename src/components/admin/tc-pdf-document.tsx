@@ -157,7 +157,7 @@ export function TcPdfDocument({
         month: "2-digit",
         year: "numeric",
       })
-    : "—";
+    : "-";
 
   return (
     <Document>
@@ -190,12 +190,12 @@ export function TcPdfDocument({
 
               <View style={styles.row}>
                 <Text style={styles.label}>(P.E.N.) Number</Text>
-                <Text style={styles.value}>{tc.penNumberSnapshot || "—"}</Text>
+                <Text style={styles.value}>{tc.penNumberSnapshot || "-"}</Text>
               </View>
 
               <View style={styles.row}>
                 <Text style={styles.label}>Unique I.D. / APAAR ID</Text>
-                <Text style={styles.value}>{tc.apaarIdSnapshot || "—"}</Text>
+                <Text style={styles.value}>{tc.apaarIdSnapshot || "-"}</Text>
               </View>
 
               <View style={styles.row}>
@@ -205,29 +205,29 @@ export function TcPdfDocument({
 
               <View style={styles.row}>
                 <Text style={styles.label}>जन्मतिथि (शब्दों में) (DOB in words)</Text>
-                <Text style={styles.value}>{tc.dobWordsSnapshot || "—"}</Text>
+                <Text style={styles.value}>{tc.dobWordsSnapshot || "-"}</Text>
               </View>
 
               <View style={styles.row}>
                 <Text style={styles.label}>माता का नाम श्रीमती (Mother Name)</Text>
-                <Text style={styles.value}>{tc.motherNameSnapshot || "—"}</Text>
+                <Text style={styles.value}>{tc.motherNameSnapshot || "-"}</Text>
               </View>
 
               <View style={styles.row}>
                 <Text style={styles.label}>पिता का नाम श्री (Father Name)</Text>
-                <Text style={styles.value}>{tc.fatherNameSnapshot || "—"}</Text>
+                <Text style={styles.value}>{tc.fatherNameSnapshot || "-"}</Text>
               </View>
 
               <View style={styles.row}>
                 <Text style={styles.label}>वर्ग, जाति, धर्म (Category / Religion)</Text>
                 <Text style={styles.value}>
-                  {tc.categorySnapshot || "—"} / {tc.religionSnapshot || "—"}
+                  {tc.categorySnapshot || "-"} / {tc.religionSnapshot || "-"}
                 </Text>
               </View>
 
               <View style={styles.row}>
                 <Text style={styles.label}>निवास स्थान (Address)</Text>
-                <Text style={styles.value}>{tc.addressSnapshot || "—"}</Text>
+                <Text style={styles.value}>{tc.addressSnapshot || "-"}</Text>
               </View>
 
               <View style={styles.row}>
@@ -237,7 +237,7 @@ export function TcPdfDocument({
 
               <View style={styles.row}>
                 <Text style={styles.label}>उत्तर प्रदेश में रहने की अवधि</Text>
-                <Text style={styles.value}>{student.durationOfStayInUP || "—"}</Text>
+                <Text style={styles.value}>{student.durationOfStayInUP || "-"}</Text>
               </View>
 
               <View style={styles.row}>
@@ -255,7 +255,7 @@ export function TcPdfDocument({
             <View style={styles.rightColumn}>
               <View style={styles.row}>
                 <Text style={styles.label}>आधार संख्या (Aadhaar Number)</Text>
-                <Text style={styles.value}>{tc.aadhaarSnapshot || "—"}</Text>
+                <Text style={styles.value}>{tc.aadhaarSnapshot || "-"}</Text>
               </View>
 
               <View style={styles.row}>
@@ -270,7 +270,7 @@ export function TcPdfDocument({
 
               <View style={styles.row}>
                 <Text style={styles.label}>परीक्षा उत्तीर्ण की (Exam Passed)</Text>
-                <Text style={styles.value}>{tc.promotedTo || "—"}</Text>
+                <Text style={styles.value}>{tc.promotedTo || "-"}</Text>
               </View>
 
               <View style={styles.row}>
@@ -287,17 +287,17 @@ export function TcPdfDocument({
 
               <View style={styles.row}>
                 <Text style={styles.label}>स्कूल खुलने के दिन की संख्या</Text>
-                <Text style={styles.value}>{tc.workingDaysTotal || "—"}</Text>
+                <Text style={styles.value}>{tc.workingDaysTotal || "-"}</Text>
               </View>
 
               <View style={styles.row}>
                 <Text style={styles.label}>विद्यार्थी की उपस्थिति (Attendance)</Text>
-                <Text style={styles.value}>{tc.workingDaysPresent || "—"}</Text>
+                <Text style={styles.value}>{tc.workingDaysPresent || "-"}</Text>
               </View>
 
               <View style={styles.row}>
                 <Text style={styles.label}>पिता/अभिभावक का व्यवसाय (Occupation)</Text>
-                <Text style={styles.value}>{student.guardians?.[0]?.occupation || "—"}</Text>
+                <Text style={styles.value}>{student.guardians?.[0]?.occupation || "-"}</Text>
               </View>
 
               <View style={styles.row}>

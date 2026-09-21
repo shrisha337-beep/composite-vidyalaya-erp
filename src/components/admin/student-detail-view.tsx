@@ -106,7 +106,7 @@ function InfoRow({ label, value }: { label: string; value?: string | null }) {
   if (!value) return (
     <div>
       <p className="text-xs text-gray-400">{label}</p>
-      <p className="text-sm text-gray-400 italic">—</p>
+      <p className="text-sm text-gray-400 italic">-</p>
     </div>
   );
   return (
@@ -290,7 +290,7 @@ export function StudentDetailView({
           <div className="flex items-start gap-4">
             {/* Photo */}
             <div
-              className="w-16 h-16 rounded-full overflow-hidden border-2 border-gray-200 shrink-0 flex items-center justify-center bg-gray-100"
+              className="w-16 h-16 rounded-sm overflow-hidden border-2 border-gray-200 shrink-0 flex items-center justify-center bg-gray-100"
             >
               {student.photoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -310,15 +310,15 @@ export function StudentDetailView({
               </p>
               <div className="flex flex-wrap items-center gap-2 mt-2">
                 {student.section && (
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+                  <span className="text-xs px-2 py-0.5 rounded-sm bg-blue-50 text-blue-700 border border-blue-100">
                     Class {student.section.class.name}
                   </span>
                 )}
-                <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200 capitalize">
+                <span className="text-xs px-2 py-0.5 rounded-sm bg-gray-100 text-gray-600 border border-gray-200 capitalize">
                   {student.gender.toLowerCase()}
                 </span>
                 {isLocked && (
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-100 flex items-center gap-1">
+                  <span className="text-xs px-2 py-0.5 rounded-sm bg-red-50 text-red-600 border border-red-100 flex items-center gap-1">
                     <ShieldAlert className="h-3 w-3" /> Account locked
                   </span>
                 )}
@@ -455,9 +455,9 @@ export function StudentDetailView({
                     <td className="py-2 text-gray-600">
                       {s.dob
                         ? new Date(s.dob).toLocaleDateString("en-IN")
-                        : "—"}
+                        : "-"}
                     </td>
-                    <td className="py-2 text-gray-600">{s.enrolledSchoolName ?? "—"}</td>
+                    <td className="py-2 text-gray-600">{s.enrolledSchoolName ?? "-"}</td>
                     <td className="py-2">
                       {s.isEnrolled ? (
                         <span className="text-green-600 text-xs font-medium">Yes</span>

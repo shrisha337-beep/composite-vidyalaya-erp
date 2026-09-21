@@ -37,6 +37,25 @@ async function main() {
     },
   });
 
+  const teacherUser = await prisma.user.upsert({
+    where: { phone: "9876543210" },
+    update: { passwordHash, email: "teacher@cvchandpur.in" },
+    create: {
+      role: Role.TEACHER,
+      phone: "9876543210",
+      email: "teacher@cvchandpur.in",
+      passwordHash,
+      teacher: {
+        create: {
+          employeeCode: "TCH001",
+          fullName: "Ramesh Sharma",
+          designation: "Assistant Teacher",
+          qualification: "B.Sc., B.Ed.",
+        },
+      },
+    },
+  });
+
   await prisma.schoolSettings.upsert({
     where: { id: "singleton" },
     update: {},
@@ -48,8 +67,10 @@ async function main() {
   });
 
   console.log("Seeded session:", session.label);
-  console.log("Seeded admin login — phone: 9999999999, password: ChangeMe@123");
+  console.log("Seeded admin login - phone: 9999999999, password: ChangeMe@123");
+  console.log("Seeded teacher login - phone: 9876543210, password: ChangeMe@123");
   console.log("Admin user id:", adminUser.id);
+  console.log("Teacher user id:", teacherUser.id);
 }
 
 main()

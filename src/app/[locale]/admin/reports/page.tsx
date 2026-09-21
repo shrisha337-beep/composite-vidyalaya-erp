@@ -57,7 +57,7 @@ export default async function AdminReportsPage({
       description:
         "Generate and download student report cards as PDF for any session.",
       icon: FileText,
-      color: "#7e22ce",
+      color: "#3D5A80",
       href: `/${locale}/admin/reports?export=reportcards`,
     },
     {
@@ -71,34 +71,33 @@ export default async function AdminReportsPage({
   ];
 
   return (
-    <main className="flex-1 p-6 lg:p-8 max-w-4xl">
+    <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-4xl w-full">
       <div className="mb-6">
-        <h1 className="text-xl font-semibold text-gray-900">
+        <h1 className="text-xl sm:text-2xl font-bold text-[#2D2A26]">
           Reports / रिपोर्ट
         </h1>
-        <p className="text-sm text-gray-500 mt-0.5">
-          Generate and export reports for session{" "}
-          <span className="font-medium text-gray-700">
-            {session?.label ?? "—"}
+        <p className="text-xs sm:text-sm text-[#7A7267] mt-0.5">
+          Generate and export institutional records for session{" "}
+          <span className="font-semibold text-[#2D2A26]">
+            {session?.label ?? "-"}
           </span>
-          .
         </p>
       </div>
 
       {/* Quick stats */}
       <div className="grid grid-cols-2 gap-3 mb-6">
-        <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center gap-3">
-          <Users className="h-5 w-5 text-gray-400" />
+        <div className="bg-white border border-[#E8E0D4] rounded-sm p-4 flex items-center gap-3 shadow-xs">
+          <Users className="h-5 w-5 text-[#6B1D30]" />
           <div>
-            <p className="text-2xl font-bold text-gray-900">{totalStudents}</p>
-            <p className="text-xs text-gray-500">Active Students</p>
+            <p className="text-xl sm:text-2xl font-bold text-[#2D2A26]">{totalStudents}</p>
+            <p className="text-xs text-[#7A7267]">Active Students</p>
           </div>
         </div>
-        <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center gap-3">
-          <Users className="h-5 w-5 text-gray-400" />
+        <div className="bg-white border border-[#E8E0D4] rounded-sm p-4 flex items-center gap-3 shadow-xs">
+          <Users className="h-5 w-5 text-[#3D5A80]" />
           <div>
-            <p className="text-2xl font-bold text-gray-900">{totalTeachers}</p>
-            <p className="text-xs text-gray-500">Teachers</p>
+            <p className="text-xl sm:text-2xl font-bold text-[#2D2A26]">{totalTeachers}</p>
+            <p className="text-xs text-[#7A7267]">Staff Members</p>
           </div>
         </div>
       </div>
@@ -111,11 +110,11 @@ export default async function AdminReportsPage({
             <Link
               key={report.title}
               href={report.href}
-              className="bg-white border border-gray-200 rounded-lg p-5 hover:border-gray-300 hover:shadow-sm transition-all group"
+              className="bg-white border border-[#E8E0D4] rounded-sm p-4 sm:p-5 hover:border-[#6B1D30] hover:bg-[#6B1D30]/5 shadow-xs transition-all group"
             >
-              <div className="flex items-start gap-4">
+              <div className="flex items-start gap-3.5">
                 <div
-                  className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
+                  className="w-10 h-10 rounded-sm flex items-center justify-center shrink-0"
                   style={{ background: `${report.color}15` }}
                 >
                   <Icon
@@ -123,15 +122,15 @@ export default async function AdminReportsPage({
                     style={{ color: report.color }}
                   />
                 </div>
-                <div className="min-w-0">
-                  <h3 className="text-sm font-semibold text-gray-800 group-hover:text-gray-900">
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-sm font-bold text-[#2D2A26] group-hover:text-[#6B1D30] transition-colors">
                     {report.title}
                   </h3>
-                  <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                  <p className="text-xs text-[#7A7267] mt-1 leading-relaxed">
                     {report.description}
                   </p>
                 </div>
-                <Download className="h-4 w-4 text-gray-300 group-hover:text-gray-500 shrink-0 mt-0.5 transition-colors" />
+                <Download className="h-4 w-4 text-[#A89F91] group-hover:text-[#6B1D30] shrink-0 mt-0.5 transition-colors" />
               </div>
             </Link>
           );

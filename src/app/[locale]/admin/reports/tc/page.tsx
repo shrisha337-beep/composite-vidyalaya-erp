@@ -232,7 +232,7 @@ export default async function TcReportsPage({
                       </td>
                       <td className="px-5 py-3.5">
                         <span
-                          className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                          className={`text-xs font-bold px-2 py-0.5 rounded-sm ${
                             tc.status === "ISSUED"
                               ? "bg-green-100 text-green-800"
                               : "bg-red-100 text-red-700"

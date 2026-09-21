@@ -17,6 +17,8 @@ import {
   Printer,
   CalendarDays,
   IndianRupee,
+  School,
+  GraduationCap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { saveMDMFruitLogAction, type StudentFruitEntry } from "@/app/actions/save-mdm";
@@ -224,17 +226,17 @@ export function MdmDashboardView({
           <h1 className="text-2xl lg:text-3xl font-bold text-[#2D2A26] tracking-tight">
             Mid-Day Meal / एम.डी.एम.
           </h1>
-          <div className="w-12 h-1 bg-[#6B1D30] rounded-full mt-2 mb-2" />
+          <div className="w-12 h-1 bg-[#6B1D30] rounded-xs mt-2 mb-2" />
           <p className="text-sm font-medium text-[#7A7267]">
             Grain consumption & fruit distribution with conversion cost (परिवर्तन लागत)
           </p>
         </div>
 
         {/* View Switcher Tabs */}
-        <div className="inline-flex bg-white rounded-xl p-1 border border-[#E8E0D4] shadow-2xs">
+        <div className="inline-flex bg-white rounded-sm p-1 border border-[#E8E0D4] shadow-2xs">
           <button
             onClick={() => setActiveTab("daily")}
-            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${
+            className={`px-4 py-2 rounded-xs text-sm font-semibold transition-all flex items-center gap-2 ${
               activeTab === "daily"
                 ? "bg-[#6B1D30] text-white shadow-xs"
                 : "text-[#7A7267] hover:text-[#2D2A26]"
@@ -245,7 +247,7 @@ export function MdmDashboardView({
           </button>
           <button
             onClick={() => setActiveTab("monthly")}
-            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${
+            className={`px-4 py-2 rounded-xs text-sm font-semibold transition-all flex items-center gap-2 ${
               activeTab === "monthly"
                 ? "bg-[#6B1D30] text-white shadow-xs"
                 : "text-[#7A7267] hover:text-[#2D2A26]"
@@ -257,30 +259,30 @@ export function MdmDashboardView({
         </div>
       </div>
 
-      {/* School Level Switcher — Primary / Junior */}
-      <div className="inline-flex bg-white rounded-xl p-1 border border-[#E8E0D4] shadow-2xs">
+      {/* School Level Switcher - Primary / Junior */}
+      <div className="inline-flex bg-white rounded-sm p-1 border border-[#E8E0D4] shadow-2xs">
         <button
           onClick={() => setSchoolLevel("primary")}
-          className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+          className={`px-5 py-2.5 rounded-xs text-sm font-semibold transition-all flex items-center gap-1.5 ${
             schoolLevel === "primary"
               ? "bg-[#3D5A80] text-white shadow-xs"
               : "text-[#7A7267] hover:text-[#2D2A26] hover:bg-[#F3EDE4]/50"
           }`}
         >
-          🏫 Primary (कक्षा 1–5)
+          <School className="h-4 w-4 inline" /> Primary (कक्षा 1-5)
           <span className="ml-2 text-xs opacity-80">
             {grainPerStudent === GRAIN_PER_STUDENT_PRIMARY ? `${GRAIN_PER_STUDENT_PRIMARY}g · ₹${CONVERSION_COST_PRIMARY}` : ""}
           </span>
         </button>
         <button
           onClick={() => setSchoolLevel("junior")}
-          className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+          className={`px-5 py-2.5 rounded-xs text-sm font-semibold transition-all flex items-center gap-1.5 ${
             schoolLevel === "junior"
               ? "bg-[#3D5A80] text-white shadow-xs"
               : "text-[#7A7267] hover:text-[#2D2A26] hover:bg-[#F3EDE4]/50"
           }`}
         >
-          🎓 Junior (कक्षा 6–8)
+          <GraduationCap className="h-4 w-4 inline" /> Junior (कक्षा 6-8)
           <span className="ml-2 text-xs opacity-80">
             {grainPerStudent === GRAIN_PER_STUDENT_JUNIOR ? `${GRAIN_PER_STUDENT_JUNIOR}g · ₹${CONVERSION_COST_JUNIOR}` : ""}
           </span>
@@ -416,8 +418,8 @@ export function MdmDashboardView({
             </div>
 
             {/* Conversion Cost */}
-            <div className="bg-white rounded-2xl border border-[#E8E0D4] p-5 shadow-xs flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-[#F0E6FF] text-[#7E22CE]">
+            <div className="bg-white rounded-sm border border-[#E8E0D4] p-5 shadow-xs flex items-center gap-4">
+              <div className="w-12 h-12 rounded-sm flex items-center justify-center shrink-0 bg-[#E8EDF2] text-[#3D5A80]">
                 <IndianRupee className="h-6 w-6" />
               </div>
               <div className="min-w-0">
@@ -512,7 +514,7 @@ export function MdmDashboardView({
                           {/* Present count */}
                           <td className="px-5 py-4 text-center">
                             <span
-                              className={`inline-block px-2.5 py-1 rounded-full text-xs font-bold ${
+                              className={`inline-block px-2.5 py-1 rounded-sm text-xs font-bold ${
                                 presentCount > 0
                                   ? "bg-emerald-100 text-emerald-800"
                                   : "bg-gray-100 text-gray-500"
@@ -544,7 +546,7 @@ export function MdmDashboardView({
 
                           {/* Conversion Cost Column */}
                           <td className="px-5 py-4 text-right">
-                            <span className="font-bold text-[#7E22CE]">₹{classCost.toFixed(2)}</span>
+                            <span className="font-bold text-[#3D5A80]">₹{classCost.toFixed(2)}</span>
                             <span className="block text-xs text-[#7A7267]">
                               ₹{conversionCostPerStudent} × {presentCount}
                             </span>
@@ -593,7 +595,7 @@ export function MdmDashboardView({
                           {totalFruitEaten} ate · {totalFruitDidNotEat} skipped
                         </span>
                       </td>
-                      <td className="px-5 py-4 text-right text-sm font-bold text-[#7E22CE]">
+                      <td className="px-5 py-4 text-right text-sm font-bold text-[#3D5A80]">
                         ₹{totalConversionCost.toFixed(2)}
                       </td>
                       <td className="px-5 py-4 text-center">
@@ -660,7 +662,7 @@ export function MdmDashboardView({
                 Monthly Mid-Day Meal Register / मासिक एम.डी.एम. पंजी
               </h2>
               <p className="text-xs text-[#7A7267] mt-0.5">
-                Consolidated daily log — {schoolLevel === "primary" ? "Primary (1–5)" : "Junior (6–8)"}
+                Consolidated daily log - {schoolLevel === "primary" ? "Primary (1-5)" : "Junior (6-8)"}
               </p>
             </div>
 
@@ -705,19 +707,19 @@ export function MdmDashboardView({
                           )}
                         </td>
                         <td className="px-4 py-3 text-right font-medium text-[#6B1D30]">
-                          {log.hasAttendance ? `${wheatKg} kg` : "—"}
+                          {log.hasAttendance ? `${wheatKg} kg` : "-"}
                         </td>
                         <td className="px-4 py-3 text-right font-medium text-[#2A9D8F]">
-                          {log.hasAttendance ? `${riceKg} kg` : "—"}
+                          {log.hasAttendance ? `${riceKg} kg` : "-"}
                         </td>
                         <td className="px-4 py-3 text-right font-medium">
-                          {log.hasAttendance ? log.fruitsEaten : "—"}
+                          {log.hasAttendance ? log.fruitsEaten : "-"}
                         </td>
                         <td className="px-4 py-3 text-right font-bold text-[#E76F51]">
-                          {log.hasAttendance ? `₹${log.fruitCost}` : "—"}
+                          {log.hasAttendance ? `₹${log.fruitCost}` : "-"}
                         </td>
-                        <td className="px-4 py-3 text-right font-bold text-[#7E22CE]">
-                          {log.hasAttendance ? `₹${log.conversionCost.toFixed(2)}` : "—"}
+                        <td className="px-4 py-3 text-right font-bold text-[#3D5A80]">
+                          {log.hasAttendance ? `₹${log.conversionCost.toFixed(2)}` : "-"}
                         </td>
                         <td className="px-4 py-3 text-center">
                           <button
@@ -765,7 +767,7 @@ export function MdmDashboardView({
                         <td className="px-4 py-4 text-right text-sm font-bold text-[#E76F51]">
                           ₹{monthTotalFruitCost.toLocaleString("en-IN")}
                         </td>
-                        <td className="px-4 py-4 text-right text-sm font-bold text-[#7E22CE]">
+                        <td className="px-4 py-4 text-right text-sm font-bold text-[#3D5A80]">
                           ₹{monthTotalConvCost.toFixed(2)}
                         </td>
                         <td className="px-4 py-4" />

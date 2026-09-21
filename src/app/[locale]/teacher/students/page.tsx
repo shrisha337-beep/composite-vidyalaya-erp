@@ -37,8 +37,8 @@ async function getStudentsForClass(classVal: string) {
     admissionNo: s.admissionNo,
     fullName: s.fullName,
     gender: s.gender,
-    fatherName: s.guardians[0]?.fullName ?? "—",
-    phone: s.mobileNumber ?? "—",
+    fatherName: s.guardians[0]?.fullName ?? "-",
+    phone: s.mobileNumber ?? "-",
   }));
 }
 

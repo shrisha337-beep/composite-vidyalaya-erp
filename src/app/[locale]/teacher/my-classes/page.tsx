@@ -50,20 +50,20 @@ export default async function TeacherMyClassesPage({
   );
 
   return (
-    <main className="flex-1 p-6 lg:p-8 max-w-4xl">
+    <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-4xl w-full">
       <div className="flex items-center gap-3 mb-5">
         <Link
           href={`/${locale}/teacher/dashboard`}
-          className="p-1.5 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+          className="p-1.5 rounded-sm text-[#7A7267] hover:text-[#2D2A26] hover:bg-[#F3EDE4] transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
         </Link>
         <div>
-          <h1 className="text-xl font-bold text-gray-900">
+          <h1 className="text-xl sm:text-2xl font-bold text-[#2D2A26]">
             My Classes / मेरी कक्षाएं
           </h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            Classes and students assigned to you.
+          <p className="text-xs sm:text-sm text-[#7A7267] mt-0.5">
+            Classes and students assigned to your profile
           </p>
         </div>
       </div>
@@ -71,58 +71,56 @@ export default async function TeacherMyClassesPage({
       {/* Class Teacher Sections */}
       {classTeacherSections.length > 0 && (
         <div className="mb-6">
-          <h2 className="text-sm font-semibold text-gray-700 mb-3">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-[#5A534A] mb-3">
             Class Teacher Of
           </h2>
           {classTeacherSections.map((section) => (
             <div
               key={section.id}
-              className="bg-white border border-gray-200 rounded-lg mb-4"
+              className="bg-white border border-[#E8E0D4] rounded-sm mb-4 shadow-xs overflow-hidden"
             >
-              <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
+              <div className="px-4 sm:px-5 py-3 border-b border-[#E8E0D4] flex items-center justify-between bg-[#F8F5F0]">
                 <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-gray-400" />
-                  <span className="text-sm font-semibold text-gray-800">
-                    Class {section.class.name} — Section {section.name}
+                  <Users className="h-4 w-4 text-[#6B1D30]" />
+                  <span className="text-sm font-bold text-[#2D2A26]">
+                    Class {section.class.name} - Section {section.name}
                   </span>
                 </div>
-                <span className="text-xs text-gray-400">
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-sm bg-white border border-[#E8E0D4] text-[#7A7267]">
                   {section.students.length} students
                 </span>
               </div>
               {section.students.length === 0 ? (
-                <p className="px-5 py-4 text-sm text-gray-400 italic">
+                <p className="px-5 py-4 text-sm text-[#7A7267] italic">
                   No students enrolled in this section.
                 </p>
               ) : (
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-gray-50 text-gray-600">
-                      <th className="text-left px-5 py-2 font-medium">#</th>
-                      <th className="text-left px-4 py-2 font-medium">
-                        Adm. No.
-                      </th>
-                      <th className="text-left px-4 py-2 font-medium">Name</th>
-                      <th className="text-left px-4 py-2 font-medium">
-                        Gender
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50">
-                    {section.students.map((s, i) => (
-                      <tr key={s.id} className="hover:bg-gray-50/50">
-                        <td className="px-5 py-2 text-gray-400">{i + 1}</td>
-                        <td className="px-4 py-2 text-gray-600">
-                          {s.admissionNo}
-                        </td>
-                        <td className="px-4 py-2 font-medium text-gray-800">
-                          {s.fullName}
-                        </td>
-                        <td className="px-4 py-2 text-gray-500">{s.gender}</td>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm min-w-[380px]">
+                    <thead>
+                      <tr className="bg-[#F8F5F0]/60 text-xs font-semibold text-[#5A534A] uppercase tracking-wider border-b border-[#E8E0D4]">
+                        <th className="text-left px-4 sm:px-5 py-2.5 w-12">#</th>
+                        <th className="text-left px-4 py-2.5">Adm. No.</th>
+                        <th className="text-left px-4 py-2.5">Name</th>
+                        <th className="text-left px-4 py-2.5">Gender</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-[#E8E0D4]">
+                      {section.students.map((s, i) => (
+                        <tr key={s.id} className="hover:bg-[#F3EDE4]/40 transition-colors">
+                          <td className="px-4 sm:px-5 py-2.5 text-xs text-[#7A7267]">{i + 1}</td>
+                          <td className="px-4 py-2.5 font-mono text-xs text-[#7A7267]">
+                            {s.admissionNo}
+                          </td>
+                          <td className="px-4 py-2.5 font-medium text-[#2D2A26]">
+                            {s.fullName}
+                          </td>
+                          <td className="px-4 py-2.5 text-xs text-[#7A7267] capitalize">{s.gender.toLowerCase()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </div>
           ))}
@@ -132,42 +130,41 @@ export default async function TeacherMyClassesPage({
       {/* Subject Assignments */}
       {assignedSubjects.length > 0 && (
         <div>
-          <h2 className="text-sm font-semibold text-gray-700 mb-3">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-[#5A534A] mb-3">
             Subject Assignments
           </h2>
-          <div className="bg-white border border-gray-200 rounded-lg">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-gray-50 text-gray-600 border-b border-gray-200">
-                  <th className="text-left px-5 py-2.5 font-medium">
-                    Subject
-                  </th>
-                  <th className="text-left px-4 py-2.5 font-medium">Class</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {assignedSubjects.map((ts) => (
-                  <tr key={ts.id} className="hover:bg-gray-50/50">
-                    <td className="px-5 py-2.5 font-medium text-gray-800">
-                      {ts.subject.name}
-                    </td>
-                    <td className="px-4 py-2.5 text-gray-600">
-                      Class {ts.subject.class.name}
-                    </td>
+          <div className="bg-white border border-[#E8E0D4] rounded-sm shadow-xs overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-[#F8F5F0] text-xs font-semibold text-[#5A534A] uppercase tracking-wider border-b border-[#E8E0D4]">
+                    <th className="text-left px-4 sm:px-5 py-2.5">Subject</th>
+                    <th className="text-left px-4 py-2.5">Class</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-[#E8E0D4]">
+                  {assignedSubjects.map((ts) => (
+                    <tr key={ts.id} className="hover:bg-[#F3EDE4]/40 transition-colors">
+                      <td className="px-4 sm:px-5 py-2.5 font-medium text-[#2D2A26]">
+                        {ts.subject.name}
+                      </td>
+                      <td className="px-4 py-2.5 text-xs text-[#7A7267]">
+                        Class {ts.subject.class.name}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
 
       {classTeacherSections.length === 0 && assignedSubjects.length === 0 && (
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
-          <Users className="h-8 w-8 text-gray-300 mx-auto mb-3" />
-          <p className="text-sm text-gray-500">
-            No classes or subjects assigned to you yet. Contact the
-            administrator.
+        <div className="bg-white border border-[#E8E0D4] rounded-sm p-8 text-center shadow-xs">
+          <Users className="h-8 w-8 text-[#A89F91] mx-auto mb-3" />
+          <p className="text-sm text-[#7A7267]">
+            No classes or subjects assigned to you yet. Contact the administrator.
           </p>
         </div>
       )}

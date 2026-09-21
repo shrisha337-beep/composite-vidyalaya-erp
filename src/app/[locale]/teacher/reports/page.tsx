@@ -77,9 +77,9 @@ export default async function TeacherReportsPage({
                 {assignedSections.map((section) => (
                   <span
                     key={section.id}
-                    className="px-3 py-1 bg-green-50 text-green-700 rounded-full text-xs font-medium"
+                    className="px-3 py-1 bg-green-50 text-green-700 rounded-sm text-xs font-medium"
                   >
-                    Class {section.class.name} — {section.name}
+                    Class {section.class.name} - {section.name}
                   </span>
                 ))}
               </div>
@@ -91,9 +91,9 @@ export default async function TeacherReportsPage({
 
           {/* Marks Summary */}
           {assignedSubjects.length > 0 && (
-            <div className="bg-white border border-gray-200 rounded-lg p-5">
+            <div className="bg-white border border-gray-200 rounded-sm p-5">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center">
+                <div className="w-9 h-9 rounded-sm bg-blue-50 flex items-center justify-center">
                   <BookOpen className="h-4 w-4 text-blue-600" />
                 </div>
                 <div>
@@ -109,9 +109,9 @@ export default async function TeacherReportsPage({
                 {assignedSubjects.map((ts) => (
                   <span
                     key={ts.id}
-                    className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium"
+                    className="px-3 py-1 bg-blue-50 text-blue-700 rounded-sm text-xs font-medium"
                   >
-                    {ts.subject.name} — Class {ts.subject.class.name}
+                    {ts.subject.name} - Class {ts.subject.class.name}
                   </span>
                 ))}
               </div>

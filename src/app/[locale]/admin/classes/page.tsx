@@ -142,7 +142,7 @@ export default async function ClassesPage({
               month: "short",
               year: "numeric",
             })}{" "}
-            —{" "}
+            to{" "}
             {new Date(sessionData.endDate).toLocaleDateString("en-IN", {
               day: "numeric",
               month: "short",

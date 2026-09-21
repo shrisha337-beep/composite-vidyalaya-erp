@@ -58,9 +58,9 @@ export default async function TeacherProfilePage({
       </div>
 
       {/* Basic Info */}
-      <div className="bg-white border border-gray-200 rounded-lg p-5 mb-4">
+      <div className="bg-white border border-gray-200 rounded-sm p-5 mb-4">
         <div className="flex items-center gap-4 mb-4">
-          <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center">
+          <div className="w-14 h-14 rounded-sm bg-gray-100 flex items-center justify-center">
             <User className="h-6 w-6 text-gray-400" />
           </div>
           <div>
@@ -77,19 +77,19 @@ export default async function TeacherProfilePage({
           <div>
             <span className="text-gray-500">Designation</span>
             <p className="font-medium text-gray-800">
-              {teacher.designation ?? "—"}
+              {teacher.designation ?? "-"}
             </p>
           </div>
           <div>
             <span className="text-gray-500">Gender</span>
             <p className="font-medium text-gray-800">
-              {teacher.gender ?? "—"}
+              {teacher.gender ?? "-"}
             </p>
           </div>
           <div>
             <span className="text-gray-500">Qualification</span>
             <p className="font-medium text-gray-800">
-              {teacher.qualification ?? "—"}
+              {teacher.qualification ?? "-"}
             </p>
           </div>
           <div>
@@ -101,7 +101,7 @@ export default async function TeacherProfilePage({
                     month: "long",
                     year: "numeric",
                   })
-                : "—"}
+                : "-"}
             </p>
           </div>
           <div>
@@ -113,7 +113,7 @@ export default async function TeacherProfilePage({
                     month: "long",
                     year: "numeric",
                   })
-                : "—"}
+                : "-"}
             </p>
           </div>
         </div>
@@ -121,7 +121,7 @@ export default async function TeacherProfilePage({
 
       {/* Class Teacher Assignment */}
       {teacher.classTeacherOf.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-lg p-5 mb-4">
+        <div className="bg-white border border-gray-200 rounded-sm p-5 mb-4">
           <h3 className="text-sm font-semibold text-gray-700 mb-3">
             Class Teacher Of
           </h3>
@@ -129,9 +129,9 @@ export default async function TeacherProfilePage({
             {teacher.classTeacherOf.map((section) => (
               <span
                 key={section.id}
-                className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium"
+                className="px-3 py-1 bg-blue-50 text-blue-700 rounded-sm text-sm font-medium"
               >
-                Class {section.class.name} — Section {section.name}
+                Class {section.class.name} - Section {section.name}
               </span>
             ))}
           </div>
@@ -140,7 +140,7 @@ export default async function TeacherProfilePage({
 
       {/* Subject Assignments */}
       {teacher.subjects.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-lg p-5 mb-4">
+        <div className="bg-white border border-gray-200 rounded-sm p-5 mb-4">
           <h3 className="text-sm font-semibold text-gray-700 mb-3">
             Subject Assignments
           </h3>
@@ -148,9 +148,9 @@ export default async function TeacherProfilePage({
             {teacher.subjects.map((ts) => (
               <span
                 key={ts.id}
-                className="px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm font-medium"
+                className="px-3 py-1 bg-green-50 text-green-700 rounded-sm text-sm font-medium"
               >
-                {ts.subject.name} — Class {ts.subject.class.name}
+                {ts.subject.name} - Class {ts.subject.class.name}
               </span>
             ))}
           </div>

@@ -43,20 +43,19 @@ export default async function AdminTeachersPage({
   const teachers = await getTeachers(q);
 
   return (
-    <main className="flex-1 p-6 lg:p-8 max-w-6xl">
+    <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-6xl w-full">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Teachers Setup / शिक्षक प्रबंधन</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <h1 className="text-xl sm:text-2xl font-bold text-[#2D2A26]">Teachers Setup / शिक्षक प्रबंधन</h1>
+          <p className="text-xs sm:text-sm text-[#7A7267] mt-0.5">
             {teachers.length} teacher{teachers.length !== 1 ? "s" : ""} registered
           </p>
         </div>
         <div>
           <Link
             href="teachers/new"
-            className="flex items-center gap-1.5 px-3 py-2 rounded text-sm font-medium text-white transition-colors"
-            style={{ background: "hsl(var(--primary))" }}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-sm text-xs font-semibold text-white bg-[#6B1D30] hover:bg-[#541624] transition-colors shadow-xs"
           >
             <Plus className="h-4 w-4" />
             Add Teacher
@@ -103,11 +102,11 @@ export default async function AdminTeachersPage({
           </p>
         </div>
       ) : (
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="bg-white rounded-sm border border-[#E8E0D4] overflow-hidden shadow-xs">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm min-w-[650px]">
               <thead>
-                <tr className="border-b border-gray-100 bg-gray-50">
+                <tr className="border-b border-[#E8E0D4] bg-[#F8F5F0]">
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
                     Employee Code
                   </th>
@@ -141,23 +140,23 @@ export default async function AdminTeachersPage({
                         {t.fullName}
                       </td>
                       <td className="px-4 py-3 text-gray-600 capitalize">
-                        {t.designation || "—"}
+                        {t.designation || "-"}
                       </td>
                       <td className="px-4 py-3 text-gray-600">
                         {assignedClass
                           ? `Class ${assignedClass.class.name} (Section ${assignedClass.name})`
-                          : "—"}
+                          : "-"}
                       </td>
                       <td className="px-4 py-3 font-mono text-xs text-gray-600">
                         {t.user.phone}
                       </td>
                       <td className="px-4 py-3">
                         {t.user.isActive ? (
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-100 font-medium">
+                          <span className="text-xs px-2 py-0.5 rounded-sm bg-green-50 text-green-700 border border-green-100 font-medium">
                             Active
                           </span>
                         ) : (
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-100 font-medium flex items-center gap-1 w-max">
+                          <span className="text-xs px-2 py-0.5 rounded-sm bg-red-50 text-red-700 border border-red-100 font-medium flex items-center gap-1 w-max">
                             <ShieldAlert className="h-3 w-3" /> Deactivated
                           </span>
                         )}

@@ -57,7 +57,7 @@ function NavLink({
       href={href}
       onClick={onClick}
       className={[
-        "group flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150",
+        "group flex items-center gap-3 px-3.5 py-2.5 rounded-sm text-sm font-medium transition-all duration-150",
         isActive
           ? "bg-white/15 text-white font-semibold shadow-xs"
           : "text-white/75 hover:text-white hover:bg-white/10",
@@ -75,16 +75,21 @@ function SidebarContent({ locale, onClose }: { locale: string; onClose?: () => v
     <div className="flex flex-col h-full bg-[#6B1D30]">
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-5 border-b border-white/15">
-        <div>
-          <p className="text-base font-bold text-white tracking-tight leading-snug">
-            Composite Vidyalaya
-          </p>
-          <p className="text-xs text-white/70 font-medium mt-0.5">Admin Portal</p>
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-sm bg-white/15 text-white flex items-center justify-center font-bold text-sm">
+            CV
+          </div>
+          <div>
+            <p className="text-sm font-bold text-white tracking-tight leading-snug">
+              Composite Vidyalaya
+            </p>
+            <p className="text-[11px] text-white/70 font-medium">Admin Portal</p>
+          </div>
         </div>
         {onClose && (
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-white/70 hover:text-white hover:bg-white/10 lg:hidden transition-colors"
+            className="p-1.5 rounded-sm text-white/70 hover:text-white hover:bg-white/10 lg:hidden transition-colors"
             aria-label="Close menu"
           >
             <X className="h-5 w-5" />
@@ -103,7 +108,7 @@ function SidebarContent({ locale, onClose }: { locale: string; onClose?: () => v
       <div className="p-3 border-t border-white/15">
         <button
           onClick={() => signOut({ callbackUrl: `/${locale}/login` })}
-          className="flex w-full items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-white/75 hover:text-white hover:bg-white/10 transition-colors"
+          className="flex w-full items-center gap-3 px-3.5 py-2.5 rounded-sm text-sm font-medium text-white/75 hover:text-white hover:bg-white/10 transition-colors"
         >
           <LogOut className="h-4 w-4 shrink-0" />
           <span>Sign out</span>
@@ -115,6 +120,12 @@ function SidebarContent({ locale, onClose }: { locale: string; onClose?: () => v
 
 export function AdminSidebar({ locale }: { locale: string }) {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+
+  const isCurrent = (href: string) => {
+    const fullHref = `/${locale}${href}`;
+    return pathname === fullHref || pathname.startsWith(`${fullHref}/`);
+  };
 
   return (
     <>
@@ -123,23 +134,93 @@ export function AdminSidebar({ locale }: { locale: string }) {
         <SidebarContent locale={locale} />
       </aside>
 
-      {/* Mobile hamburger */}
-      <button
-        className="lg:hidden fixed top-3 left-3 z-40 p-2.5 rounded-xl shadow-md bg-[#6B1D30] text-white hover:bg-[#581726] transition-colors"
-        onClick={() => setOpen(true)}
-        aria-label="Open navigation"
-      >
-        <Menu className="h-5 w-5" />
-      </button>
+      {/* Mobile Top Header App Bar (Phone View) */}
+      <header className="lg:hidden sticky top-0 z-30 h-14 w-full shrink-0 bg-[#6B1D30] text-white flex items-center justify-between px-3 sm:px-4 shadow-sm">
+        <div className="flex items-center gap-2.5">
+          <button
+            className="p-2 rounded-sm text-white hover:bg-white/10 transition-colors"
+            onClick={() => setOpen(true)}
+            aria-label="Open navigation menu"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+          <div>
+            <p className="text-sm font-bold text-white leading-tight">
+              Composite Vidyalaya
+            </p>
+            <p className="text-[10px] text-white/70">Admin Portal</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-sm bg-white/15 text-white border border-white/10">
+            Headmaster
+          </span>
+        </div>
+      </header>
 
-      {/* Mobile drawer */}
+      {/* Mobile Bottom Navigation Bar (Phone View) */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-[#E8E0D4] flex items-center justify-around py-1 shadow-lg">
+        <Link
+          href={`/${locale}/admin/dashboard`}
+          className={`flex flex-col items-center gap-0.5 px-2.5 py-1 text-xs transition-colors ${
+            isCurrent("/admin/dashboard")
+              ? "text-[#6B1D30] font-bold"
+              : "text-[#7A7267] hover:text-[#2D2A26]"
+          }`}
+        >
+          <LayoutDashboard className="h-4 w-4" />
+          <span className="text-[10px]">Dashboard</span>
+        </Link>
+        <Link
+          href={`/${locale}/admin/attendance`}
+          className={`flex flex-col items-center gap-0.5 px-2.5 py-1 text-xs transition-colors ${
+            isCurrent("/admin/attendance")
+              ? "text-[#6B1D30] font-bold"
+              : "text-[#7A7267] hover:text-[#2D2A26]"
+          }`}
+        >
+          <CalendarCheck className="h-4 w-4" />
+          <span className="text-[10px]">Attendance</span>
+        </Link>
+        <Link
+          href={`/${locale}/admin/mdm`}
+          className={`flex flex-col items-center gap-0.5 px-2.5 py-1 text-xs transition-colors ${
+            isCurrent("/admin/mdm")
+              ? "text-[#6B1D30] font-bold"
+              : "text-[#7A7267] hover:text-[#2D2A26]"
+          }`}
+        >
+          <UtensilsCrossed className="h-4 w-4" />
+          <span className="text-[10px]">MDM</span>
+        </Link>
+        <Link
+          href={`/${locale}/admin/notifications`}
+          className={`flex flex-col items-center gap-0.5 px-2.5 py-1 text-xs transition-colors ${
+            isCurrent("/admin/notifications")
+              ? "text-[#6B1D30] font-bold"
+              : "text-[#7A7267] hover:text-[#2D2A26]"
+          }`}
+        >
+          <Bell className="h-4 w-4" />
+          <span className="text-[10px]">Notices</span>
+        </Link>
+        <button
+          onClick={() => setOpen(true)}
+          className="flex flex-col items-center gap-0.5 px-2.5 py-1 text-xs text-[#7A7267] hover:text-[#2D2A26] transition-colors"
+        >
+          <Menu className="h-4 w-4" />
+          <span className="text-[10px]">Menu</span>
+        </button>
+      </nav>
+
+      {/* Mobile Drawer */}
       {open && (
         <div className="lg:hidden fixed inset-0 z-50 flex">
           <div
             className="absolute inset-0 bg-black/40 backdrop-blur-xs transition-opacity"
             onClick={() => setOpen(false)}
           />
-          <aside className="relative flex flex-col w-64 h-full shadow-2xl bg-[#6B1D30]">
+          <aside className="relative flex flex-col w-72 max-w-[85vw] h-full shadow-2xl bg-[#6B1D30]">
             <SidebarContent locale={locale} onClose={() => setOpen(false)} />
           </aside>
         </div>

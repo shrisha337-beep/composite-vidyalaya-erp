@@ -58,7 +58,7 @@ export function TeacherDetailView({
         month: "short",
         year: "numeric",
       })
-    : "—";
+    : "-";
 
   async function handleUpdateSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -148,7 +148,7 @@ export function TeacherDetailView({
       <div className="bg-white border border-gray-200 rounded-lg p-5">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-4">
-            <div className="w-16 h-16 rounded-full border border-gray-200 overflow-hidden shrink-0 bg-gray-100 flex items-center justify-center">
+            <div className="w-16 h-16 rounded-sm border border-gray-200 overflow-hidden shrink-0 bg-gray-100 flex items-center justify-center">
               {teacher.photoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={teacher.photoUrl} alt={teacher.fullName} className="w-full h-full object-cover" />
@@ -163,15 +163,15 @@ export function TeacherDetailView({
                 Employee Code: <span className="font-mono font-medium">{teacher.employeeCode}</span>
               </p>
               <div className="flex flex-wrap items-center gap-2 mt-2">
-                <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+                <span className="text-xs px-2.5 py-0.5 rounded-sm bg-blue-50 text-blue-700 border border-blue-100">
                   {teacher.designation || "Teacher"}
                 </span>
                 {teacher.user.isActive ? (
-                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-100 font-medium">
+                  <span className="text-xs px-2.5 py-0.5 rounded-sm bg-green-50 text-green-700 border border-green-100 font-medium">
                     Active Account
                   </span>
                 ) : (
-                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-100 font-medium flex items-center gap-1">
+                  <span className="text-xs px-2.5 py-0.5 rounded-sm bg-red-50 text-red-700 border border-red-100 font-medium flex items-center gap-1">
                     <ShieldAlert className="h-3.5 w-3.5" /> Deactivated
                   </span>
                 )}
@@ -274,7 +274,7 @@ export function TeacherDetailView({
                   <option value="Headmaster">Headmaster / प्रधानाध्यापक</option>
                 </select>
               ) : (
-                <p className="text-sm font-semibold text-gray-800">{teacher.designation || "—"}</p>
+                <p className="text-sm font-semibold text-gray-800">{teacher.designation || "-"}</p>
               )}
             </div>
 
@@ -288,7 +288,7 @@ export function TeacherDetailView({
                   className="w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-[hsl(var(--ring))] bg-white"
                 />
               ) : (
-                <p className="text-sm font-semibold text-gray-800">{teacher.qualification || "—"}</p>
+                <p className="text-sm font-semibold text-gray-800">{teacher.qualification || "-"}</p>
               )}
             </div>
 
@@ -327,7 +327,7 @@ export function TeacherDetailView({
                 <p className="text-sm font-semibold text-gray-800">
                   {assignedClass
                     ? `Class ${assignedClass.class.name} (Section A)`
-                    : "—"}
+                    : "-"}
                 </p>
               )}
             </div>
