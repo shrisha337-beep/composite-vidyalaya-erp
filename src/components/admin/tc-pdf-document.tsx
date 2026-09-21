@@ -169,14 +169,13 @@ export function TcPdfDocument({
             <Text style={styles.titleEnglish}>Transfer Certificate</Text>
             <Text style={styles.schoolName}>कम्पोजिट विद्यालय चांदपुर तरहर (Composite Vidyalaya Chandpur Tarahar)</Text>
             <Text style={styles.schoolMeta}>
-              Block - Paraspur, Tehsil - Colonel Ganj, Janpad - Gonda
+              ब्लॉक - परासपुर, तहसील - कर्नलगंज, जनपद - गोंडा
             </Text>
           </View>
 
           {/* Top metadata */}
           <View style={styles.topMetadata}>
             <Text style={styles.metaText}>U-DISE Code: {tc.udiseCode || "Pending Allotment"}</Text>
-            <Text style={styles.metaText}>Book No / बुक नम्बर: {tc.bookNumber || "—"}</Text>
             <Text style={styles.metaText}>Serial No / क्रम संख्या: {tc.tcNumber}</Text>
           </View>
 

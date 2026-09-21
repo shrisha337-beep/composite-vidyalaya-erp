@@ -129,6 +129,7 @@ export function AdmissionForm({
   sessionLabel,
   schoolDistrict,
   schoolBlock,
+  udiseCode,
   isEdit = false,
   student,
   decrypted,
@@ -137,6 +138,7 @@ export function AdmissionForm({
   sessionLabel: string;
   schoolDistrict?: string;
   schoolBlock?: string;
+  udiseCode?: string;
   isEdit?: boolean;
   student?: any;
   decrypted?: any;
@@ -221,7 +223,7 @@ export function AdmissionForm({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <Field label="School Name" labelHi="विद्यालय का नाम" name="schoolName">
             <input
               name="schoolName"
@@ -245,6 +247,14 @@ export function AdmissionForm({
               type="text"
               defaultValue={schoolDistrict ?? ""}
               className="w-full border border-gray-300 rounded px-2.5 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-[hsl(var(--ring))]"
+            />
+          </Field>
+          <Field label="UDISE Code" labelHi="यू-डाइस कोड">
+            <input
+              type="text"
+              value={udiseCode || "— Not yet allotted"}
+              readOnly
+              className="w-full border border-gray-200 rounded px-2.5 py-1.5 text-sm bg-gray-50 text-gray-500 cursor-not-allowed"
             />
           </Field>
         </div>
@@ -273,9 +283,35 @@ export function AdmissionForm({
           {/* Occupation + Caste row */}
           <Field label="Father/Guardian's Occupation" labelHi="पिता/अभिभावक का व्यवसाय" name="occupation" defaultValue={father?.occupation || ""} />
           <div className="grid grid-cols-3 gap-2">
-            <Field label="Caste" labelHi="जाति" name="category" defaultValue={student?.category || ""} />
+            <Field label="Caste" labelHi="जाति" name="category">
+              <select
+                name="category"
+                defaultValue={student?.category || ""}
+                className="w-full border border-gray-300 rounded px-2.5 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-[hsl(var(--ring))] bg-white"
+              >
+                <option value="">Select</option>
+                <option value="GEN">GEN (सामान्य)</option>
+                <option value="OBC">OBC (अन्य पिछड़ा वर्ग)</option>
+                <option value="SC">SC (अनुसूचित जाति)</option>
+                <option value="ST">ST (अनुसूचित जनजाति)</option>
+                <option value="OTHER">Other (अन्य)</option>
+              </select>
+            </Field>
             <Field label="Sub-caste" labelHi="उपजाति" name="subCaste" defaultValue={student?.subCaste || ""} />
-            <Field label="Religion" labelHi="धर्म" name="religion" defaultValue={student?.religion || ""} />
+            <Field label="Religion" labelHi="धर्म" name="religion">
+              <select
+                name="religion"
+                defaultValue={student?.religion || ""}
+                className="w-full border border-gray-300 rounded px-2.5 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-[hsl(var(--ring))] bg-white"
+              >
+                <option value="">Select</option>
+                <option value="HINDU">Hindu (हिन्दू)</option>
+                <option value="MUSLIM">Muslim (मुस्लिम)</option>
+                <option value="CHRISTIAN">Christian (ईसाई)</option>
+                <option value="BUDDHISM">Buddhism (बौद्ध)</option>
+                <option value="OTHER">Other (अन्य)</option>
+              </select>
+            </Field>
           </div>
 
           {/* DOB */}
@@ -339,8 +375,8 @@ export function AdmissionForm({
           {/* Address */}
           <Field label="Village / Mohalla" labelHi="निवास स्थान ग्राम/मोहल्ला" name="villageOrMohalla" defaultValue={student?.villageOrMohalla || ""} />
           <Field label="Post Office" labelHi="पोस्ट" name="postOffice" defaultValue={student?.postOffice || ""} />
-          <Field label="Development Block" labelHi="विकास खण्ड/नगरखेड़ा" name="developmentBlock" defaultValue={student?.developmentBlock || ""} />
-          <Field label="District" labelHi="जनपद" name="district" defaultValue={student?.district || ""} />
+          <Field label="Development Block" labelHi="विकास खण्ड/नगरखेड़ा" name="developmentBlock" defaultValue={student?.developmentBlock || "Paraspur"} />
+          <Field label="District" labelHi="जनपद" name="district" defaultValue={student?.district || "Gonda"} />
           <Field label="Pincode" labelHi="पिनकोड" name="pincode" type="text" placeholder="6 digits" defaultValue={student?.pincode || ""} />
           <Field label="Mobile Number" labelHi="मोबाइल नंबर" name="mobileNumber" type="tel" placeholder="10 digits" defaultValue={student?.mobileNumber || ""} />
           <Field label="WhatsApp Number" labelHi="व्हाट्सऐप नंबर" name="whatsappNumber" type="tel" placeholder="10 digits" defaultValue={student?.whatsappNumber || ""} />

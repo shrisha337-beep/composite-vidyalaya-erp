@@ -30,10 +30,10 @@ export async function issueTransferCertificate(formData: FormData): Promise<void
   const dateOfIssueRaw = (formData.get("dateOfIssue") as string)?.trim();
 
   // Additional details from the physical form
-  const bookNumber = (formData.get("bookNumber") as string)?.trim() || "";
+  const bookNumber = ""; // Removed from form — no longer used
   const schoolDistrict = (formData.get("schoolDistrict") as string)?.trim() || "";
   const schoolBlock = (formData.get("schoolBlock") as string)?.trim() || "";
-  const strikingReason = (formData.get("strikingReason") as string)?.trim() || "";
+  const dobInWordsForm = (formData.get("dobInWords") as string)?.trim() || "";
   const passedHigherExam = (formData.get("passedHigherExam") as string)?.trim() || "";
   const passedHigherExamDate = (formData.get("passedHigherExamDate") as string)?.trim() || "";
   const struckClass = (formData.get("struckClass") as string)?.trim() || "";
@@ -113,7 +113,7 @@ export async function issueTransferCertificate(formData: FormData): Promise<void
         fatherNameSnapshot: fatherName,
         motherNameSnapshot: motherName,
         dobSnapshot: student.dob,
-        dobWordsSnapshot: student.dobInWords,
+        dobWordsSnapshot: dobInWordsForm || student.dobInWords,
         aadhaarSnapshot: studentAadhaarDecrypted,
         penNumberSnapshot: student.penNumber,
         apaarIdSnapshot: student.apaarId,

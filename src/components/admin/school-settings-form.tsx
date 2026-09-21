@@ -16,6 +16,7 @@ import {
   AlertCircle,
   Loader2,
   Save,
+  IndianRupee,
 } from "lucide-react";
 
 export function SchoolSettingsForm({
@@ -218,6 +219,49 @@ export function SchoolSettingsForm({
                 className="hidden"
               />
             </label>
+          </div>
+        </div>
+      </div>
+
+      {/* MDM Conversion Cost Settings */}
+      <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-4">
+        <h2 className="text-sm font-bold text-gray-800 border-b border-gray-100 pb-3 flex items-center gap-2">
+          <IndianRupee className="h-4 w-4 text-[hsl(var(--primary))]" />
+          MDM Conversion Cost / एम.डी.एम. परिवर्तन लागत
+        </h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+          <div>
+            <label className="block font-semibold text-gray-700 mb-1">
+              Primary (कक्षा 1–5) — ₹ per student
+            </label>
+            <input
+              type="number"
+              name="conversionCostPrimary"
+              step="0.01"
+              min="0"
+              defaultValue={settings.conversionCostPrimary}
+              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            />
+            <p className="text-[11px] text-gray-400 mt-1">
+              Current government rate: ₹6.78/student
+            </p>
+          </div>
+          <div>
+            <label className="block font-semibold text-gray-700 mb-1">
+              Junior (कक्षा 6–8) — ₹ per student
+            </label>
+            <input
+              type="number"
+              name="conversionCostJunior"
+              step="0.01"
+              min="0"
+              defaultValue={settings.conversionCostJunior}
+              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            />
+            <p className="text-[11px] text-gray-400 mt-1">
+              Current government rate: ₹10.17/student
+            </p>
           </div>
         </div>
       </div>

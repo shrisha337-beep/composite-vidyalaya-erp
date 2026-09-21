@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { issueTransferCertificate } from "@/app/actions/issue-tc";
 import Link from "next/link";
@@ -49,20 +49,94 @@ function Field({
   );
 }
 
+// ── DOB to words converter (Hindi + English) ────────────────────────────────
+
+const hindiDigitWords = [
+  "", "एक", "दो", "तीन", "चार", "पाँच", "छह", "सात", "आठ", "नौ", "दस",
+  "ग्यारह", "बारह", "तेरह", "चौदह", "पंद्रह", "सोलह", "सत्रह", "अठारह", "उन्नीस", "बीस",
+  "इक्कीस", "बाईस", "तेईस", "चौबीस", "पच्चीस", "छब्बीस", "सत्ताईस", "अठ्ठाईस", "उनतीस", "तीस",
+  "इकतीस",
+];
+
+const hindiMonths = [
+  "जनवरी", "फरवरी", "मार्च", "अप्रैल", "मई", "जून",
+  "जुलाई", "अगस्त", "सितम्बर", "अक्टूबर", "नवम्बर", "दिसम्बर",
+];
+
+const englishMonths = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
+const englishOnes = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine",
+  "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
+const englishTens = ["", "", "Twenty", "Thirty"];
+
+function numberToEnglish(n: number): string {
+  if (n < 20) return englishOnes[n];
+  if (n < 40) return englishTens[Math.floor(n / 10)] + (n % 10 ? " " + englishOnes[n % 10] : "");
+  return String(n);
+}
+
+function yearToHindi(year: number): string {
+  if (year < 2000) {
+    return `उन्नीस सौ ${hindiDigitWords[year - 1900] || year - 1900}`;
+  }
+  const remainder = year - 2000;
+  if (remainder === 0) return "दो हज़ार";
+  if (remainder <= 31) return `दो हज़ार ${hindiDigitWords[remainder]}`;
+  return `दो हज़ार ${hindiDigitWords[Math.floor(remainder / 10) * 10] || ""} ${hindiDigitWords[remainder % 10] || ""}`.trim();
+}
+
+function yearToEnglish(year: number): string {
+  if (year < 2000) {
+    return `Nineteen ${numberToEnglish(year - 1900)}`;
+  }
+  const remainder = year - 2000;
+  if (remainder === 0) return "Two Thousand";
+  return `Two Thousand ${numberToEnglish(remainder)}`;
+}
+
+function dobToWords(dob: Date): string {
+  const day = dob.getDate();
+  const month = dob.getMonth();
+  const year = dob.getFullYear();
+
+  const hindi = `${hindiDigitWords[day]} ${hindiMonths[month]} ${yearToHindi(year)}`;
+  const english = `${numberToEnglish(day)} ${englishMonths[month]} ${yearToEnglish(year)}`;
+
+  return `${hindi} (${english})`;
+}
+
+// ── Main form component ─────────────────────────────────────────────────────
+
 export function TcForm({
   locale,
   student,
   decrypted,
+  nextTcNumber,
 }: {
   locale: string;
   student: any;
   decrypted: any;
+  nextTcNumber: string;
 }) {
   const searchParams = useSearchParams();
   const error = searchParams.get("error");
 
-  const [isEnrolled, setIsEnrolled] = useState(true);
   const [reasonForLeaving, setReasonForLeaving] = useState("");
+
+  // Auto-compute DOB in words from student's DOB
+  const studentDob = student.dob ? new Date(student.dob) : null;
+  const autoDobWords = studentDob ? dobToWords(studentDob) : "";
+  const [dobInWords, setDobInWords] = useState(student.dobInWords || autoDobWords);
+
+  // If student has DOB but no existing dobInWords, auto-fill
+  useEffect(() => {
+    if (!dobInWords && autoDobWords) {
+      setDobInWords(autoDobWords);
+    }
+  }, []);
 
   return (
     <form action={issueTransferCertificate} className="space-y-6">
@@ -75,24 +149,18 @@ export function TcForm({
         </div>
       )}
 
-      {/* ── SECTION 1: BOOK & SERIAL NUMBERS ──────────────────────────────── */}
+      {/* ── SECTION 1: SERIAL NUMBER ─────────────────────────────────────── */}
       <div className="bg-white border border-gray-200 rounded-lg p-5">
         <h2 className="text-sm font-semibold text-gray-800 mb-3">
-          Book & Serial Details / पुस्तक एवं क्रम संख्या
+          Serial Number / क्रम संख्या
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field
-            label="Book Number"
-            labelHi="बुक नम्बर"
-            name="bookNumber"
-            placeholder="e.g. 12"
-          />
           <Field
             label="Serial Number (TC No)"
             labelHi="क्रम संख्या"
             name="tcNumber"
             required
-            placeholder="e.g. 34"
+            defaultValue={nextTcNumber}
           />
         </div>
       </div>
@@ -107,31 +175,52 @@ export function TcForm({
             label="School Block"
             labelHi="विकास खण्ड"
             name="schoolBlock"
-            defaultValue={student.developmentBlock || "Tarhar"}
+            defaultValue="Paraspur"
           />
           <Field
             label="School District"
             labelHi="जनपद"
             name="schoolDistrict"
-            defaultValue={student.district || "Maharajganj"}
+            defaultValue="Gonda"
           />
         </div>
       </div>
 
-      {/* ── SECTION 3: REASON & CONDUCT ───────────────────────────────────── */}
+      {/* ── SECTION 3: DOB IN WORDS (auto-extracted, required) ────────────── */}
       <div className="bg-white border border-gray-200 rounded-lg p-5">
         <h2 className="text-sm font-semibold text-gray-800 mb-3">
-          Striking Off & Leaving Info / विवरण नाम काटने का
+          Date of Birth in Words / जन्मतिथि शब्दों में
+        </h2>
+        <Field
+          label="DOB in Words"
+          labelHi="जन्मतिथि शब्दों में"
+          name="dobInWords"
+          required
+        >
+          <input
+            name="dobInWords"
+            type="text"
+            required
+            value={dobInWords}
+            onChange={(e) => setDobInWords(e.target.value)}
+            className="w-full border border-gray-300 rounded px-2.5 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-[hsl(var(--ring))] focus:border-transparent bg-white"
+          />
+          {autoDobWords && (
+            <p className="text-[11px] text-gray-400 mt-1">
+              Auto-extracted from DOB: {studentDob?.toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric" })}
+            </p>
+          )}
+        </Field>
+      </div>
+
+      {/* ── SECTION 4: REASON & CONDUCT ──────────────────────────────────── */}
+      <div className="bg-white border border-gray-200 rounded-lg p-5">
+        <h2 className="text-sm font-semibold text-gray-800 mb-3">
+          Leaving Info / विवरण
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
           <Field
-            label="Reason for Striking Off"
-            labelHi="नाम काटने का कारण"
-            name="strikingReason"
-            placeholder="e.g. Guardians relocated / अभिभावक के स्थानान्तरण के कारण"
-          />
-          <Field
-            label="Reason for Leaving (Schema Match)"
+            label="Reason for Leaving"
             labelHi="विद्यालय छोड़ने का कारण"
             name="reasonForLeaving"
             required
@@ -175,7 +264,7 @@ export function TcForm({
         </div>
       </div>
 
-      {/* ── SECTION 4: CLASS & PROMOTION ──────────────────────────────────── */}
+      {/* ── SECTION 5: CLASS & PROMOTION ──────────────────────────────────── */}
       <div className="bg-white border border-gray-200 rounded-lg p-5">
         <h2 className="text-sm font-semibold text-gray-800 mb-3">
           Class & Promotion Details / कक्षा एवं प्रोन्नति
@@ -209,7 +298,7 @@ export function TcForm({
         </div>
       </div>
 
-      {/* ── SECTION 5: WORKING DAYS & DATES ───────────────────────────────── */}
+      {/* ── SECTION 6: WORKING DAYS & DATES ───────────────────────────────── */}
       <div className="bg-white border border-gray-200 rounded-lg p-5">
         <h2 className="text-sm font-semibold text-gray-800 mb-3">
           Attendance & Dates / उपस्थिति एवं दिनांक
@@ -254,7 +343,7 @@ export function TcForm({
         </div>
       </div>
 
-      {/* ── SECTION 6: REMARKS ────────────────────────────────────────────── */}
+      {/* ── SECTION 7: REMARKS ────────────────────────────────────────────── */}
       <div className="bg-white border border-gray-200 rounded-lg p-5">
         <h2 className="text-sm font-semibold text-gray-800 mb-3">
           Remarks / टिप्पणी

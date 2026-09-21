@@ -17,6 +17,25 @@ async function getStudent(studentId: string) {
   });
 }
 
+async function getNextTcNumber(): Promise<string> {
+  // Get all TC numbers, find the highest numeric one, and increment
+  const latestTc = await prisma.transferCertificate.findMany({
+    select: { tcNumber: true },
+    orderBy: { createdAt: "desc" },
+    take: 50,
+  });
+
+  let maxNum = 0;
+  for (const tc of latestTc) {
+    const num = parseInt(tc.tcNumber, 10);
+    if (!isNaN(num) && num > maxNum) {
+      maxNum = num;
+    }
+  }
+
+  return String(maxNum + 1);
+}
+
 export default async function IssueTcPage({
   params,
 }: {
@@ -50,6 +69,8 @@ export default async function IssueTcPage({
     })),
   };
 
+  const nextTcNumber = await getNextTcNumber();
+
   return (
     <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-3xl">
       {/* Header */}
@@ -72,6 +93,7 @@ export default async function IssueTcPage({
         locale={locale}
         student={student}
         decrypted={decrypted}
+        nextTcNumber={nextTcNumber}
       />
     </main>
   );

@@ -1,5 +1,6 @@
 import { requireRole } from "@/lib/rbac";
 import { prisma } from "@/lib/prisma";
+import { getSchoolSettings } from "@/app/actions/school-settings";
 import { MdmDashboardView, type ClassSectionMDM, type MonthlyDayLog } from "@/components/admin/mdm-dashboard-view";
 
 // ── Constants matching the client component ──────────────────────────────────
@@ -7,8 +8,6 @@ const PRIMARY_CLASSES = ["1", "2", "3", "4", "5"];
 const GRAIN_PRIMARY = 100;
 const GRAIN_JUNIOR = 150;
 const FRUIT_COST = 4;
-const CONVERSION_COST_PRIMARY = 6.78;
-const CONVERSION_COST_JUNIOR = 10.17;
 
 function isPrimary(className: string) {
   return PRIMARY_CLASSES.includes(className);
@@ -24,6 +23,11 @@ export default async function AdminMDMPage({
   await requireRole(["ADMIN"]);
   const { locale } = await params;
   const query = await searchParams;
+
+  // Load admin-configured MDM conversion costs
+  const settings = await getSchoolSettings();
+  const CONVERSION_COST_PRIMARY = settings.conversionCostPrimary;
+  const CONVERSION_COST_JUNIOR = settings.conversionCostJunior;
 
   const now = new Date();
   const defaultDateStr = now.toISOString().split("T")[0]; // "YYYY-MM-DD"
@@ -275,6 +279,8 @@ export default async function AdminMDMPage({
         classesData={classesData}
         primaryMonthlyLogs={primaryMonthlyLogs}
         juniorMonthlyLogs={juniorMonthlyLogs}
+        conversionCostPrimary={CONVERSION_COST_PRIMARY}
+        conversionCostJunior={CONVERSION_COST_JUNIOR}
       />
     </main>
   );

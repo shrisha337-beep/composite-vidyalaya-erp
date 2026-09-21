@@ -871,6 +871,10 @@ model SchoolSettings {
   defaultLocale String  @default("hi") // "hi" | "en"
   themeConfig   Json?
 
+  // MDM conversion cost per student (₹), admin-editable
+  conversionCostPrimary Float @default(6.78)  // Primary (कक्षा 1–5)
+  conversionCostJunior  Float @default(10.17) // Junior (कक्षा 6–8)
+
   @@map("school_settings")
 }
 

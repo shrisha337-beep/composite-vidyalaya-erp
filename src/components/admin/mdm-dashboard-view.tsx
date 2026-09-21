@@ -57,16 +57,15 @@ interface MdmDashboardViewProps {
   classesData: ClassSectionMDM[];
   primaryMonthlyLogs: MonthlyDayLog[];
   juniorMonthlyLogs: MonthlyDayLog[];
+  conversionCostPrimary: number;
+  conversionCostJunior: number;
 }
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const PRIMARY_CLASSES = ["1", "2", "3", "4", "5"];
-const JUNIOR_CLASSES = ["6", "7", "8"];
 const GRAIN_PER_STUDENT_PRIMARY = 100; // grams
 const GRAIN_PER_STUDENT_JUNIOR = 150; // grams
 const FRUIT_COST_PER_STUDENT = 4; // ₹
-const CONVERSION_COST_PRIMARY = 6.78; // ₹
-const CONVERSION_COST_JUNIOR = 10.17; // ₹
 
 function isPrimaryClass(className: string): boolean {
   return PRIMARY_CLASSES.includes(className);
@@ -79,6 +78,8 @@ export function MdmDashboardView({
   classesData,
   primaryMonthlyLogs,
   juniorMonthlyLogs,
+  conversionCostPrimary: CONVERSION_COST_PRIMARY,
+  conversionCostJunior: CONVERSION_COST_JUNIOR,
 }: MdmDashboardViewProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"daily" | "monthly">("daily");

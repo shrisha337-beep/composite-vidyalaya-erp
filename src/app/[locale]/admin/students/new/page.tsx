@@ -1,5 +1,6 @@
 import { requireRole } from "@/lib/rbac";
 import { prisma } from "@/lib/prisma";
+import { getSchoolSettings } from "@/app/actions/school-settings";
 import { AdmissionForm } from "@/components/admin/admission-form";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -26,6 +27,8 @@ export default async function NewStudentPage({
     )}`);
   }
 
+  const settings = await getSchoolSettings();
+
   return (
     <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-3xl">
       {/* Header */}
@@ -44,7 +47,7 @@ export default async function NewStudentPage({
         </div>
       </div>
 
-      <AdmissionForm locale={locale} sessionLabel={session.label} />
+      <AdmissionForm locale={locale} sessionLabel={session.label} schoolDistrict="Gonda" schoolBlock="Paraspur" udiseCode={settings.udiseCode || undefined} />
     </main>
   );
 }

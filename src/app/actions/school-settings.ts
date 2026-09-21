@@ -13,6 +13,8 @@ export interface SchoolSettingsData {
   logoUrlSarvaShiksha: string | null;
   logoUrlSamagra: string | null;
   defaultLocale: string;
+  conversionCostPrimary: number;
+  conversionCostJunior: number;
 }
 
 const DEFAULT_SETTINGS = {
@@ -24,6 +26,8 @@ const DEFAULT_SETTINGS = {
   logoUrlSarvaShiksha: "/images/logo-sarva-shiksha.jpg",
   logoUrlSamagra: "/images/logo-samagra-shiksha.png",
   defaultLocale: "hi",
+  conversionCostPrimary: 6.78,
+  conversionCostJunior: 10.17,
 };
 
 /**
@@ -44,6 +48,8 @@ export async function getSchoolSettings(): Promise<SchoolSettingsData> {
       logoUrlSarvaShiksha: existing.logoUrlSarvaShiksha,
       logoUrlSamagra: existing.logoUrlSamagra,
       defaultLocale: existing.defaultLocale,
+      conversionCostPrimary: existing.conversionCostPrimary,
+      conversionCostJunior: existing.conversionCostJunior,
     };
   }
 
@@ -60,6 +66,8 @@ export async function getSchoolSettings(): Promise<SchoolSettingsData> {
     logoUrlSarvaShiksha: created.logoUrlSarvaShiksha,
     logoUrlSamagra: created.logoUrlSamagra,
     defaultLocale: created.defaultLocale,
+    conversionCostPrimary: created.conversionCostPrimary,
+    conversionCostJunior: created.conversionCostJunior,
   };
 }
 
@@ -75,6 +83,8 @@ export async function updateSchoolSettingsAction(
   const schoolName = (formData.get("schoolName") as string)?.trim();
   const address = (formData.get("address") as string)?.trim() || null;
   const udiseCode = (formData.get("udiseCode") as string)?.trim() || null;
+  const conversionCostPrimary = parseFloat(formData.get("conversionCostPrimary") as string) || 6.78;
+  const conversionCostJunior = parseFloat(formData.get("conversionCostJunior") as string) || 10.17;
 
   if (!schoolName) {
     return { success: false, message: "School name is required." };
@@ -118,6 +128,8 @@ export async function updateSchoolSettingsAction(
         schoolName,
         address,
         udiseCode,
+        conversionCostPrimary,
+        conversionCostJunior,
         ...(logoUrlSarvaShiksha ? { logoUrlSarvaShiksha } : {}),
         ...(logoUrlSamagra ? { logoUrlSamagra } : {}),
       },
@@ -126,6 +138,8 @@ export async function updateSchoolSettingsAction(
         schoolName,
         address,
         udiseCode,
+        conversionCostPrimary,
+        conversionCostJunior,
         logoUrlSarvaShiksha: logoUrlSarvaShiksha ?? "/images/logo-sarva-shiksha.jpg",
         logoUrlSamagra: logoUrlSamagra ?? "/images/logo-samagra-shiksha.png",
         defaultLocale: "hi",
