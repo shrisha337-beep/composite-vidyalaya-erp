@@ -39,11 +39,11 @@ async function main() {
 
   const teacherUser = await prisma.user.upsert({
     where: { phone: "9876543210" },
-    update: { passwordHash, email: "teacher@cvchandpur.in" },
+    update: { passwordHash },
     create: {
       role: Role.TEACHER,
       phone: "9876543210",
-      email: "teacher@cvchandpur.in",
+
       passwordHash,
       teacher: {
         create: {

@@ -14,17 +14,17 @@ export async function createTeacher(formData: FormData): Promise<void> {
   const fullName = (formData.get("fullName") as string)?.trim();
   const employeeCode = (formData.get("employeeCode") as string)?.trim();
   const phone = (formData.get("phone") as string)?.trim();
-  const email = (formData.get("email") as string)?.trim().toLowerCase() || null;
+
   const designation = (formData.get("designation") as string)?.trim() || null;
   const qualification = (formData.get("qualification") as string)?.trim() || null;
   const dateOfJoiningRaw = (formData.get("dateOfJoining") as string)?.trim();
   const classAssignment = (formData.get("classAssignment") as string)?.trim();
   const tempPassword = (formData.get("tempPassword") as string)?.trim();
 
-  if (!fullName || !employeeCode || !phone || !email || !tempPassword) {
+  if (!fullName || !employeeCode || !phone || !tempPassword) {
     redirect(
       `/${locale}/admin/teachers/new?error=${encodeURIComponent(
-        "Full Name, Employee Code, Mobile Number, Email, and Temporary Password are required."
+        "Full Name, Employee Code, Mobile Number, and Temporary Password are required."
       )}`
     );
   }
@@ -50,20 +50,7 @@ export async function createTeacher(formData: FormData): Promise<void> {
     );
   }
 
-  // 1b. Verify unique email
-  if (email) {
-    const existingEmail = await prisma.user.findFirst({
-      where: { email },
-      select: { id: true },
-    });
-    if (existingEmail) {
-      redirect(
-        `/${locale}/admin/teachers/new?error=${encodeURIComponent(
-          "A user with this email address already exists."
-        )}`
-      );
-    }
-  }
+
 
   // 2. Verify unique employee code
   const existingTeacher = await prisma.teacher.findUnique({
@@ -101,7 +88,6 @@ export async function createTeacher(formData: FormData): Promise<void> {
       data: {
         role: "TEACHER",
         phone,
-        email,
         passwordHash,
         isActive: true,
       },
