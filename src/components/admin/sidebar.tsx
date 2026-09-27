@@ -107,7 +107,10 @@ function SidebarContent({ locale, onClose }: { locale: string; onClose?: () => v
       {/* Sign out */}
       <div className="p-3 border-t border-white/15">
         <button
-          onClick={() => signOut({ callbackUrl: `${window.location.origin}/${locale}/login` })}
+          onClick={async () => {
+            await signOut({ redirect: false });
+            window.location.href = `/${locale}/login`;
+          }}
           className="flex w-full items-center gap-3 px-3.5 py-2.5 rounded-sm text-sm font-medium text-white/75 hover:text-white hover:bg-white/10 transition-colors"
         >
           <LogOut className="h-4 w-4 shrink-0" />
