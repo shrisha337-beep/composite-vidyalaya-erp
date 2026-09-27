@@ -1,4 +1,4 @@
- import "dotenv/config";
+import "dotenv/config";
 import { PrismaClient, Role } from "../src/generated/prisma/client";
 import { PrismaNeon } from "@prisma/adapter-neon";
 import bcrypt from "bcryptjs";
@@ -22,7 +22,7 @@ async function main() {
 
   const adminUser = await prisma.user.upsert({
     where: { phone: "9999999999" },
-    update: {passwordHash, email: "durga.anmol@gmail.com"},
+    update: { passwordHash, email: "durga.anmol@gmail.com" },
     create: {
       role: Role.ADMIN,
       phone: "9999999999",
@@ -43,7 +43,6 @@ async function main() {
     create: {
       role: Role.TEACHER,
       phone: "9876543210",
-
       passwordHash,
       teacher: {
         create: {
