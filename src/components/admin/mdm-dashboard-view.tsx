@@ -19,9 +19,12 @@ import {
   IndianRupee,
   School,
   GraduationCap,
+  Milk,
+  Cookie,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { saveMDMFruitLogAction, type StudentFruitEntry } from "@/app/actions/save-mdm";
+import { saveMdmItemSelectionAction } from "@/app/actions/save-mdm-items";
 
 export interface StudentItem {
   id: string;
@@ -49,7 +52,29 @@ export interface MonthlyDayLog {
   fruitsEaten: number;
   fruitCost: number;
   conversionCost: number;
+  nutritionCost: number;
+  milkStudents: number;
+  milkLitres: number;
+  riceMenu: string | null;
+  wheatMenu: string | null;
+  itemsServed: {
+    rice: boolean;
+    wheat: boolean;
+    fruits: boolean;
+    nutrition: boolean;
+    milk: boolean;
+  } | null;
   hasAttendance: boolean;
+}
+
+interface ItemSelection {
+  rice: boolean;
+  wheat: boolean;
+  fruits: boolean;
+  nutrition: boolean;
+  milk: boolean;
+  riceMenu: string | null;
+  wheatMenu: string | null;
 }
 
 interface MdmDashboardViewProps {
@@ -61,6 +86,11 @@ interface MdmDashboardViewProps {
   juniorMonthlyLogs: MonthlyDayLog[];
   conversionCostPrimary: number;
   conversionCostJunior: number;
+  fruitCostPerStudent: number;
+  nutritionCostPerStudent: number;
+  riceMenuOptions: string[];
+  wheatMenuOptions: string[];
+  todayItemSelection: ItemSelection | null;
 }
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -82,6 +112,11 @@ export function MdmDashboardView({
   juniorMonthlyLogs,
   conversionCostPrimary: CONVERSION_COST_PRIMARY,
   conversionCostJunior: CONVERSION_COST_JUNIOR,
+  fruitCostPerStudent: FRUIT_COST_PER_STUDENT,
+  nutritionCostPerStudent: NUTRITION_COST_PER_STUDENT,
+  riceMenuOptions,
+  wheatMenuOptions,
+  todayItemSelection,
 }: MdmDashboardViewProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"daily" | "monthly">("daily");
@@ -166,12 +201,48 @@ export function MdmDashboardView({
     });
   }
 
+  // ─── MDM Daily Item Selection state ─────────────────────────────────────────
+  const [itemRice, setItemRice] = useState(todayItemSelection?.rice ?? true);
+  const [itemWheat, setItemWheat] = useState(todayItemSelection?.wheat ?? true);
+  const [itemFruits, setItemFruits] = useState(todayItemSelection?.fruits ?? true);
+  const [itemNutrition, setItemNutrition] = useState(todayItemSelection?.nutrition ?? false);
+  const [itemMilk, setItemMilk] = useState(todayItemSelection?.milk ?? false);
+  const [itemRiceMenu, setItemRiceMenu] = useState<string>(todayItemSelection?.riceMenu || "");
+  const [itemWheatMenu, setItemWheatMenu] = useState<string>(todayItemSelection?.wheatMenu || "");
+  const [itemSaving, setItemSaving] = useState(false);
+  const [itemSaveMsg, setItemSaveMsg] = useState<string | null>(null);
+
+  async function handleSaveItemSelection() {
+    setItemSaving(true);
+    setItemSaveMsg(null);
+    const res = await saveMdmItemSelectionAction({
+      dateString: selectedDateStr,
+      rice: itemRice,
+      wheat: itemWheat,
+      fruits: itemFruits,
+      nutrition: itemNutrition,
+      milk: itemMilk,
+      riceMenu: itemRiceMenu || null,
+      wheatMenu: itemWheatMenu || null,
+      locale,
+    });
+    setItemSaving(false);
+    if (res.success) {
+      setItemSaveMsg("Item selection saved!");
+      setTimeout(() => setItemSaveMsg(null), 3000);
+      router.refresh();
+    } else {
+      setItemSaveMsg(res.message);
+    }
+  }
+
   // ─── Split classes by school level ──────────────────────────────────────────
   const primaryClasses = classesData.filter((c) => isPrimaryClass(c.className));
   const juniorClasses = classesData.filter((c) => !isPrimaryClass(c.className));
 
   const currentClasses = schoolLevel === "primary" ? primaryClasses : juniorClasses;
   const grainPerStudent = schoolLevel === "primary" ? GRAIN_PER_STUDENT_PRIMARY : GRAIN_PER_STUDENT_JUNIOR;
+  const milkMlPerStudent = schoolLevel === "primary" ? 150 : 200;
   const conversionCostPerStudent = schoolLevel === "primary" ? CONVERSION_COST_PRIMARY : CONVERSION_COST_JUNIOR;
   const currentMonthlyLogs = schoolLevel === "primary" ? primaryMonthlyLogs : juniorMonthlyLogs;
 
@@ -182,20 +253,33 @@ export function MdmDashboardView({
   let totalRiceGrams = 0;
   let totalFruitEaten = 0;
   let totalConversionCost = 0;
+  let totalNutritionCost = 0;
+  let totalMilkStudents = 0;
+  let totalMilkLitres = 0;
 
   currentClasses.forEach((c) => {
     totalEnrolled += c.totalStudents;
     const presentCount = c.presentStudents.length;
     totalPresent += presentCount;
-    totalWheatGrams += presentCount * grainPerStudent;
-    totalRiceGrams += presentCount * grainPerStudent;
+    // Only count grain if that item is selected
+    totalWheatGrams += itemWheat ? presentCount * grainPerStudent : 0;
+    totalRiceGrams += itemRice ? presentCount * grainPerStudent : 0;
     totalConversionCost += presentCount * conversionCostPerStudent;
 
-    c.presentStudents.forEach((s) => {
-      if (fruitState[s.id] !== false) {
-        totalFruitEaten += 1;
-      }
-    });
+    if (itemFruits) {
+      c.presentStudents.forEach((s) => {
+        if (fruitState[s.id] !== false) {
+          totalFruitEaten += 1;
+        }
+      });
+    }
+    if (itemNutrition) {
+      totalNutritionCost += presentCount * NUTRITION_COST_PER_STUDENT;
+    }
+    if (itemMilk) {
+      totalMilkStudents += presentCount;
+      totalMilkLitres += (presentCount * milkMlPerStudent) / 1000;
+    }
   });
 
   const totalFruitDidNotEat = totalPresent - totalFruitEaten;
@@ -355,8 +439,98 @@ export function MdmDashboardView({
             </p>
           </div>
 
-          {/* 5 Stat Badges */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          {/* ── Today's Menu Selection Panel ───────────────────────────────── */}
+          <div className="bg-white rounded-2xl border border-[#E8E0D4] p-5 shadow-xs space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-[#2D2A26]">
+                  Today&apos;s Menu / आज का मेन्यू
+                </h3>
+                <p className="text-xs text-[#7A7267] mt-0.5">
+                  Select which items are being served today. Only selected items will be calculated.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                {itemSaveMsg && (
+                  <span className="text-xs font-medium text-emerald-600">{itemSaveMsg}</span>
+                )}
+                <Button
+                  size="sm"
+                  onClick={handleSaveItemSelection}
+                  disabled={itemSaving}
+                  className="bg-[#6B1D30] hover:bg-[#5a1828] text-white text-xs"
+                >
+                  {itemSaving ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+                  ) : (
+                    <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+                  )}
+                  Save Items
+                </Button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+              {/* Rice toggle */}
+              <label className={`flex items-center gap-2.5 p-3 rounded-lg border cursor-pointer transition-colors ${itemRice ? "bg-emerald-50 border-emerald-200" : "bg-gray-50 border-gray-200"}`}>
+                <input type="checkbox" checked={itemRice} onChange={(e) => setItemRice(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-emerald-600" />
+                <div>
+                  <p className="text-xs font-semibold text-gray-800">🍚 Rice / चावल</p>
+                  {itemRice && riceMenuOptions.length > 0 && (
+                    <select value={itemRiceMenu} onChange={(e) => setItemRiceMenu(e.target.value)} className="mt-1 text-[11px] w-full border border-gray-200 rounded px-1.5 py-0.5 bg-white">
+                      <option value="">Select menu...</option>
+                      {riceMenuOptions.map((opt) => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              </label>
+
+              {/* Wheat toggle */}
+              <label className={`flex items-center gap-2.5 p-3 rounded-lg border cursor-pointer transition-colors ${itemWheat ? "bg-amber-50 border-amber-200" : "bg-gray-50 border-gray-200"}`}>
+                <input type="checkbox" checked={itemWheat} onChange={(e) => setItemWheat(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-amber-600" />
+                <div>
+                  <p className="text-xs font-semibold text-gray-800">🌾 Wheat / गेहूँ</p>
+                  {itemWheat && wheatMenuOptions.length > 0 && (
+                    <select value={itemWheatMenu} onChange={(e) => setItemWheatMenu(e.target.value)} className="mt-1 text-[11px] w-full border border-gray-200 rounded px-1.5 py-0.5 bg-white">
+                      <option value="">Select menu...</option>
+                      {wheatMenuOptions.map((opt) => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              </label>
+
+              {/* Fruits toggle */}
+              <label className={`flex items-center gap-2.5 p-3 rounded-lg border cursor-pointer transition-colors ${itemFruits ? "bg-orange-50 border-orange-200" : "bg-gray-50 border-gray-200"}`}>
+                <input type="checkbox" checked={itemFruits} onChange={(e) => setItemFruits(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-orange-600" />
+                <p className="text-xs font-semibold text-gray-800">🍎 Fruits / फल</p>
+              </label>
+
+              {/* Nutrition toggle */}
+              <label className={`flex items-center gap-2.5 p-3 rounded-lg border cursor-pointer transition-colors ${itemNutrition ? "bg-violet-50 border-violet-200" : "bg-gray-50 border-gray-200"}`}>
+                <input type="checkbox" checked={itemNutrition} onChange={(e) => setItemNutrition(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-violet-600" />
+                <div>
+                  <p className="text-xs font-semibold text-gray-800">🥗 Nutrition / पोषण</p>
+                  <p className="text-[10px] text-gray-500">₹{NUTRITION_COST_PER_STUDENT}/student</p>
+                </div>
+              </label>
+
+              {/* Milk toggle */}
+              <label className={`flex items-center gap-2.5 p-3 rounded-lg border cursor-pointer transition-colors ${itemMilk ? "bg-blue-50 border-blue-200" : "bg-gray-50 border-gray-200"}`}>
+                <input type="checkbox" checked={itemMilk} onChange={(e) => setItemMilk(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-blue-600" />
+                <div>
+                  <p className="text-xs font-semibold text-gray-800">🥛 Milk / दूध</p>
+                  <p className="text-[10px] text-gray-500">{milkMlPerStudent}mL/student</p>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          {/* Stat Badges — 7 cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Present Students */}
             <div className="bg-white rounded-2xl border border-[#E8E0D4] p-5 shadow-xs flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-[#E8EDF2] text-[#3D5A80]">
@@ -373,7 +547,7 @@ export function MdmDashboardView({
             </div>
 
             {/* Wheat */}
-            <div className="bg-white rounded-2xl border border-[#E8E0D4] p-5 shadow-xs flex items-center gap-4">
+            <div className={`bg-white rounded-2xl border p-5 shadow-xs flex items-center gap-4 ${itemWheat ? "border-[#E8E0D4]" : "border-gray-200 opacity-50"}`}>
               <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-[#FBF5E5] text-[#B8860B]">
                 <Wheat className="h-6 w-6" />
               </div>
@@ -382,13 +556,13 @@ export function MdmDashboardView({
                   {totalWheatKg} <span className="text-xs font-bold text-[#7A7267]">kg</span>
                 </p>
                 <p className="text-xs font-medium text-[#7A7267]">
-                  Wheat (गेहूं) · {grainLabel}/छात्र
+                  Wheat (गेहूं){!itemWheat && " — not served"}
                 </p>
               </div>
             </div>
 
             {/* Rice */}
-            <div className="bg-white rounded-2xl border border-[#E8E0D4] p-5 shadow-xs flex items-center gap-4">
+            <div className={`bg-white rounded-2xl border p-5 shadow-xs flex items-center gap-4 ${itemRice ? "border-[#E8E0D4]" : "border-gray-200 opacity-50"}`}>
               <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-[#E6F4F1] text-[#2A9D8F]">
                 <Utensils className="h-6 w-6" />
               </div>
@@ -397,13 +571,13 @@ export function MdmDashboardView({
                   {totalRiceKg} <span className="text-xs font-bold text-[#7A7267]">kg</span>
                 </p>
                 <p className="text-xs font-medium text-[#7A7267]">
-                  Rice (चावल) · {grainLabel}/छात्र
+                  Rice (चावल){!itemRice && " — not served"}
                 </p>
               </div>
             </div>
 
             {/* Fruit */}
-            <div className="bg-white rounded-2xl border border-[#E8E0D4] p-5 shadow-xs flex items-center gap-4">
+            <div className={`bg-white rounded-2xl border p-5 shadow-xs flex items-center gap-4 ${itemFruits ? "border-[#E8E0D4]" : "border-gray-200 opacity-50"}`}>
               <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-[#FBECE9] text-[#E76F51]">
                 <Apple className="h-6 w-6" />
               </div>
@@ -412,7 +586,7 @@ export function MdmDashboardView({
                   ₹{totalFruitRupees.toLocaleString("en-IN")}
                 </p>
                 <p className="text-xs font-medium text-[#7A7267]">
-                  Fruit: {totalFruitEaten} ate · {totalFruitDidNotEat} skipped
+                  {itemFruits ? `Fruit: ${totalFruitEaten} ate · ${totalFruitDidNotEat} skipped` : "Fruits — not served"}
                 </p>
               </div>
             </div>
@@ -428,6 +602,36 @@ export function MdmDashboardView({
                 </p>
                 <p className="text-xs font-medium text-[#7A7267]">
                   Conversion Cost (परिवर्तन लागत)
+                </p>
+              </div>
+            </div>
+
+            {/* Nutrition */}
+            <div className={`bg-white rounded-sm border p-5 shadow-xs flex items-center gap-4 ${itemNutrition ? "border-violet-200" : "border-gray-200 opacity-50"}`}>
+              <div className="w-12 h-12 rounded-sm flex items-center justify-center shrink-0 bg-violet-50 text-violet-600">
+                <Cookie className="h-6 w-6" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-2xl font-bold text-[#2D2A26] leading-none mb-1">
+                  ₹{totalNutritionCost.toFixed(2)}
+                </p>
+                <p className="text-xs font-medium text-[#7A7267]">
+                  {itemNutrition ? `Nutrition (पोषण) · ₹${NUTRITION_COST_PER_STUDENT}/student` : "Nutrition — not served"}
+                </p>
+              </div>
+            </div>
+
+            {/* Milk */}
+            <div className={`bg-white rounded-sm border p-5 shadow-xs flex items-center gap-4 ${itemMilk ? "border-blue-200" : "border-gray-200 opacity-50"}`}>
+              <div className="w-12 h-12 rounded-sm flex items-center justify-center shrink-0 bg-blue-50 text-blue-600">
+                <Milk className="h-6 w-6" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-2xl font-bold text-[#2D2A26] leading-none mb-1">
+                  {totalMilkLitres.toFixed(2)} <span className="text-xs font-bold text-[#7A7267]">L</span>
+                </p>
+                <p className="text-xs font-medium text-[#7A7267]">
+                  {itemMilk ? `Milk (दूध) · ${totalMilkStudents} students · ${milkMlPerStudent}mL each` : "Milk — not served"}
                 </p>
               </div>
             </div>
@@ -677,7 +881,9 @@ export function MdmDashboardView({
                     <th className="px-4 py-3 text-right">Rice / चावल (kg)</th>
                     <th className="px-4 py-3 text-right">Fruits Eaten</th>
                     <th className="px-4 py-3 text-right">Fruit Cost / फल (₹)</th>
-                    <th className="px-4 py-3 text-right">Conversion Cost / परिवर्तन लागत (₹)</th>
+                    <th className="px-4 py-3 text-right">Conversion Cost (₹)</th>
+                    <th className="px-4 py-3 text-right">Nutrition / पोषण (₹)</th>
+                    <th className="px-4 py-3 text-right">Milk / दूध (L)</th>
                     <th className="px-4 py-3 text-center">Action</th>
                   </tr>
                 </thead>
@@ -707,10 +913,20 @@ export function MdmDashboardView({
                           )}
                         </td>
                         <td className="px-4 py-3 text-right font-medium text-[#6B1D30]">
-                          {log.hasAttendance ? `${wheatKg} kg` : "-"}
+                          {log.hasAttendance ? (
+                            <div>
+                              <span>{wheatKg} kg</span>
+                              {log.wheatMenu && <span className="block text-[10px] text-gray-500">{log.wheatMenu}</span>}
+                            </div>
+                          ) : "-"}
                         </td>
                         <td className="px-4 py-3 text-right font-medium text-[#2A9D8F]">
-                          {log.hasAttendance ? `${riceKg} kg` : "-"}
+                          {log.hasAttendance ? (
+                            <div>
+                              <span>{riceKg} kg</span>
+                              {log.riceMenu && <span className="block text-[10px] text-gray-500">{log.riceMenu}</span>}
+                            </div>
+                          ) : "-"}
                         </td>
                         <td className="px-4 py-3 text-right font-medium">
                           {log.hasAttendance ? log.fruitsEaten : "-"}
@@ -720,6 +936,17 @@ export function MdmDashboardView({
                         </td>
                         <td className="px-4 py-3 text-right font-bold text-[#3D5A80]">
                           {log.hasAttendance ? `₹${log.conversionCost.toFixed(2)}` : "-"}
+                        </td>
+                        <td className="px-4 py-3 text-right font-bold text-violet-600">
+                          {log.hasAttendance && log.nutritionCost > 0 ? `₹${log.nutritionCost.toFixed(2)}` : "-"}
+                        </td>
+                        <td className="px-4 py-3 text-right font-bold text-blue-600">
+                          {log.hasAttendance && log.milkLitres > 0 ? (
+                            <div>
+                              <span>{log.milkLitres.toFixed(2)} L</span>
+                              <span className="block text-[10px] text-gray-500">{log.milkStudents} students</span>
+                            </div>
+                          ) : "-"}
                         </td>
                         <td className="px-4 py-3 text-center">
                           <button
@@ -746,6 +973,9 @@ export function MdmDashboardView({
                     const monthTotalFruitCost = currentMonthlyLogs.reduce((s, l) => s + l.fruitCost, 0);
                     const monthTotalFruitsEaten = currentMonthlyLogs.reduce((s, l) => s + l.fruitsEaten, 0);
                     const monthTotalConvCost = currentMonthlyLogs.reduce((s, l) => s + l.conversionCost, 0);
+                    const monthTotalNutritionCost = currentMonthlyLogs.reduce((s, l) => s + l.nutritionCost, 0);
+                    const monthTotalMilkLitres = currentMonthlyLogs.reduce((s, l) => s + l.milkLitres, 0);
+                    const monthTotalMilkStudents = currentMonthlyLogs.reduce((s, l) => s + l.milkStudents, 0);
 
                     return (
                       <tr className="border-t-2 border-[#6B1D30] bg-[#F3EDE4]/80 font-bold text-[#2D2A26]">
@@ -769,6 +999,15 @@ export function MdmDashboardView({
                         </td>
                         <td className="px-4 py-4 text-right text-sm font-bold text-[#3D5A80]">
                           ₹{monthTotalConvCost.toFixed(2)}
+                        </td>
+                        <td className="px-4 py-4 text-right text-sm font-bold text-violet-600">
+                          ₹{monthTotalNutritionCost.toFixed(2)}
+                        </td>
+                        <td className="px-4 py-4 text-right text-sm font-bold text-blue-600">
+                          <div>
+                            <span>{monthTotalMilkLitres.toFixed(2)} L</span>
+                            <span className="block text-[10px] font-normal text-gray-500">{monthTotalMilkStudents} total servings</span>
+                          </div>
                         </td>
                         <td className="px-4 py-4" />
                       </tr>

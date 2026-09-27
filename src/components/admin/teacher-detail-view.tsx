@@ -30,10 +30,12 @@ export function TeacherDetailView({
   locale,
   teacher,
   classes,
+  clBalance,
 }: {
   locale: string;
   teacher: TeacherDetail;
   classes: string[];
+  clBalance?: { used: number; remaining: number; limit: number };
 }) {
   const router = useRouter();
 
@@ -199,6 +201,66 @@ export function TeacherDetailView({
           </div>
         </div>
       </div>
+
+      {/* ── LEAVE BALANCE SUMMARY CARD ──────────────────────────────────── */}
+      {clBalance && (
+        <div className="bg-white border border-gray-200 rounded-lg p-5">
+          <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
+            <div>
+              <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                Casual Leave (CL) Balance / आकस्मिक अवकाश स्थिति
+              </h2>
+              <p className="text-xs text-gray-400 mt-0.5">
+                Calendar Year {new Date().getFullYear()} (Annual Entitlement: {clBalance.limit} Days)
+              </p>
+            </div>
+            <span
+              className={`text-xs font-bold px-2.5 py-1 rounded border ${
+                clBalance.remaining > 5
+                  ? "bg-green-50 text-green-700 border-green-200"
+                  : clBalance.remaining > 0
+                  ? "bg-amber-50 text-amber-700 border-amber-200"
+                  : "bg-red-50 text-red-700 border-red-200"
+              }`}
+            >
+              {clBalance.remaining} Days Remaining
+            </span>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div className="p-3 bg-gray-50 border border-gray-100 rounded-lg">
+              <span className="block text-xl font-bold text-gray-800">{clBalance.limit}</span>
+              <span className="text-[11px] text-gray-500 font-medium">Total Limit / कुल सीमा</span>
+            </div>
+            <div className="p-3 bg-amber-50/60 border border-amber-100 rounded-lg">
+              <span className="block text-xl font-bold text-amber-800">{clBalance.used}</span>
+              <span className="text-[11px] text-amber-700 font-medium">Leaves Used / उपयोग किए</span>
+            </div>
+            <div className="p-3 bg-blue-50/60 border border-blue-100 rounded-lg">
+              <span className="block text-xl font-bold text-blue-800">{clBalance.remaining}</span>
+              <span className="text-[11px] text-blue-700 font-medium">Remaining / शेष अवकाश</span>
+            </div>
+          </div>
+
+          {/* Visual Progress Bar */}
+          <div className="mt-4">
+            <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+              <div
+                className={`h-2 rounded-full transition-all ${
+                  clBalance.used >= clBalance.limit ? "bg-red-500" : "bg-blue-600"
+                }`}
+                style={{
+                  width: `${Math.min(100, Math.round((clBalance.used / clBalance.limit) * 100))}%`,
+                }}
+              />
+            </div>
+            <div className="flex justify-between text-[10px] text-gray-400 mt-1">
+              <span>{Math.round((clBalance.used / clBalance.limit) * 100)}% Used</span>
+              <span>{clBalance.remaining} of {clBalance.limit} days available</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── CORE PROFILE DETAILS (In-place edit form) ────────────────────── */}
       <form onSubmit={handleUpdateSubmit} className="space-y-6">

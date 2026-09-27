@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { TeacherLeavePanel } from "@/components/teacher/leave-panel";
+import { getTeacherCLBalance } from "@/app/actions/leave";
 
 export default async function TeacherLeavePage({
   params,
@@ -15,15 +16,19 @@ export default async function TeacherLeavePage({
   // Find Teacher linked to user
   const teacher = await prisma.teacher.findUnique({
     where: { userId: session.user.id },
-    select: { id: true },
+    select: { id: true, gender: true },
   });
 
   let pastRequests: any[] = [];
+  let clBalance = { used: 0, remaining: 14, limit: 14 };
+  const teacherGender = teacher?.gender || "MALE";
+
   if (teacher) {
     pastRequests = await prisma.leaveRequest.findMany({
       where: { teacherId: teacher.id },
       orderBy: { createdAt: "desc" },
     });
+    clBalance = await getTeacherCLBalance(teacher.id);
   }
 
   return (
@@ -44,7 +49,12 @@ export default async function TeacherLeavePage({
         </div>
       </div>
 
-      <TeacherLeavePanel locale={locale} pastRequests={pastRequests} />
+      <TeacherLeavePanel
+        locale={locale}
+        pastRequests={pastRequests}
+        teacherGender={teacherGender}
+        clBalance={clBalance}
+      />
     </main>
   );
 }

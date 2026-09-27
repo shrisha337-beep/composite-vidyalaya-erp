@@ -53,6 +53,14 @@ enum LeaveApplicantType {
   TEACHER
 }
 
+enum LeaveType {
+  CASUAL_LEAVE      // CL — 14 days/calendar year, hard cap
+  MEDICAL_LEAVE     // ML — no limit
+  CHILD_CARE_LEAVE  // CCL — female only, no limit
+  MATERNITY_LEAVE   // MAT — female only, no limit
+  ABORTION_LEAVE    // AL — female only, no limit
+}
+
 enum MealType {
   BREAKFAST
   LUNCH
@@ -615,6 +623,7 @@ model LeaveRequest {
   student       Student? @relation(fields: [studentId], references: [id])
   teacherId     String?
   teacher       Teacher? @relation(fields: [teacherId], references: [id])
+  leaveType     LeaveType?  // null for student leaves (backward compat)
   fromDate      DateTime
   toDate        DateTime
   reason        String
@@ -783,6 +792,26 @@ model MDMStudentAttendance {
   @@map("mdm_student_attendance")
 }
 
+/// Per-day selection of which MDM items are served.
+/// Admin toggles items daily; only selected items get calculated.
+model MDMDailyItemSelection {
+  id        String   @id @default(cuid())
+  date      DateTime @db.Date
+  rice      Boolean  @default(false)
+  wheat     Boolean  @default(false)
+  fruits    Boolean  @default(false)
+  nutrition Boolean  @default(false)
+  milk      Boolean  @default(false)
+  riceMenu  String?  // selected menu item for the day (e.g. "Dal-Chawal")
+  wheatMenu String?  // selected menu item for the day (e.g. "Sabzi-Roti")
+  updatedById String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([date])
+  @@map("mdm_daily_item_selections")
+}
+
 model MDMStockItem {
   id        String        @id @default(cuid())
   name      String        @unique // "Rice", "Wheat", "Fruits", "Pulses"
@@ -872,8 +901,14 @@ model SchoolSettings {
   themeConfig   Json?
 
   // MDM conversion cost per student (₹), admin-editable
-  conversionCostPrimary Float @default(6.78)  // Primary (कक्षा 1–5)
-  conversionCostJunior  Float @default(10.17) // Junior (कक्षा 6–8)
+  conversionCostPrimary    Float @default(6.78)   // Primary (कक्षा 1–5)
+  conversionCostJunior     Float @default(10.17)  // Junior (कक्षा 6–8)
+  fruitCostPerStudent      Float @default(4.0)    // ₹ per student per fruit day
+  nutritionCostPerStudent  Float @default(5.0)    // ₹ per present student per nutrition day
+
+  // MDM menu options — admin-configurable lists
+  riceMenuOptions  String[] @default(["Dal-Chawal", "Sabzi-Chawal", "Tehri"])
+  wheatMenuOptions String[] @default(["Sabzi-Roti"])
 
   @@map("school_settings")
 }

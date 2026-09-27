@@ -10,14 +10,32 @@ interface TeacherLeaveRequest {
   fromDate: Date;
   toDate: Date;
   reason: string;
+  leaveType: string | null;
   status: "PENDING" | "APPROVED" | "REJECTED";
   createdAt: Date;
+  clBalance?: { used: number; remaining: number; limit: number } | null;
   teacher: {
     fullName: string;
     employeeCode: string;
     designation: string | null;
   } | null;
 }
+
+const LEAVE_TYPE_LABELS: Record<string, string> = {
+  CASUAL_LEAVE: "CL",
+  MEDICAL_LEAVE: "ML",
+  CHILD_CARE_LEAVE: "CCL",
+  MATERNITY_LEAVE: "Maternity",
+  ABORTION_LEAVE: "Abortion Leave",
+};
+
+const LEAVE_TYPE_COLORS: Record<string, string> = {
+  CASUAL_LEAVE: "bg-sky-50 text-sky-700 border-sky-200",
+  MEDICAL_LEAVE: "bg-amber-50 text-amber-700 border-amber-200",
+  CHILD_CARE_LEAVE: "bg-purple-50 text-purple-700 border-purple-200",
+  MATERNITY_LEAVE: "bg-pink-50 text-pink-700 border-pink-200",
+  ABORTION_LEAVE: "bg-rose-50 text-rose-700 border-rose-200",
+};
 
 export function TeacherLeaveApprover({
   locale,
@@ -91,13 +109,23 @@ export function TeacherLeaveApprover({
                   className="p-4 bg-gray-50 border border-gray-100 rounded-lg text-xs flex flex-col sm:flex-row justify-between sm:items-center gap-4"
                 >
                   <div className="space-y-2 flex-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-bold text-gray-800 text-sm">
                         {req.teacher?.fullName}
                       </span>
                       <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-100 font-semibold text-[10px] capitalize">
                         {req.teacher?.designation || "Teacher"}
                       </span>
+                      {req.leaveType && (
+                        <span className={`px-2 py-0.5 rounded border font-semibold text-[10px] ${LEAVE_TYPE_COLORS[req.leaveType] || "bg-gray-50 text-gray-700 border-gray-200"}`}>
+                          {LEAVE_TYPE_LABELS[req.leaveType] || req.leaveType}
+                        </span>
+                      )}
+                      {req.clBalance && (
+                        <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-800 border border-blue-200 font-semibold text-[10px]">
+                          CL: {req.clBalance.remaining}/{req.clBalance.limit} left
+                        </span>
+                      )}
                     </div>
 
                     <div className="flex items-center gap-1 text-gray-500 font-medium">
@@ -170,9 +198,19 @@ export function TeacherLeaveApprover({
                   className="p-3 bg-gray-50 border border-gray-100 rounded-lg text-xs space-y-1.5"
                 >
                   <div className="flex items-center justify-between">
-                    <div>
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-bold text-gray-700">{req.teacher?.fullName}</span>
-                      <span className="ml-2 text-[10px] text-gray-400">({req.teacher?.designation})</span>
+                      <span className="text-[10px] text-gray-400">({req.teacher?.designation})</span>
+                      {req.leaveType && (
+                        <span className={`px-2 py-0.5 rounded border font-semibold text-[10px] ${LEAVE_TYPE_COLORS[req.leaveType] || "bg-gray-50 text-gray-700 border-gray-200"}`}>
+                          {LEAVE_TYPE_LABELS[req.leaveType] || req.leaveType}
+                        </span>
+                      )}
+                      {req.clBalance && (
+                        <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-800 border border-blue-200 font-semibold text-[10px]">
+                          CL: {req.clBalance.remaining}/{req.clBalance.limit} left
+                        </span>
+                      )}
                     </div>
                     <span
                       className={[

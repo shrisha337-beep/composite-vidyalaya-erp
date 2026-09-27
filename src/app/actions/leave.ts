@@ -72,11 +72,13 @@ export async function applyTeacherLeaveAction({
   fromDateString,
   toDateString,
   reason,
+  leaveType,
   locale,
 }: {
   fromDateString: string;
   toDateString: string;
   reason: string;
+  leaveType: string;
   locale: string;
 }): Promise<{ success: boolean; message: string }> {
   const session = await requireRole(["TEACHER"]);
@@ -96,14 +98,74 @@ export async function applyTeacherLeaveAction({
     return { success: false, message: "Reason is required." };
   }
 
+  // Validate leaveType
+  const validTypes = [
+    "CASUAL_LEAVE",
+    "MEDICAL_LEAVE",
+    "CHILD_CARE_LEAVE",
+    "MATERNITY_LEAVE",
+    "ABORTION_LEAVE",
+  ] as const;
+  if (!leaveType || !validTypes.includes(leaveType as typeof validTypes[number])) {
+    return { success: false, message: "Please select a valid leave type." };
+  }
+
   // Find Teacher linked to user
   const teacher = await prisma.teacher.findUnique({
     where: { userId: session.user.id },
-    select: { id: true },
+    select: { id: true, gender: true },
   });
 
   if (!teacher) {
     return { success: false, message: "Teacher record not found." };
+  }
+
+  // ─── Gender validation for female-only leave types ──────────────────────
+  const femaleOnlyTypes = ["CHILD_CARE_LEAVE", "MATERNITY_LEAVE", "ABORTION_LEAVE"];
+  if (femaleOnlyTypes.includes(leaveType) && teacher.gender !== "FEMALE") {
+    return {
+      success: false,
+      message: "This leave type is available for female teachers only.",
+    };
+  }
+
+  // ─── CL limit enforcement (14 days per calendar year) ───────────────────
+  if (leaveType === "CASUAL_LEAVE") {
+    const CL_ANNUAL_LIMIT = 14;
+
+    // Calculate requested days
+    const timeDiff = toDate.getTime() - fromDate.getTime();
+    const requestedDays = Math.floor(timeDiff / (1000 * 60 * 60 * 24)) + 1;
+
+    // Count approved CL days in the current calendar year
+    const yearStart = new Date(fromDate.getFullYear(), 0, 1); // Jan 1
+    const yearEnd = new Date(fromDate.getFullYear(), 11, 31, 23, 59, 59); // Dec 31
+
+    const approvedCLRequests = await prisma.leaveRequest.findMany({
+      where: {
+        teacherId: teacher.id,
+        leaveType: "CASUAL_LEAVE",
+        status: "APPROVED",
+        fromDate: { gte: yearStart },
+        toDate: { lte: yearEnd },
+      },
+      select: { fromDate: true, toDate: true },
+    });
+
+    let usedDays = 0;
+    approvedCLRequests.forEach((req) => {
+      const diff = req.toDate.getTime() - req.fromDate.getTime();
+      usedDays += Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
+    });
+
+    const remainingDays = CL_ANNUAL_LIMIT - usedDays;
+
+    if (requestedDays > remainingDays) {
+      return {
+        success: false,
+        message: `Cannot apply for ${requestedDays} day(s) of Casual Leave. You have only ${Math.max(0, remainingDays)} day(s) remaining out of ${CL_ANNUAL_LIMIT} for this year.`,
+      };
+    }
   }
 
   try {
@@ -111,6 +173,7 @@ export async function applyTeacherLeaveAction({
       data: {
         applicantType: "TEACHER",
         teacherId: teacher.id,
+        leaveType: leaveType as any,
         fromDate,
         toDate,
         reason: reason.trim(),
@@ -126,6 +189,43 @@ export async function applyTeacherLeaveAction({
       message: err instanceof Error ? err.message : "Failed to apply for leave.",
     };
   }
+}
+
+/**
+ * Helper to calculate remaining CL balance for a teacher in the current year.
+ */
+export async function getTeacherCLBalance(teacherId: string): Promise<{
+  used: number;
+  remaining: number;
+  limit: number;
+}> {
+  const CL_ANNUAL_LIMIT = 14;
+  const now = new Date();
+  const yearStart = new Date(now.getFullYear(), 0, 1);
+  const yearEnd = new Date(now.getFullYear(), 11, 31, 23, 59, 59);
+
+  const approvedCLRequests = await prisma.leaveRequest.findMany({
+    where: {
+      teacherId,
+      leaveType: "CASUAL_LEAVE",
+      status: "APPROVED",
+      fromDate: { gte: yearStart },
+      toDate: { lte: yearEnd },
+    },
+    select: { fromDate: true, toDate: true },
+  });
+
+  let usedDays = 0;
+  approvedCLRequests.forEach((req) => {
+    const diff = req.toDate.getTime() - req.fromDate.getTime();
+    usedDays += Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
+  });
+
+  return {
+    used: usedDays,
+    remaining: Math.max(0, CL_ANNUAL_LIMIT - usedDays),
+    limit: CL_ANNUAL_LIMIT,
+  };
 }
 
 export async function reviewLeaveAction({

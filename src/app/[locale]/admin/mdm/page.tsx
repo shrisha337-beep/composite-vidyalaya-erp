@@ -7,7 +7,8 @@ import { MdmDashboardView, type ClassSectionMDM, type MonthlyDayLog } from "@/co
 const PRIMARY_CLASSES = ["1", "2", "3", "4", "5"];
 const GRAIN_PRIMARY = 100;
 const GRAIN_JUNIOR = 150;
-const FRUIT_COST = 4;
+const MILK_ML_PRIMARY = 150;
+const MILK_ML_JUNIOR = 200;
 
 function isPrimary(className: string) {
   return PRIMARY_CLASSES.includes(className);
@@ -24,10 +25,12 @@ export default async function AdminMDMPage({
   const { locale } = await params;
   const query = await searchParams;
 
-  // Load admin-configured MDM conversion costs
+  // Load admin-configured MDM costs and menu options
   const settings = await getSchoolSettings();
   const CONVERSION_COST_PRIMARY = settings.conversionCostPrimary;
   const CONVERSION_COST_JUNIOR = settings.conversionCostJunior;
+  const FRUIT_COST = settings.fruitCostPerStudent;
+  const NUTRITION_COST = settings.nutritionCostPerStudent;
 
   const now = new Date();
   const defaultDateStr = now.toISOString().split("T")[0]; // "YYYY-MM-DD"
@@ -97,6 +100,11 @@ export default async function AdminMDMPage({
     },
   });
 
+  // 6. Fetch MDM daily item selection for the selected date
+  const todayItemSelection = await prisma.mDMDailyItemSelection.findUnique({
+    where: { date: selectedDateObj },
+  });
+
   // Build fruit attendance lookup: studentId -> boolean
   const fruitAttendanceMap = new Map<string, boolean>();
   if (mdmLog && mdmLog.studentAttendance.length > 0) {
@@ -105,7 +113,7 @@ export default async function AdminMDMPage({
     });
   }
 
-  // 6. Build classSection data structure
+  // 7. Build classSection data structure
   const classesData: ClassSectionMDM[] = [];
 
   classes.forEach((cls) => {
@@ -134,7 +142,7 @@ export default async function AdminMDMPage({
     });
   });
 
-  // 7. Generate monthly log data — split by primary / junior
+  // 8. Generate monthly log data — split by primary / junior
   const [yearStr, monthNumStr] = selectedMonthStr.split("-");
   const year = parseInt(yearStr, 10);
   const month = parseInt(monthNumStr, 10); // 1-12
@@ -143,8 +151,7 @@ export default async function AdminMDMPage({
   const monthEnd = new Date(year, month, 1);
   const daysInMonth = new Date(year, month, 0).getDate();
 
-  // Query month's present attendance grouped by day AND student, so we can
-  // split by class level. We need to join with Student -> Section -> Class.
+  // Query month's present attendance grouped by day AND student
   const monthAttendanceRaw = await prisma.attendance.findMany({
     where: {
       date: { gte: monthStart, lt: monthEnd },
@@ -168,7 +175,6 @@ export default async function AdminMDMPage({
   });
 
   // Build per-day, per-level attendance counts
-  // Map<dateStr, { primary: number, junior: number }>
   const monthAttendanceByLevel = new Map<string, { primary: number; junior: number }>();
   monthAttendanceRaw.forEach((rec) => {
     const dStr = new Date(rec.date).toISOString().split("T")[0];
@@ -184,7 +190,7 @@ export default async function AdminMDMPage({
     }
   });
 
-  // Query month's MDM logs for fruit data — grouped by day and level
+  // Query month's MDM logs for fruit data
   const monthMdmLogs = await prisma.mDMDailyLog.findMany({
     where: {
       date: { gte: monthStart, lt: monthEnd },
@@ -227,6 +233,37 @@ export default async function AdminMDMPage({
     });
   });
 
+  // Query all daily item selections for this month
+  const monthItemSelections = await prisma.mDMDailyItemSelection.findMany({
+    where: {
+      date: { gte: monthStart, lt: monthEnd },
+    },
+  });
+  const itemSelectionByDate = new Map<
+    string,
+    {
+      rice: boolean;
+      wheat: boolean;
+      fruits: boolean;
+      nutrition: boolean;
+      milk: boolean;
+      riceMenu: string | null;
+      wheatMenu: string | null;
+    }
+  >();
+  monthItemSelections.forEach((sel) => {
+    const dStr = new Date(sel.date).toISOString().split("T")[0];
+    itemSelectionByDate.set(dStr, {
+      rice: sel.rice,
+      wheat: sel.wheat,
+      fruits: sel.fruits,
+      nutrition: sel.nutrition,
+      milk: sel.milk,
+      riceMenu: sel.riceMenu,
+      wheatMenu: sel.wheatMenu,
+    });
+  });
+
   const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   const primaryMonthlyLogs: MonthlyDayLog[] = [];
   const juniorMonthlyLogs: MonthlyDayLog[] = [];
@@ -238,6 +275,7 @@ export default async function AdminMDMPage({
 
     const levelCounts = monthAttendanceByLevel.get(dayStr) ?? { primary: 0, junior: 0 };
     const fruitCounts = monthFruitByLevel.get(dayStr);
+    const dayItems = itemSelectionByDate.get(dayStr);
 
     // Primary
     const primaryPresent = levelCounts.primary;
@@ -246,11 +284,19 @@ export default async function AdminMDMPage({
       dateStr: dayStr,
       dayOfWeek,
       totalPresent: primaryPresent,
-      wheatGrams: primaryPresent * GRAIN_PRIMARY,
-      riceGrams: primaryPresent * GRAIN_PRIMARY,
-      fruitsEaten: primaryFruit,
-      fruitCost: primaryFruit * FRUIT_COST,
-      conversionCost: primaryPresent * CONVERSION_COST_PRIMARY,
+      // Only calculate grain amounts if that item is selected for the day
+      wheatGrams: dayItems?.wheat ? primaryPresent * GRAIN_PRIMARY : 0,
+      riceGrams: dayItems?.rice ? primaryPresent * GRAIN_PRIMARY : 0,
+      fruitsEaten: dayItems?.fruits ? primaryFruit : 0,
+      fruitCost: dayItems?.fruits ? primaryFruit * FRUIT_COST : 0,
+      conversionCost: primaryPresent > 0 ? primaryPresent * CONVERSION_COST_PRIMARY : 0,
+      // New fields
+      nutritionCost: dayItems?.nutrition ? primaryPresent * NUTRITION_COST : 0,
+      milkStudents: dayItems?.milk ? primaryPresent : 0,
+      milkLitres: dayItems?.milk ? (primaryPresent * MILK_ML_PRIMARY) / 1000 : 0,
+      riceMenu: dayItems?.riceMenu || null,
+      wheatMenu: dayItems?.wheatMenu || null,
+      itemsServed: dayItems || null,
       hasAttendance: primaryPresent > 0,
     });
 
@@ -261,11 +307,18 @@ export default async function AdminMDMPage({
       dateStr: dayStr,
       dayOfWeek,
       totalPresent: juniorPresent,
-      wheatGrams: juniorPresent * GRAIN_JUNIOR,
-      riceGrams: juniorPresent * GRAIN_JUNIOR,
-      fruitsEaten: juniorFruit,
-      fruitCost: juniorFruit * FRUIT_COST,
-      conversionCost: juniorPresent * CONVERSION_COST_JUNIOR,
+      wheatGrams: dayItems?.wheat ? juniorPresent * GRAIN_JUNIOR : 0,
+      riceGrams: dayItems?.rice ? juniorPresent * GRAIN_JUNIOR : 0,
+      fruitsEaten: dayItems?.fruits ? juniorFruit : 0,
+      fruitCost: dayItems?.fruits ? juniorFruit * FRUIT_COST : 0,
+      conversionCost: juniorPresent > 0 ? juniorPresent * CONVERSION_COST_JUNIOR : 0,
+      // New fields
+      nutritionCost: dayItems?.nutrition ? juniorPresent * NUTRITION_COST : 0,
+      milkStudents: dayItems?.milk ? juniorPresent : 0,
+      milkLitres: dayItems?.milk ? (juniorPresent * MILK_ML_JUNIOR) / 1000 : 0,
+      riceMenu: dayItems?.riceMenu || null,
+      wheatMenu: dayItems?.wheatMenu || null,
+      itemsServed: dayItems || null,
       hasAttendance: juniorPresent > 0,
     });
   }
@@ -281,6 +334,19 @@ export default async function AdminMDMPage({
         juniorMonthlyLogs={juniorMonthlyLogs}
         conversionCostPrimary={CONVERSION_COST_PRIMARY}
         conversionCostJunior={CONVERSION_COST_JUNIOR}
+        fruitCostPerStudent={FRUIT_COST}
+        nutritionCostPerStudent={NUTRITION_COST}
+        riceMenuOptions={settings.riceMenuOptions}
+        wheatMenuOptions={settings.wheatMenuOptions}
+        todayItemSelection={todayItemSelection ? {
+          rice: todayItemSelection.rice,
+          wheat: todayItemSelection.wheat,
+          fruits: todayItemSelection.fruits,
+          nutrition: todayItemSelection.nutrition,
+          milk: todayItemSelection.milk,
+          riceMenu: todayItemSelection.riceMenu,
+          wheatMenu: todayItemSelection.wheatMenu,
+        } : null}
       />
     </main>
   );

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { TeacherLeaveApprover } from "@/components/admin/teacher-leave-approver";
+import { getTeacherCLBalance } from "@/app/actions/leave";
 
 export default async function AdminLeaveRequestsPage({
   params,
@@ -29,6 +30,21 @@ export default async function AdminLeaveRequestsPage({
     orderBy: { createdAt: "desc" },
   });
 
+  // Fetch CL balance for each unique teacher
+  const teacherIds = [...new Set(requests.map((r) => r.teacherId).filter(Boolean))] as string[];
+  const balanceMap = new Map<string, { used: number; remaining: number; limit: number }>();
+  await Promise.all(
+    teacherIds.map(async (tid) => {
+      const bal = await getTeacherCLBalance(tid);
+      balanceMap.set(tid, bal);
+    })
+  );
+
+  const requestsWithBalance = requests.map((r) => ({
+    ...r,
+    clBalance: r.teacherId ? balanceMap.get(r.teacherId) || null : null,
+  }));
+
   return (
     <main className="flex-1 p-6 lg:p-8 max-w-4xl">
       {/* Header */}
@@ -47,7 +63,7 @@ export default async function AdminLeaveRequestsPage({
         </div>
       </div>
 
-      <TeacherLeaveApprover locale={locale} requests={requests} />
+      <TeacherLeaveApprover locale={locale} requests={requestsWithBalance} />
     </main>
   );
 }

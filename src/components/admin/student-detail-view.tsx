@@ -343,13 +343,22 @@ export function StudentDetailView({
                 Issue TC
               </Link>
             ) : student.transferCertificates?.[0] ? (
-              <Link
-                href={`/${locale}/admin/students/${student.id}/tc/download`}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium border border-green-200 text-green-700 bg-green-50 hover:bg-green-100 transition-colors"
-              >
-                <FileText className="h-3.5 w-3.5" />
-                Download TC
-              </Link>
+              <>
+                <Link
+                  href={`/${locale}/admin/students/${student.id}/tc/download`}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium border border-green-200 text-green-700 bg-green-50 hover:bg-green-100 transition-colors"
+                >
+                  <FileText className="h-3.5 w-3.5" />
+                  Download TC
+                </Link>
+                <Link
+                  href={`/${locale}/admin/students/${student.id}/tc?edit=true`}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium border border-amber-200 text-amber-700 bg-amber-50 hover:bg-amber-100 transition-colors"
+                >
+                  <Edit2 className="h-3.5 w-3.5" />
+                  Edit TC
+                </Link>
+              </>
             ) : null}
             <Link
               href={`/${locale}/admin/students/${student.id}/edit`}

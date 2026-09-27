@@ -30,7 +30,8 @@ export const authOptions: NextAuthOptions = {
     maxAge: SESSION_MAX_AGE,
   },
   pages: {
-    signIn: "/login",
+    signIn: "/hi/login",
+    signOut: "/hi/login",
   },
   providers: [
     CredentialsProvider({

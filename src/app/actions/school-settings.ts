@@ -15,6 +15,10 @@ export interface SchoolSettingsData {
   defaultLocale: string;
   conversionCostPrimary: number;
   conversionCostJunior: number;
+  fruitCostPerStudent: number;
+  nutritionCostPerStudent: number;
+  riceMenuOptions: string[];
+  wheatMenuOptions: string[];
 }
 
 const DEFAULT_SETTINGS = {
@@ -28,6 +32,10 @@ const DEFAULT_SETTINGS = {
   defaultLocale: "hi",
   conversionCostPrimary: 6.78,
   conversionCostJunior: 10.17,
+  fruitCostPerStudent: 4.0,
+  nutritionCostPerStudent: 5.0,
+  riceMenuOptions: ["Dal-Chawal", "Sabzi-Chawal", "Tehri"],
+  wheatMenuOptions: ["Sabzi-Roti"],
 };
 
 /**
@@ -50,6 +58,10 @@ export async function getSchoolSettings(): Promise<SchoolSettingsData> {
       defaultLocale: existing.defaultLocale,
       conversionCostPrimary: existing.conversionCostPrimary,
       conversionCostJunior: existing.conversionCostJunior,
+      fruitCostPerStudent: existing.fruitCostPerStudent,
+      nutritionCostPerStudent: existing.nutritionCostPerStudent,
+      riceMenuOptions: existing.riceMenuOptions,
+      wheatMenuOptions: existing.wheatMenuOptions,
     };
   }
 
@@ -68,6 +80,10 @@ export async function getSchoolSettings(): Promise<SchoolSettingsData> {
     defaultLocale: created.defaultLocale,
     conversionCostPrimary: created.conversionCostPrimary,
     conversionCostJunior: created.conversionCostJunior,
+    fruitCostPerStudent: created.fruitCostPerStudent,
+    nutritionCostPerStudent: created.nutritionCostPerStudent,
+    riceMenuOptions: created.riceMenuOptions,
+    wheatMenuOptions: created.wheatMenuOptions,
   };
 }
 
@@ -85,6 +101,14 @@ export async function updateSchoolSettingsAction(
   const udiseCode = (formData.get("udiseCode") as string)?.trim() || null;
   const conversionCostPrimary = parseFloat(formData.get("conversionCostPrimary") as string) || 6.78;
   const conversionCostJunior = parseFloat(formData.get("conversionCostJunior") as string) || 10.17;
+  const fruitCostPerStudent = parseFloat(formData.get("fruitCostPerStudent") as string) || 4.0;
+  const nutritionCostPerStudent = parseFloat(formData.get("nutritionCostPerStudent") as string) || 5.0;
+
+  // Parse menu options from comma-separated strings
+  const riceMenuRaw = (formData.get("riceMenuOptions") as string)?.trim() || "";
+  const wheatMenuRaw = (formData.get("wheatMenuOptions") as string)?.trim() || "";
+  const riceMenuOptions = riceMenuRaw ? riceMenuRaw.split(",").map(s => s.trim()).filter(Boolean) : ["Dal-Chawal", "Sabzi-Chawal", "Tehri"];
+  const wheatMenuOptions = wheatMenuRaw ? wheatMenuRaw.split(",").map(s => s.trim()).filter(Boolean) : ["Sabzi-Roti"];
 
   if (!schoolName) {
     return { success: false, message: "School name is required." };
@@ -130,6 +154,10 @@ export async function updateSchoolSettingsAction(
         udiseCode,
         conversionCostPrimary,
         conversionCostJunior,
+        fruitCostPerStudent,
+        nutritionCostPerStudent,
+        riceMenuOptions,
+        wheatMenuOptions,
         ...(logoUrlSarvaShiksha ? { logoUrlSarvaShiksha } : {}),
         ...(logoUrlSamagra ? { logoUrlSamagra } : {}),
       },
@@ -140,6 +168,10 @@ export async function updateSchoolSettingsAction(
         udiseCode,
         conversionCostPrimary,
         conversionCostJunior,
+        fruitCostPerStudent,
+        nutritionCostPerStudent,
+        riceMenuOptions,
+        wheatMenuOptions,
         logoUrlSarvaShiksha: logoUrlSarvaShiksha ?? "/images/logo-sarva-shiksha.jpg",
         logoUrlSamagra: logoUrlSamagra ?? "/images/logo-samagra-shiksha.png",
         defaultLocale: "hi",

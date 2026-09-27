@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { TeacherDetailView } from "@/components/admin/teacher-detail-view";
+import { getTeacherCLBalance } from "@/app/actions/leave";
 
 async function getTeacher(teacherId: string) {
   const teacher = await prisma.teacher.findUnique({
@@ -43,6 +44,7 @@ export default async function AdminTeacherDetailPage({
   });
 
   const classes = currentSession?.classes.map((c) => c.name) ?? ["1", "2", "3", "4", "5", "6", "7", "8"];
+  const clBalance = await getTeacherCLBalance(teacher.id);
 
   return (
     <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-3xl">
@@ -66,6 +68,7 @@ export default async function AdminTeacherDetailPage({
         locale={locale}
         teacher={teacher}
         classes={classes}
+        clBalance={clBalance}
       />
     </main>
   );

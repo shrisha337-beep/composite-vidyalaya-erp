@@ -519,5 +519,79 @@ This directory records all active, verified administrative and instructional tes
    - Students and parents have no direct login access. They exist strictly as administrative data records linked to academic sessions.
 
 ---
+
+## 10. Pending Decision Records (2026-09-27)
+
+The following decisions were logged after requirements gathering and clarification with the project stakeholder.
+
+```
++---------+-------------------------------------------------------------+-------------+
+| ADR ID  | Decision Title                                              | Status      |
++---------+-------------------------------------------------------------+-------------+
+| ADR-015 | Sign-Out Redirect Fix (404 → Login Page)                    | Pending     |
+| ADR-016 | TC Re-Editing (Non-Legal Fields Only)                        | Pending     |
+| ADR-017 | MDM Day-Wise Item Selection (Rice/Wheat/Fruits/Nutrition/Milk)| Pending     |
+| ADR-018 | MDM Nutrition (₹5) & Milk (150mL/200mL) Columns            | Pending     |
+| ADR-019 | MDM Rice/Wheat Menu Dropdowns (Admin-Configurable)          | Pending     |
+| ADR-020 | Teacher Leave Type System with CL Tracking                  | Pending     |
+| ADR-021 | Admin-Configurable MDM Costs (Fruit, Nutrition)             | Pending     |
++---------+-------------------------------------------------------------+-------------+
+```
+
+#### ADR-015: Sign-Out Redirect Fix (404 → Login Page)
+* **Context:** After signing out, the browser lands on bare `localhost:3000` which shows a 404. The `signOut({ callbackUrl })` in both admin and teacher sidebars resolves, but the root page `/(locale)/` has no redirect logic to catch unauthenticated users.
+* **Decision:** Add proper sign-out page config in NextAuth `authOptions.pages`, and add redirect logic to the root locale page (`src/app/[locale]/page.tsx`) to send unauthenticated users to login.
+* **Status:** Pending
+
+#### ADR-016: TC Re-Editing (Non-Legal Fields Only)
+* **Context:** Once a TC is issued, there is no way to correct mistakes in fields like conduct, reason for leaving, or remarks. Reissuing a full TC with a new serial number is operationally disruptive.
+* **Decision:** Allow editing of non-legal fields only (reason, conduct, promotedTo, remarks, workingDays, subjectsStudied, lastClassStudied, dates). All snapshot fields (student name, DOB, Aadhaar, PEN, APAAR, father/mother names, category, religion, address) remain permanently frozen. Edits are logged in `AuditLog` with before/after delta for full traceability.
+* **Rationale for frozen snapshots:** A TC is a legal document. Name, DOB, and identity data must reflect the exact state at issuance time.
+* **Status:** Pending
+
+#### ADR-017: MDM Day-Wise Item Selection (Rice/Wheat/Fruits/Nutrition/Milk)
+* **Context:** Currently rice and wheat quantities are calculated for every present student every single day. In reality, the school does not serve all items daily — the admin must choose which items are served on each day.
+* **Decision:** Introduce a new `MDMDailyItemSelection` model with per-day boolean flags for rice, wheat, fruits, nutrition, and milk. Only selected items have their quantities/costs calculated. Unselected items show zero in the monthly summary.
+* **Consequences:** Monthly totals accurately reflect actual consumption; grain accounting becomes precise.
+* **Status:** Pending
+
+#### ADR-018: MDM Nutrition & Milk Columns
+* **Context:** Two additional MDM columns are required: Nutrition (₹5 per present student on chosen days) and Milk (150 mL for Primary, 200 mL for Junior on chosen days).
+* **Decisions Made (via stakeholder clarification):**
+  - Nutrition cost = ₹5 × present students (not enrolled students), only on admin-chosen days.
+  - Milk has no cost field — tracked by volume only.
+  - Milk display: show both student count AND total volume in litres.
+  - Milk volumes: 150 mL for Primary (Class 1-5), 200 mL for Junior (Class 6-8).
+  - Days for both nutrition and milk are chosen by the admin per-day (part of the MDMDailyItemSelection).
+* **Status:** Pending
+
+#### ADR-019: MDM Rice/Wheat Menu Dropdowns (Admin-Configurable)
+* **Context:** Above the monthly total rows for Rice and Wheat, a dropdown should show what menu was served (e.g., Dal-Chawal, Sabzi-Chawal, Tehri for rice; Sabzi-Roti for wheat).
+* **Decisions Made:**
+  - Menu options are admin-configurable from the Settings tab (not hardcoded).
+  - Default rice options: "Dal-Chawal", "Sabzi-Chawal", "Tehri".
+  - Default wheat options: "Sabzi-Roti".
+  - Menu selection is stored per-day in the daily item selection model.
+  - Admin can add/remove menu options from Settings → MDM Menu Configuration.
+* **Schema:** `riceMenuOptions String[]` and `wheatMenuOptions String[]` added to `SchoolSettings`; `riceMenu String?` and `wheatMenu String?` added to `MDMDailyItemSelection`.
+* **Status:** Pending
+
+#### ADR-020: Teacher Leave Type System with CL Tracking
+* **Context:** Currently teacher leave uses a free-text reason field with no categorization or limits. The school requires structured leave types with specific rules.
+* **Decisions Made (via stakeholder clarification):**
+  - **Leave Types:** Casual Leave (CL), Medical Leave (ML), Child Care Leave (CCL), Maternity Leave (MAT), Abortion Leave (AL).
+  - **CL Limit:** 14 days per calendar year (Jan 1 – Dec 31). Hard block — teacher cannot submit once exhausted.
+  - **Other Limits:** ML, CCL, MAT, AL have no day caps.
+  - **Gender Restrictions:** CCL, MAT, AL restricted to female teachers only. Male teachers see these options in the dropdown but they are greyed out/disabled with a tooltip "Available for female teachers only". System uses the teacher's stored `gender` field for enforcement.
+  - **CL Balance Visibility:** Shown on both teacher's own portal AND admin's portal (leave-requests page + teacher detail page).
+  - **Backward compatibility:** `leaveType` field is nullable on `LeaveRequest` to avoid breaking existing student leave records.
+* **Status:** Pending
+
+#### ADR-021: Admin-Configurable MDM Costs (Fruit, Nutrition)
+* **Context:** Fruit cost per student (₹4) and nutrition cost per student (₹5) are currently hardcoded. Admin needs to adjust these as government rates change.
+* **Decision:** Add `fruitCostPerStudent Float @default(4.0)` and `nutritionCostPerStudent Float @default(5.0)` to `SchoolSettings`. Group all four MDM cost fields together on the Settings page under "MDM Cost Configuration": Conversion Cost Primary, Conversion Cost Junior, Fruit Cost, Nutrition Cost. Milk has no cost field (volume tracking only).
+* **Status:** Pending
+
+---
 *Document officially generated and archived for Composite Vidyalaya Chandpur Tarhar ERP Portal.*
 

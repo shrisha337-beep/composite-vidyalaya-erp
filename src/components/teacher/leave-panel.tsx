@@ -5,11 +5,20 @@ import { useRouter } from "next/navigation";
 import { applyTeacherLeaveAction } from "@/app/actions/leave";
 import { Calendar, AlertCircle, CheckCircle2, Loader, Send } from "lucide-react";
 
+const LEAVE_TYPE_LABELS: Record<string, string> = {
+  CASUAL_LEAVE: "CL",
+  MEDICAL_LEAVE: "ML",
+  CHILD_CARE_LEAVE: "CCL",
+  MATERNITY_LEAVE: "Maternity",
+  ABORTION_LEAVE: "Abortion Leave",
+};
+
 interface LeaveItem {
   id: string;
   fromDate: Date;
   toDate: Date;
   reason: string;
+  leaveType: string | null;
   status: "PENDING" | "APPROVED" | "REJECTED";
   createdAt: Date;
 }
@@ -17,15 +26,20 @@ interface LeaveItem {
 export function TeacherLeavePanel({
   locale,
   pastRequests,
+  teacherGender,
+  clBalance,
 }: {
   locale: string;
   pastRequests: LeaveItem[];
+  teacherGender: string;
+  clBalance: { used: number; remaining: number; limit: number };
 }) {
   const router = useRouter();
 
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [reason, setReason] = useState("");
+  const [leaveType, setLeaveType] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
@@ -36,8 +50,8 @@ export function TeacherLeavePanel({
     setSuccessMsg("");
     setErrorMsg("");
 
-    if (!fromDate || !toDate || !reason.trim()) {
-      setErrorMsg("Please fill out all fields.");
+    if (!fromDate || !toDate || !reason.trim() || !leaveType) {
+      setErrorMsg("Please fill out all fields including leave type.");
       return;
     }
 
@@ -47,6 +61,7 @@ export function TeacherLeavePanel({
         fromDateString: fromDate,
         toDateString: toDate,
         reason,
+        leaveType,
         locale,
       });
 
@@ -55,6 +70,7 @@ export function TeacherLeavePanel({
         setFromDate("");
         setToDate("");
         setReason("");
+        setLeaveType("");
         router.refresh();
       } else {
         setErrorMsg(res.message);
@@ -90,6 +106,35 @@ export function TeacherLeavePanel({
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+          {/* CL Balance Badge */}
+          <div className="flex items-center justify-between px-3 py-2 bg-blue-50 border border-blue-200 rounded text-xs">
+            <span className="font-medium text-blue-800">Casual Leave Balance ({new Date().getFullYear()})</span>
+            <span className="font-bold text-blue-900">{clBalance.remaining}/{clBalance.limit} remaining</span>
+          </div>
+
+          {/* Leave Type Dropdown */}
+          <div>
+            <label className="block text-gray-500 mb-1">Leave Type / अवकाश प्रकार <span className="text-red-500">*</span></label>
+            <select
+              required
+              value={leaveType}
+              onChange={(e) => setLeaveType(e.target.value)}
+              className="w-full border border-gray-300 rounded px-2.5 py-1.5 focus:outline-none bg-white text-sm"
+            >
+              <option value="">Select leave type...</option>
+              <option value="CASUAL_LEAVE">Casual Leave / आकस्मिक अवकाश (CL) — {clBalance.remaining} left</option>
+              <option value="MEDICAL_LEAVE">Medical Leave / चिकित्सा अवकाश (ML)</option>
+              <option value="CHILD_CARE_LEAVE" disabled={teacherGender !== "FEMALE"} title={teacherGender !== "FEMALE" ? "Available for female teachers only" : ""}>
+                Child Care Leave / बाल देखभाल अवकाश (CCL){teacherGender !== "FEMALE" ? " — Female only" : ""}
+              </option>
+              <option value="MATERNITY_LEAVE" disabled={teacherGender !== "FEMALE"} title={teacherGender !== "FEMALE" ? "Available for female teachers only" : ""}>
+                Maternity Leave / मातृत्व अवकाश{teacherGender !== "FEMALE" ? " — Female only" : ""}
+              </option>
+              <option value="ABORTION_LEAVE" disabled={teacherGender !== "FEMALE"} title={teacherGender !== "FEMALE" ? "Available for female teachers only" : ""}>
+                Abortion Leave / गर्भपात अवकाश{teacherGender !== "FEMALE" ? " — Female only" : ""}
+              </option>
+            </select>
+          </div>
           <div>
             <label className="block text-gray-500 mb-1">From Date / अवकाश प्रारंभ</label>
             <input
@@ -159,7 +204,7 @@ export function TeacherLeavePanel({
                     className="p-4 bg-gray-50 border border-gray-100 rounded-lg text-xs space-y-2"
                   >
                     <div className="flex items-center justify-between border-b border-gray-100 pb-1.5">
-                      <span className="flex items-center gap-1 font-bold text-gray-700">
+                      <span className="flex items-center gap-1.5 font-bold text-gray-700">
                         <Calendar className="h-3.5 w-3.5 text-gray-400" />
                         {new Date(req.fromDate).toLocaleDateString("en-IN", {
                           day: "2-digit",
@@ -171,6 +216,11 @@ export function TeacherLeavePanel({
                           month: "short",
                           year: "numeric",
                         })}
+                        {req.leaveType && (
+                          <span className="px-1.5 py-0.5 rounded bg-gray-200 text-gray-700 font-semibold text-[9px] ml-1">
+                            {LEAVE_TYPE_LABELS[req.leaveType] || req.leaveType}
+                          </span>
+                        )}
                       </span>
 
                       <span

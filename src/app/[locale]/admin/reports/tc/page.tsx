@@ -7,6 +7,7 @@ import {
   FileText,
   Download,
   Filter,
+  Edit2,
 } from "lucide-react";
 
 export default async function TcReportsPage({
@@ -243,12 +244,22 @@ export default async function TcReportsPage({
                       </td>
                       <td className="px-5 py-3.5 text-center">
                         {tc.student && (
-                          <Link
-                            href={`/${locale}/admin/students/${tc.student.id}/tc/download`}
-                            className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg border border-green-200 text-green-700 hover:bg-green-50 transition-colors"
-                          >
-                            <Download className="h-3 w-3" /> Download
-                          </Link>
+                          <div className="flex items-center justify-center gap-1.5">
+                            <Link
+                              href={`/${locale}/admin/students/${tc.student.id}/tc/download`}
+                              className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-green-200 text-green-700 hover:bg-green-50 transition-colors"
+                            >
+                              <Download className="h-3 w-3" /> Download
+                            </Link>
+                            {tc.status === "ISSUED" && (
+                              <Link
+                                href={`/${locale}/admin/students/${tc.student.id}/tc?edit=true`}
+                                className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-amber-200 text-amber-700 hover:bg-amber-50 transition-colors"
+                              >
+                                <Edit2 className="h-3 w-3" /> Edit
+                              </Link>
+                            )}
+                          </div>
                         )}
                       </td>
                     </tr>
