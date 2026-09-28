@@ -654,6 +654,35 @@ The following decisions were logged after requirements gathering and clarificati
   - **Desktop behavior preserved:** Inline preview continues to work on desktop browsers.
 * **Status:** ✅ Implemented
 
+#### ADR-028: Add "Anudeshak" Teacher Designation
+* **Context:** A new designation type "Anudeshak" (अनुदेशक) needs to be available when adding/editing teachers.
+* **Decision:** Add `<option value="Anudeshak">Anudeshak / अनुदेशक</option>` to the designation dropdowns in the "New Teacher" form and the "Teacher Detail Edit" form.
+* **Status:** ✅ Implemented
+
+#### ADR-029: Delete TC and Re-activate Student
+* **Context:** Admin needs the ability to delete an issued TC. When a TC is deleted, the student should automatically be re-activated (isActive = true, transferredOutAt = null) so they appear in attendance again. The student's user account should also be re-activated.
+* **Decision:** Create a `deleteTransferCertificateAction` server action that:
+  1. Deletes the TC record.
+  2. Sets `student.isActive = true`, `student.transferredOutAt = null`.
+  3. Sets `student.user.isActive = true` (re-enable portal login).
+  4. Logs the deletion in the audit log.
+  UI: A "Delete TC" button on the TC detail page, with confirmation dialog.
+* **Status:** ✅ Implemented
+
+#### ADR-030: Timetable Redesign — Primary/Junior Split with Printable Grid
+* **Context:** The existing timetable is a day-based slot manager. The school needs a printable grid timetable separated into Primary (classes 1-5) and Junior (classes 6-8), with 8 periods as rows and classes as columns. Each cell has a teacher dropdown and a subject dropdown. Teacher names and subjects are hardcoded per the stakeholder's specifications.
+* **Decisions Made (via stakeholder clarification):**
+  - **Layout:** Two separate tables — Primary (Classes 1-5) and Junior (Classes 6-8).
+  - **Rows:** 8 periods. Period times are editable by admin (displayed in the period column).
+  - **Columns:** Each class is a column.
+  - **Cell content:** Two dropdowns per cell — one for teacher, one for subject.
+  - **Teachers (hardcoded):**
+    - *Primary:* Durga Prasad, Rajan Singh, Anand Kaushal Srivastava, Poonam Kannaujia, Babita Pandey
+    - *Junior:* Arti Pandey, Akahnd Pratap Singh, Komal Singh, Neelam Singh, Pallavi Tiwari, Vijay Kumar Mishra
+  - **Subjects (hardcoded):** Hindi, Maths (गणित), Science (विज्ञान), Social Science (सामाजिक विज्ञान), Sanskrit, English (अंग्रेजी), Environmental Science (पर्यावरण) / Home Science (गृह विज्ञान), Hamara Paryavaran, Sports & Health (खेल और स्वास्थ्य) / Home Craft (गृह शिल्प)
+  - **Persistence:** Not saved to database — this is a printable page that admin fills and prints each time.
+* **Status:** ✅ Implemented
+
 ---
 *Document officially generated and archived for Composite Vidyalaya Chandpur Tarhar ERP Portal.*
 

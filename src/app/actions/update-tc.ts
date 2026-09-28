@@ -166,3 +166,100 @@ export async function updateTransferCertificate({
     };
   }
 }
+
+/**
+ * Delete a Transfer Certificate and re-activate the student.
+ * - Sets student.isActive = true, transferredOutAt = null
+ * - Re-enables the student's user portal login
+ * - Logs the deletion to audit
+ */
+export async function deleteTransferCertificateAction({
+  tcId,
+  locale = "en",
+}: {
+  tcId: string;
+  locale?: string;
+}): Promise<{ success: boolean; message: string }> {
+  const session = await requireRole(["ADMIN"]);
+
+  if (!tcId) {
+    return { success: false, message: "TC ID is required." };
+  }
+
+  const existingTc = await prisma.transferCertificate.findUnique({
+    where: { id: tcId },
+    select: {
+      id: true,
+      tcNumber: true,
+      studentId: true,
+      student: {
+        select: {
+          id: true,
+          fullName: true,
+          userId: true,
+        },
+      },
+    },
+  });
+
+  if (!existingTc) {
+    return { success: false, message: "Transfer Certificate not found." };
+  }
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      // 1. Delete the TC record
+      await tx.transferCertificate.delete({
+        where: { id: tcId },
+      });
+
+      // 2. Re-activate the student
+      await tx.student.update({
+        where: { id: existingTc.studentId },
+        data: {
+          isActive: true,
+          transferredOutAt: null,
+        },
+      });
+
+      // 3. Re-enable student portal login
+      await tx.user.update({
+        where: { id: existingTc.student.userId },
+        data: {
+          isActive: true,
+        },
+      });
+
+      // 4. Audit log
+      await tx.auditLog.create({
+        data: {
+          userId: session.user.id,
+          action: "TC_DELETE",
+          entityType: "TransferCertificate",
+          entityId: tcId,
+          metadata: {
+            tcNumber: existingTc.tcNumber,
+            studentId: existingTc.studentId,
+            studentName: existingTc.student.fullName,
+          },
+        },
+      });
+    });
+
+    revalidatePath(`/${locale}/admin/students/${existingTc.studentId}`);
+    revalidatePath(`/${locale}/admin/students`);
+    revalidatePath(`/${locale}/admin/reports/tc`);
+
+    return {
+      success: true,
+      message: `TC #${existingTc.tcNumber} deleted. ${existingTc.student.fullName} has been re-activated.`,
+    };
+  } catch (error) {
+    console.error("Error deleting TC:", error);
+    return {
+      success: false,
+      message: "Failed to delete Transfer Certificate. Please try again.",
+    };
+  }
+}
+

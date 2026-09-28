@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { updateTransferCertificate } from "@/app/actions/update-tc";
+import { updateTransferCertificate, deleteTransferCertificateAction } from "@/app/actions/update-tc";
 
 function Field({
   label,
@@ -47,6 +47,7 @@ export function TcEditForm({
 }) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
@@ -280,7 +281,7 @@ export function TcEditForm({
       <div className="flex items-center gap-3">
         <button
           type="submit"
-          disabled={saving}
+          disabled={saving || deleting}
           className="px-6 py-2.5 rounded text-sm font-semibold text-white transition-colors disabled:opacity-50"
           style={{ background: "hsl(var(--primary))" }}
         >
@@ -292,6 +293,34 @@ export function TcEditForm({
           className="px-4 py-2.5 rounded text-sm font-medium text-gray-600 border border-gray-300 hover:bg-gray-50"
         >
           Cancel
+        </button>
+
+        {/* Delete TC Button */}
+        <button
+          type="button"
+          disabled={deleting || saving}
+          onClick={async () => {
+            if (!confirm(
+              `Are you sure you want to DELETE TC #${tc.tcNumber}?\n\nThis will:\n- Permanently delete the Transfer Certificate\n- Re-activate the student (${student.fullName})\n- Re-enable their portal login\n\nThis action cannot be undone.`
+            )) return;
+            setDeleting(true);
+            setError(null);
+            try {
+              const res = await deleteTransferCertificateAction({ tcId: tc.id, locale });
+              if (res.success) {
+                router.push(`/${locale}/admin/students/${student.id}`);
+              } else {
+                setError(res.message);
+              }
+            } catch {
+              setError("Failed to delete TC.");
+            } finally {
+              setDeleting(false);
+            }
+          }}
+          className="ml-auto px-4 py-2.5 rounded text-sm font-semibold text-red-700 border border-red-300 bg-red-50 hover:bg-red-100 transition-colors disabled:opacity-50"
+        >
+          {deleting ? "Deleting..." : "Delete TC / TC हटाएं"}
         </button>
       </div>
     </form>

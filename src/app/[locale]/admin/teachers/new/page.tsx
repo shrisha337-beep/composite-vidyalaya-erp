@@ -118,6 +118,7 @@ export default async function AddTeacherPage({
                 <option value="TGT">TGT / प्रशिक्षित स्नातक</option>
                 <option value="PGT">PGT / प्रवक्ता</option>
                 <option value="Headmaster">Headmaster / प्रधानाध्यापक</option>
+                <option value="Anudeshak">Anudeshak / अनुदेशक</option>
               </select>
             </div>
 
