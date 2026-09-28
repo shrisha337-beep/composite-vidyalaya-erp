@@ -1,8 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/rbac";
-import { Bell, Plus, AlertTriangle } from "lucide-react";
+import { Bell, Plus, AlertTriangle, Paperclip } from "lucide-react";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { put } from "@vercel/blob";
 
 async function createNotice(formData: FormData) {
   "use server";
@@ -12,12 +13,14 @@ async function createNotice(formData: FormData) {
   const body = formData.get("body") as string;
   const audience = formData.get("audience") as string;
   const isEmergency = formData.get("isEmergency") === "on";
+  const locale = formData.get("locale") as string;
 
   if (!title?.trim() || !body?.trim()) {
     return;
   }
 
-  await prisma.notice.create({
+  // Create the notice first
+  const notice = await prisma.notice.create({
     data: {
       title: title.trim(),
       body: body.trim(),
@@ -27,8 +30,38 @@ async function createNotice(formData: FormData) {
     },
   });
 
-  const locale = formData.get("locale") as string;
+  // Handle file attachments (up to 5)
+  const files: File[] = [];
+  for (let i = 0; i < 5; i++) {
+    const file = formData.get(`attachment_${i}`) as File | null;
+    if (file && file.size > 0) {
+      files.push(file);
+    }
+  }
+
+  if (files.length > 0) {
+    const attachmentData = await Promise.all(
+      files.map(async (file) => {
+        const blob = await put(`notices/${notice.id}/${file.name}`, file, {
+          access: "public",
+        });
+        return {
+          noticeId: notice.id,
+          fileName: file.name,
+          fileUrl: blob.url,
+          fileType: file.type || "application/octet-stream",
+          fileSize: file.size,
+        };
+      })
+    );
+
+    await prisma.noticeAttachment.createMany({
+      data: attachmentData,
+    });
+  }
+
   revalidatePath(`/${locale}/admin/notifications`);
+  revalidatePath(`/${locale}/teacher/notices`);
   redirect(`/${locale}/admin/notifications`);
 }
 
@@ -43,6 +76,9 @@ export default async function AdminNotificationsPage({
   const notices = await prisma.notice.findMany({
     orderBy: { postedAt: "desc" },
     take: 50,
+    include: {
+      attachments: true,
+    },
   });
 
   return (
@@ -64,7 +100,7 @@ export default async function AdminNotificationsPage({
           <Plus className="h-4 w-4" />
           Post New Notice
         </h2>
-        <form action={createNotice} className="space-y-4">
+        <form action={createNotice} className="space-y-4" encType="multipart/form-data">
           <input type="hidden" name="locale" value={locale} />
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">
@@ -89,6 +125,29 @@ export default async function AdminNotificationsPage({
               placeholder="Notice body…"
             />
           </div>
+
+          {/* File Attachments */}
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1 flex items-center gap-1">
+              <Paperclip className="h-3.5 w-3.5" />
+              Attachments (up to 5 files — images, PDFs, documents)
+            </label>
+            <div className="space-y-2">
+              {[0, 1, 2, 3, 4].map((i) => (
+                <input
+                  key={i}
+                  type="file"
+                  name={`attachment_${i}`}
+                  accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv"
+                  className="block w-full text-xs text-gray-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border file:border-gray-300 file:text-xs file:font-medium file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100"
+                />
+              ))}
+            </div>
+            <p className="text-[10px] text-gray-400 mt-1">
+              Supported: Images (JPEG, PNG, WebP), PDF, Word, Excel, PowerPoint, Text, CSV
+            </p>
+          </div>
+
           <div className="flex flex-wrap items-end gap-4">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">
@@ -155,6 +214,27 @@ export default async function AdminNotificationsPage({
                     <p className="text-sm text-gray-600 line-clamp-2">
                       {n.body}
                     </p>
+
+                    {/* Attachments */}
+                    {n.attachments.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {n.attachments.map((att) => (
+                          <a
+                            key={att.id}
+                            href={att.fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded text-[11px] font-medium hover:bg-blue-100 transition-colors"
+                          >
+                            <Paperclip className="h-3 w-3" />
+                            {att.fileName}
+                            <span className="text-blue-400">
+                              ({(att.fileSize / 1024).toFixed(0)} KB)
+                            </span>
+                          </a>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div className="shrink-0 text-right">
                     <span className="text-xs text-gray-400 capitalize block">

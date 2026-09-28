@@ -865,10 +865,23 @@ model Notice {
   postedAt    DateTime        @default(now())
   expiresAt   DateTime?
 
+  attachments   NoticeAttachment[]
   notifications Notification[]
 
   @@index([audience, postedAt])
   @@map("notices")
+}
+
+model NoticeAttachment {
+  id        String @id @default(cuid())
+  noticeId  String
+  notice    Notice @relation(fields: [noticeId], references: [id], onDelete: Cascade)
+  fileName  String
+  fileUrl   String
+  fileType  String   // MIME type: "image/jpeg", "application/pdf", etc.
+  fileSize  Int      // bytes
+
+  @@map("notice_attachments")
 }
 
 model Notification {

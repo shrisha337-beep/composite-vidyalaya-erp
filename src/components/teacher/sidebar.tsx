@@ -20,6 +20,7 @@ import {
   GraduationCap,
   BarChart3,
   User,
+  Bell,
 } from "lucide-react";
 
 const navItems = [
@@ -32,6 +33,7 @@ const navItems = [
   { label: "Timetable",       href: "/teacher/timetable",      icon: CalendarDays    },
   { label: "Apply Leave",     href: "/teacher/leave",          icon: FileText        },
   { label: "Student Leaves",  href: "/teacher/leave-approval", icon: FileCheck       },
+  { label: "Notices",         href: "/teacher/notices",        icon: Bell            },
   { label: "Reports",         href: "/teacher/reports",        icon: BarChart3       },
   { label: "Profile",         href: "/teacher/profile",        icon: User            },
 ];
@@ -195,15 +197,15 @@ export function TeacherSidebar({ locale }: { locale: string }) {
           <span className="text-[10px]">Marks</span>
         </Link>
         <Link
-          href={`/${locale}/teacher/leave`}
+          href={`/${locale}/teacher/notices`}
           className={`flex flex-col items-center gap-0.5 px-2.5 py-1 text-xs transition-colors ${
-            isCurrent("/teacher/leave")
+            isCurrent("/teacher/notices")
               ? "text-[#6B1D30] font-bold"
               : "text-[#7A7267] hover:text-[#2D2A26]"
           }`}
         >
-          <FileText className="h-4 w-4" />
-          <span className="text-[10px]">Leave</span>
+          <Bell className="h-4 w-4" />
+          <span className="text-[10px]">Notices</span>
         </Link>
         <button
           onClick={() => setOpen(true)}

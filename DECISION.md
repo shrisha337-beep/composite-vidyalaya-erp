@@ -592,6 +592,68 @@ The following decisions were logged after requirements gathering and clarificati
 * **Decision:** Add `fruitCostPerStudent Float @default(4.0)` and `nutritionCostPerStudent Float @default(5.0)` to `SchoolSettings`. Group all four MDM cost fields together on the Settings page under "MDM Cost Configuration": Conversion Cost Primary, Conversion Cost Junior, Fruit Cost, Nutrition Cost. Milk has no cost field (volume tracking only).
 * **Status:** Pending
 
+#### ADR-022: Admin Can Add Past/Previous Leaves for Teachers
+* **Context:** Teachers may have taken CL or other leaves in the past (before the ERP was set up, or leaves that were tracked manually). The admin needs the ability to backfill these leaves so the CL balance is accurately reflected on the teacher's portal.
+* **Decisions Made (via stakeholder clarification):**
+  - **Access Point:** A new "Add Past Leave" form on the admin's Leave Requests page (`/admin/leave-requests`), with a dropdown to select the teacher.
+  - **Auto-Approval:** Past leaves added by admin are auto-approved immediately (`status = APPROVED`), since the admin is recording a historical fact, not requesting approval.
+  - **CL Balance Impact:** Past CL entries count against the teacher's annual CL balance (14 days/calendar year). The balance is recalculated based on the `fromDate`'s calendar year.
+  - **Teacher Visibility:** The teacher sees these admin-entered past leaves in their own Leave Portal, indistinguishable from self-applied leaves (except the leave was not created by them).
+  - **Form Fields:** Teacher (dropdown), Leave Type, From Date, To Date, Reason. Dates can be in the past (no future date restriction for this form).
+* **Status:** ✅ Implemented
+
+#### ADR-023: Student Attendance Percentage — Class-wise & Student-wise with Search
+* **Context:** Admin and teachers need to see attendance percentage aggregated by class and by individual student, with search capability.
+* **Decisions Made (via stakeholder clarification):**
+  - **Location:** Added to the existing attendance pages (admin `/admin/attendance` and teacher `/teacher/attendance`) with a search + percentage view section.
+  - **Time Period:** Two modes with toggle:
+    1. **Session-wise:** From the date attendance marking started (first attendance record in the current session) to today.
+    2. **Month-wise:** Current calendar month.
+  - **Admin View:** Search by class, student name, or admission number. Shows class-level percentage summary and drill-down to individual students.
+  - **Teacher View:** Same for their assigned class only.
+  - **Session Reset:** Attendance percentage resets to 0 for the new session once students are promoted to the next class.
+* **Status:** ✅ Implemented
+
+#### ADR-024: Past Attendance Update Capability
+* **Context:** Teachers or admin may need to correct or backfill attendance for past dates.
+* **Decisions Made (via stakeholder clarification):**
+  - **Admin:** Can update/edit attendance for any class on any past date within the current session.
+  - **Class Teacher:** Can update/edit attendance only for their own assigned class on past dates.
+  - **Mechanism:** The existing attendance marking UI will allow date navigation to past dates and enable editing of previously saved records.
+* **Status:** ✅ Implemented
+
+#### ADR-025: Notice Attachments (Images, PDFs, Documents)
+* **Context:** Currently, the Notice model only supports a text `title` and `body`. Admin needs to attach files (images, PDFs, folders/documents) when posting notices to teachers.
+* **Decisions Made (via stakeholder clarification):**
+  - **Attachment Limit:** Up to 5 attachments per notice.
+  - **Supported Types:** Images (JPEG, PNG, WebP), PDFs, and common document formats.
+  - **Storage:** Files uploaded to Vercel Blob (already configured with `@vercel/blob` and `BLOB_READ_WRITE_TOKEN`).
+  - **Schema Change:** New `NoticeAttachment` model linked to `Notice` — stores `fileName`, `fileUrl`, `fileType`, `fileSize`.
+  - **Teacher View:** Teachers see the full notice (title, body, AND attachments) with a dedicated Download button per attachment.
+  - **Teacher Portal:** A notices/announcements section must be visible on the teacher portal (currently missing from teacher navigation).
+* **Status:** ✅ Implemented
+
+#### ADR-026: Reports Hub — Expandable Panel UX
+* **Context:** The Reports Hub currently has 5 report card links. The Marks card works (links to `/admin/marks`), and the TC card works (links to `/admin/reports/tc`). But Student List, Attendance Summary, and Report Cards link to non-functional `?export=` query params.
+* **Decisions Made (via stakeholder clarification):**
+  - **UX Pattern:** Each report card becomes a clickable panel that expands **inline** on the same page, revealing:
+    1. Search/filter bar (by class, student name, admission number).
+    2. Data table or summary.
+    3. Export/download action.
+  - **Empty State:** All panels open and show a proper empty state even when no data exists (like the Marks page does).
+  - **Each panel has its own search:** No global search bar; each expanded section has its own filter controls relevant to that report type.
+  - **Marks & TC:** These already have dedicated pages. They will continue linking to their existing pages (no change).
+* **Status:** ✅ Implemented
+
+#### ADR-027: TC PDF Preview Mobile Fix
+* **Context:** On mobile phones, the TC PDF preview page shows a file UUID and an "Open" button instead of the actual PDF preview. This is because `@react-pdf/renderer`'s `PDFViewer` component uses an `<iframe>` internally, and most mobile browsers do not support inline PDF rendering via iframe — they show a download fallback.
+* **Root Cause:** `PDFViewer` from `@react-pdf/renderer` renders an `<iframe src="blob:...">`. Mobile browsers (Chrome, Samsung Internet, Firefox Mobile) cannot display PDFs in iframes and show a fallback with the blob UUID and an "Open" button.
+* **Decisions Made (via stakeholder clarification):**
+  - **Fix Approach:** Generate the PDF as a data URL (base64) or blob URL on the client side using `@react-pdf/renderer`'s `pdf()` function, then render it in an `<iframe>` with the data URL directly. This bypasses the PDFViewer limitation.
+  - **Fallback for unsupported mobile browsers:** If inline rendering still fails, render each page as an image using a canvas-based approach, or simply provide the Download button prominently.
+  - **Desktop behavior preserved:** Inline preview continues to work on desktop browsers.
+* **Status:** ✅ Implemented
+
 ---
 *Document officially generated and archived for Composite Vidyalaya Chandpur Tarhar ERP Portal.*
 

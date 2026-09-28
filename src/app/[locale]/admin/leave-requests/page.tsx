@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { TeacherLeaveApprover } from "@/components/admin/teacher-leave-approver";
+import { AdminPastLeaveForm } from "@/components/admin/admin-past-leave-form";
 import { getTeacherCLBalance } from "@/app/actions/leave";
 
 export default async function AdminLeaveRequestsPage({
@@ -45,6 +46,12 @@ export default async function AdminLeaveRequestsPage({
     clBalance: r.teacherId ? balanceMap.get(r.teacherId) || null : null,
   }));
 
+  // Fetch all teachers for the "Add Past Leave" dropdown
+  const allTeachers = await prisma.teacher.findMany({
+    select: { id: true, fullName: true, employeeCode: true },
+    orderBy: { fullName: "asc" },
+  });
+
   return (
     <main className="flex-1 p-6 lg:p-8 max-w-4xl">
       {/* Header */}
@@ -62,6 +69,9 @@ export default async function AdminLeaveRequestsPage({
           <p className="text-sm text-gray-500 mt-0.5">Review and Process Teacher Leave Applications</p>
         </div>
       </div>
+
+      {/* Add Past Leave Form */}
+      <AdminPastLeaveForm locale={locale} teachers={allTeachers} />
 
       <TeacherLeaveApprover locale={locale} requests={requestsWithBalance} />
     </main>

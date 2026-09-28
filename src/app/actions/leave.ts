@@ -302,3 +302,136 @@ export async function reviewLeaveAction({
     };
   }
 }
+
+/**
+ * Admin action: Record a past/previous leave for a teacher.
+ * The leave is auto-approved (status = APPROVED) since admin is recording a fact.
+ * CL limits are checked based on the fromDate's calendar year.
+ */
+export async function adminAddPastLeaveAction({
+  teacherId,
+  leaveType,
+  fromDateString,
+  toDateString,
+  reason,
+  locale,
+}: {
+  teacherId: string;
+  leaveType: string;
+  fromDateString: string;
+  toDateString: string;
+  reason: string;
+  locale: string;
+}): Promise<{ success: boolean; message: string }> {
+  const session = await requireRole(["ADMIN"]);
+
+  const fromDate = new Date(fromDateString);
+  const toDate = new Date(toDateString);
+
+  if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
+    return { success: false, message: "Invalid date format." };
+  }
+
+  if (fromDate > toDate) {
+    return { success: false, message: "From Date must be before or on To Date." };
+  }
+
+  if (!reason.trim()) {
+    return { success: false, message: "Reason is required." };
+  }
+
+  // Validate leaveType
+  const validTypes = [
+    "CASUAL_LEAVE",
+    "MEDICAL_LEAVE",
+    "CHILD_CARE_LEAVE",
+    "MATERNITY_LEAVE",
+    "ABORTION_LEAVE",
+  ] as const;
+  if (!leaveType || !validTypes.includes(leaveType as typeof validTypes[number])) {
+    return { success: false, message: "Please select a valid leave type." };
+  }
+
+  // Verify teacher exists
+  const teacher = await prisma.teacher.findUnique({
+    where: { id: teacherId },
+    select: { id: true, gender: true, fullName: true },
+  });
+
+  if (!teacher) {
+    return { success: false, message: "Teacher record not found." };
+  }
+
+  // Gender validation for female-only leave types
+  const femaleOnlyTypes = ["CHILD_CARE_LEAVE", "MATERNITY_LEAVE", "ABORTION_LEAVE"];
+  if (femaleOnlyTypes.includes(leaveType) && teacher.gender !== "FEMALE") {
+    return {
+      success: false,
+      message: "This leave type is available for female teachers only.",
+    };
+  }
+
+  // CL limit enforcement (14 days per calendar year)
+  if (leaveType === "CASUAL_LEAVE") {
+    const CL_ANNUAL_LIMIT = 14;
+    const timeDiff = toDate.getTime() - fromDate.getTime();
+    const requestedDays = Math.floor(timeDiff / (1000 * 60 * 60 * 24)) + 1;
+
+    const yearStart = new Date(fromDate.getFullYear(), 0, 1);
+    const yearEnd = new Date(fromDate.getFullYear(), 11, 31, 23, 59, 59);
+
+    const approvedCLRequests = await prisma.leaveRequest.findMany({
+      where: {
+        teacherId: teacher.id,
+        leaveType: "CASUAL_LEAVE",
+        status: "APPROVED",
+        fromDate: { gte: yearStart },
+        toDate: { lte: yearEnd },
+      },
+      select: { fromDate: true, toDate: true },
+    });
+
+    let usedDays = 0;
+    approvedCLRequests.forEach((req) => {
+      const diff = req.toDate.getTime() - req.fromDate.getTime();
+      usedDays += Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
+    });
+
+    const remainingDays = CL_ANNUAL_LIMIT - usedDays;
+
+    if (requestedDays > remainingDays) {
+      return {
+        success: false,
+        message: `Cannot record ${requestedDays} day(s) of CL. ${teacher.fullName} has only ${Math.max(0, remainingDays)} day(s) remaining out of ${CL_ANNUAL_LIMIT} for ${fromDate.getFullYear()}.`,
+      };
+    }
+  }
+
+  try {
+    await prisma.leaveRequest.create({
+      data: {
+        applicantType: "TEACHER",
+        teacherId: teacher.id,
+        leaveType: leaveType as any,
+        fromDate,
+        toDate,
+        reason: reason.trim(),
+        status: "APPROVED",         // Auto-approved — recording a historical fact
+        reviewedById: session.user.id,
+        reviewedAt: new Date(),
+      },
+    });
+
+    revalidatePath(`/${locale}/admin/leave-requests`);
+    revalidatePath(`/${locale}/teacher/leave`);
+    return {
+      success: true,
+      message: `Past leave for ${teacher.fullName} successfully recorded and approved.`,
+    };
+  } catch (err) {
+    return {
+      success: false,
+      message: err instanceof Error ? err.message : "Failed to record past leave.",
+    };
+  }
+}

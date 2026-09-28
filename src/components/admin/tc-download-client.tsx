@@ -1,17 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
-import { ArrowLeft, Download, Eye, FileText, Loader } from "lucide-react";
+import { ArrowLeft, Download, Eye, Loader, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { TcPdfDocument } from "@/components/admin/tc-pdf-document";
+import { pdf } from "@react-pdf/renderer";
 
-// Dynamically import PDF components with SSR disabled to avoid Node.js window errors
-const PDFViewer = dynamic(
-  () => import("@react-pdf/renderer").then((m) => m.PDFViewer),
-  { ssr: false }
-);
-
+// Dynamically import PDFDownloadLink with SSR disabled
 const PDFDownloadLink = dynamic(
   () => import("@react-pdf/renderer").then((m) => m.PDFDownloadLink),
   { ssr: false }
@@ -27,10 +23,41 @@ export function TcDownloadClient({
   tc: any;
 }) {
   const [mounted, setMounted] = useState(false);
+  const [pdfDataUrl, setPdfDataUrl] = useState<string | null>(null);
+  const [pdfError, setPdfError] = useState(false);
+  const [generating, setGenerating] = useState(false);
+
+  const generatePdfPreview = useCallback(async () => {
+    setGenerating(true);
+    setPdfError(false);
+    try {
+      const doc = <TcPdfDocument tc={tc} student={student} />;
+      const blob = await pdf(doc).toBlob();
+      const url = URL.createObjectURL(blob);
+      setPdfDataUrl(url);
+    } catch (err) {
+      console.error("PDF preview generation failed:", err);
+      setPdfError(true);
+    } finally {
+      setGenerating(false);
+    }
+  }, [tc, student]);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (mounted) {
+      generatePdfPreview();
+    }
+    // Cleanup blob URL on unmount
+    return () => {
+      if (pdfDataUrl) {
+        URL.revokeObjectURL(pdfDataUrl);
+      }
+    };
+  }, [mounted]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!mounted) {
     return (
@@ -84,8 +111,8 @@ export function TcDownloadClient({
         </div>
       </div>
 
-      {/* PDF Web Previewer */}
-      <div className="bg-white border border-gray-200 rounded-lg p-4 h-[650px] flex flex-col">
+      {/* PDF Preview — uses generated blob URL in iframe for mobile compatibility */}
+      <div className="bg-white border border-gray-200 rounded-lg p-4 flex flex-col" style={{ minHeight: "500px" }}>
         <div className="flex items-center gap-2 pb-3 border-b border-gray-100 mb-4">
           <Eye className="h-4 w-4 text-gray-400" />
           <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -93,10 +120,41 @@ export function TcDownloadClient({
           </h3>
         </div>
 
-        <div className="flex-1 w-full rounded border border-gray-100 overflow-hidden bg-gray-50">
-          <PDFViewer width="100%" height="100%" className="border-0">
-            <TcPdfDocument tc={tc} student={student} />
-          </PDFViewer>
+        <div className="flex-1 w-full rounded border border-gray-100 overflow-hidden bg-gray-50 relative" style={{ minHeight: "450px" }}>
+          {generating && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-50 z-10">
+              <Loader className="h-8 w-8 text-gray-400 animate-spin mb-3" />
+              <p className="text-sm text-gray-500">Generating preview...</p>
+            </div>
+          )}
+
+          {pdfError && !generating && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-50 z-10 gap-3 px-6 text-center">
+              <p className="text-sm text-gray-600 font-medium">
+                Preview could not be generated on this device.
+              </p>
+              <p className="text-xs text-gray-400">
+                Please use the Download PDF button above to view the certificate.
+              </p>
+              <button
+                onClick={generatePdfPreview}
+                className="mt-2 flex items-center gap-2 px-4 py-2 rounded-md text-xs font-medium border border-gray-300 text-gray-600 hover:bg-gray-100 transition-colors"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                Retry Preview
+              </button>
+            </div>
+          )}
+
+          {pdfDataUrl && !generating && !pdfError && (
+            <iframe
+              src={pdfDataUrl}
+              title="TC PDF Preview"
+              width="100%"
+              height="100%"
+              style={{ border: "none", minHeight: "450px" }}
+            />
+          )}
         </div>
       </div>
     </div>
