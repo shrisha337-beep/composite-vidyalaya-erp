@@ -181,7 +181,7 @@ export function AdminAttendanceView({
         {/* Boys Present */}
         <div className="bg-white border border-blue-100 rounded-lg p-3.5 flex items-center gap-2.5">
           <div className="p-2 rounded-lg bg-blue-50 text-blue-700 font-bold text-xs shrink-0">
-            👦
+            <UserCheck className="h-4 w-4" />
           </div>
           <div>
             <p className="text-gray-400 font-medium text-[11px]">Boys / बालक</p>
@@ -195,7 +195,7 @@ export function AdminAttendanceView({
         {/* Girls Present */}
         <div className="bg-white border border-rose-100 rounded-lg p-3.5 flex items-center gap-2.5">
           <div className="p-2 rounded-lg bg-rose-50 text-rose-700 font-bold text-xs shrink-0">
-            👧
+            <UserCheck className="h-4 w-4" />
           </div>
           <div>
             <p className="text-gray-400 font-medium text-[11px]">Girls / बालिका</p>
@@ -384,7 +384,7 @@ export function AdminAttendanceView({
                       rosterGenderFilter === "MALE" ? "bg-blue-600 text-white shadow-xs" : "text-blue-700 hover:text-blue-900"
                     }`}
                   >
-                    👦 Boys ({activeSection.students.filter((s) => s.gender === "MALE").length})
+                    Boys / बालक ({activeSection.students.filter((s) => s.gender === "MALE").length})
                   </button>
                   <button
                     type="button"
@@ -393,7 +393,7 @@ export function AdminAttendanceView({
                       rosterGenderFilter === "FEMALE" ? "bg-rose-600 text-white shadow-xs" : "text-rose-700 hover:text-rose-900"
                     }`}
                   >
-                    👧 Girls ({activeSection.students.filter((s) => s.gender === "FEMALE").length})
+                    Girls / बालिका ({activeSection.students.filter((s) => s.gender === "FEMALE").length})
                   </button>
                 </div>
               </div>
@@ -426,7 +426,7 @@ export function AdminAttendanceView({
                                     : "bg-blue-50 text-blue-700 border border-blue-200"
                                 }`}
                               >
-                                {s.gender === "FEMALE" ? "👧 बालिका" : "👦 बालक"}
+                                {s.gender === "FEMALE" ? "बालिका" : "बालक"}
                               </span>
                             </div>
                           </div>

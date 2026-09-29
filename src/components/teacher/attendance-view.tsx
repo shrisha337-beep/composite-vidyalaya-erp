@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { saveDailyAttendanceAction } from "@/app/actions/save-attendance";
-import { Calendar, CheckCircle2, AlertCircle, Loader } from "lucide-react";
+import { Calendar, CheckCircle2, AlertCircle, Loader, Users } from "lucide-react";
 import Link from "next/link";
 
 interface StudentRow {
@@ -167,8 +167,10 @@ export function AttendanceView({
       {/* Gender Breakdown Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
         <div className="bg-white border border-blue-100 rounded-sm p-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-base">👦</span>
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded bg-blue-50 text-blue-700 shrink-0">
+              <Users className="h-4 w-4" />
+            </div>
             <div>
               <p className="text-[11px] font-semibold text-gray-500">Boys / बालक</p>
               <p className="text-sm font-bold text-blue-900">
@@ -180,8 +182,10 @@ export function AttendanceView({
         </div>
 
         <div className="bg-white border border-rose-100 rounded-sm p-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-base">👧</span>
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded bg-rose-50 text-rose-700 shrink-0">
+              <Users className="h-4 w-4" />
+            </div>
             <div>
               <p className="text-[11px] font-semibold text-gray-500">Girls / बालिका</p>
               <p className="text-sm font-bold text-rose-900">
@@ -193,8 +197,10 @@ export function AttendanceView({
         </div>
 
         <div className="bg-white border border-[#E8E0D4] rounded-sm p-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-base">👥</span>
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded bg-gray-100 text-gray-700 shrink-0">
+              <Users className="h-4 w-4" />
+            </div>
             <div>
               <p className="text-[11px] font-semibold text-gray-500">Total / कुल उपस्थिति</p>
               <p className="text-sm font-bold text-[#2D2A26]">
@@ -236,7 +242,7 @@ export function AttendanceView({
                 genderFilter === "MALE" ? "bg-blue-600 text-white shadow-xs" : "text-blue-800 hover:text-blue-900"
               }`}
             >
-              👦 Boys ({boys.length})
+              Boys / बालक ({boys.length})
             </button>
             <button
               type="button"
@@ -245,7 +251,7 @@ export function AttendanceView({
                 genderFilter === "FEMALE" ? "bg-rose-600 text-white shadow-xs" : "text-rose-800 hover:text-rose-900"
               }`}
             >
-              👧 Girls ({girls.length})
+              Girls / बालिका ({girls.length})
             </button>
           </div>
         </div>

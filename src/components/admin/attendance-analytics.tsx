@@ -154,7 +154,7 @@ export function AttendanceAnalytics({
         <div className="bg-blue-50/50 border border-blue-200 rounded-lg p-3.5 flex items-center justify-between">
           <div>
             <div className="flex items-center gap-1.5 text-xs font-bold text-blue-900">
-              <span className="text-sm">👦</span>
+              <Users className="h-3.5 w-3.5 text-blue-700" />
               <span>Boys / बालक</span>
             </div>
             <div className="text-xl font-bold text-blue-700 mt-1">
@@ -176,7 +176,7 @@ export function AttendanceAnalytics({
         <div className="bg-pink-50/50 border border-pink-200 rounded-lg p-3.5 flex items-center justify-between">
           <div>
             <div className="flex items-center gap-1.5 text-xs font-bold text-pink-900">
-              <span className="text-sm">👧</span>
+              <Users className="h-3.5 w-3.5 text-pink-700" />
               <span>Girls / बालिका</span>
             </div>
             <div className="text-xl font-bold text-pink-700 mt-1">
@@ -326,7 +326,7 @@ export function AttendanceAnalytics({
                     : "text-blue-700 hover:bg-blue-50"
                 }`}
               >
-                👦 Boys / बालक
+                Boys / बालक
               </button>
               <button
                 type="button"
@@ -337,7 +337,7 @@ export function AttendanceAnalytics({
                     : "text-pink-700 hover:bg-pink-50"
                 }`}
               >
-                👧 Girls / बालिका
+                Girls / बालिका
               </button>
             </div>
 
@@ -364,13 +364,13 @@ export function AttendanceAnalytics({
               <tr className="bg-gray-50 border-b border-gray-200 text-gray-600 font-bold uppercase tracking-wider">
                 <th className="text-left py-2.5 px-3">Class & Section / कक्षा</th>
                 <th className="text-center py-2.5 px-3">
-                  <span className="text-blue-700">👦 Boys / बालक</span>
+                  <span className="text-blue-700">Boys / बालक</span>
                   <span className="block text-[10px] font-normal text-gray-500">
                     (Present / Total, %)
                   </span>
                 </th>
                 <th className="text-center py-2.5 px-3">
-                  <span className="text-pink-700">👧 Girls / बालिका</span>
+                  <span className="text-pink-700">Girls / बालिका</span>
                   <span className="block text-[10px] font-normal text-gray-500">
                     (Present / Total, %)
                   </span>
@@ -520,11 +520,11 @@ export function AttendanceAnalytics({
                       <td className="py-2.5 px-3 text-center">
                         {isBoy ? (
                           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
-                            👦 बालक
+                            बालक
                           </span>
                         ) : isGirl ? (
                           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-pink-50 text-pink-700 border border-pink-200">
-                            👧 बालिका
+                            बालिका
                           </span>
                         ) : (
                           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-50 text-gray-600 border border-gray-200">
