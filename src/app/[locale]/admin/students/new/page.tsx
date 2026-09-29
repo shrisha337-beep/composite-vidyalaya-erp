@@ -47,7 +47,14 @@ export default async function NewStudentPage({
         </div>
       </div>
 
-      <AdmissionForm locale={locale} sessionLabel={session.label} schoolDistrict="Gonda" schoolBlock="Paraspur" udiseCode={settings.udiseCode || undefined} />
+      <AdmissionForm
+        locale={locale}
+        sessionLabel={session.label}
+        schoolName={settings.schoolName}
+        schoolDistrict={settings.schoolDistrict || "Gonda"}
+        schoolBlock={settings.schoolBlock || "Paraspur"}
+        udiseCode={settings.udiseCode || "09530607202"}
+      />
     </main>
   );
 }

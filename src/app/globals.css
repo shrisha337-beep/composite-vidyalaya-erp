@@ -73,6 +73,7 @@
 
   --font-sans: var(--font-geist-sans), system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), monospace;
+  --font-school-header: var(--font-school-header), "Times New Roman", Georgia, serif;
 
   --radius-xs: 0px;
   --radius-sm: 0px;
@@ -99,3 +100,8 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+.font-school-header {
+  font-family: var(--font-school-header), "Times New Roman", Georgia, serif;
+}
+

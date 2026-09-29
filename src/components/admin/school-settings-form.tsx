@@ -30,7 +30,9 @@ export function SchoolSettingsForm({
 
   const [schoolName, setSchoolName] = useState(settings.schoolName);
   const [address, setAddress] = useState(settings.address ?? "");
-  const [udiseCode, setUdiseCode] = useState(settings.udiseCode ?? "");
+  const [udiseCode, setUdiseCode] = useState(settings.udiseCode ?? "09530607202");
+  const [schoolBlock, setSchoolBlock] = useState(settings.schoolBlock ?? "Paraspur");
+  const [schoolDistrict, setSchoolDistrict] = useState(settings.schoolDistrict ?? "Gonda");
 
   const [sarvaLogoPreview, setSarvaLogoPreview] = useState<string | null>(
     settings.logoUrlSarvaShiksha
@@ -135,6 +137,44 @@ export function SchoolSettingsForm({
             />
           </div>
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block font-semibold text-gray-700 mb-1">
+                Development Block / विकासखण्ड <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="schoolBlock"
+                required
+                value={schoolBlock}
+                onChange={(e) => setSchoolBlock(e.target.value)}
+                placeholder="Paraspur"
+                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              />
+              <p className="text-[11px] text-gray-400 mt-1">
+                Auto-fills in new & edit admission forms.
+              </p>
+            </div>
+
+            <div>
+              <label className="block font-semibold text-gray-700 mb-1">
+                District / जनपद <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="schoolDistrict"
+                required
+                value={schoolDistrict}
+                onChange={(e) => setSchoolDistrict(e.target.value)}
+                placeholder="Gonda"
+                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              />
+              <p className="text-[11px] text-gray-400 mt-1">
+                Auto-fills in new & edit admission forms.
+              </p>
+            </div>
+          </div>
+
           <div>
             <label className="block font-semibold text-gray-700 mb-1 flex items-center gap-1">
               <FileText className="h-3.5 w-3.5 text-gray-400" />
@@ -145,11 +185,11 @@ export function SchoolSettingsForm({
               name="udiseCode"
               value={udiseCode}
               onChange={(e) => setUdiseCode(e.target.value)}
-              placeholder="Pending client confirmation (e.g. 09540000000)"
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              placeholder="09530607202"
+              className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white font-mono"
             />
             <p className="text-[11px] text-gray-400 mt-1">
-              Leave blank if UDISE code is not yet allotted. You can update this anytime.
+              Official school UDISE+ Code (e.g. 09530607202). Auto-fills into admission forms.
             </p>
           </div>
         </div>

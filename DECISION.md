@@ -683,6 +683,38 @@ The following decisions were logged after requirements gathering and clarificati
   - **Persistence:** Not saved to database — this is a printable page that admin fills and prints each time.
 * **Status:** ✅ Implemented
 
+#### ADR-031: School Identity Update ("Composite School"), Auto-filled Settings & Typography Refinement
+* **Context:** The stakeholder requested updating the school's English name from "Composite Vidyalaya" to "Composite School" (retaining "Chandpur Tarhar" and the Hindi name "कम्पोजिट विद्यालय"), auto-filling UDISE (`09530607202`), Block (`Paraspur`), and District (`Gonda`) in the student admission forms as read-only fields managed via admin settings, and upgrading the typography for the school header and CV emblem on the web UI (sidebar, login, dashboard) to a formal, elegant serif style (Option D: Noto Serif Display) while leaving document exports untouched.
+* **Decisions Made (via stakeholder clarification):**
+  - **School Name:** English name updated to "Composite School Chandpur Tarhar". Hindi name "कम्पोजिट विद्यालय चांदपुर तरहर" remains unchanged.
+  - **UDISE Code:** Hardcoded default set to `09530607202`.
+  - **Admission Form (New & Edit):** School Name, Block, District, and UDISE Code are auto-populated from `SchoolSettings` and rendered as read-only fields to prevent manual tampering. Admin edits these centrally via Settings.
+  - **Schema Update:** `SchoolSettings` model extended with `schoolBlock String? @default("Paraspur")` and `schoolDistrict String? @default("Gonda")`, and default `udiseCode` set to `"09530607202"`.
+  - **Settings Form:** Added fields for Block (विकासखण्ड) and District (जनपद) under School Information.
+  - **Typography (Option D - Noto Serif Display):** Loaded via Next.js Google Fonts (`--font-noto-serif-display`). Applied specifically to school name, subtitle, and CV emblem in the admin sidebar, teacher sidebar, login page, and dashboard. Document layouts (e.g. TC PDF) remain untouched as instructed.
+* **Status:** ✅ Implemented
+
+#### ADR-032: Gender-Wise Attendance Tracking (Day-wise, Class-wise, and Month-wise)
+* **Context:** The school requires gender-wise attendance analysis for boys (बालक) and girls (बालिका), showing both present counts and attendance percentages across Day-wise, Class-wise, and Month-wise views for both Admin and Teachers.
+* **Decisions Made (via stakeholder clarification):**
+  - **Location & Integration:** Full integration across both the Daily Register view (for the selected date) AND the Attendance Analytics panel on both `/admin/attendance` and `/teacher/attendance`.
+  - **Daily Register View:**
+    - Summary banner shows total present boys and girls with respective percentages (`boysPresent / totalBoys %` and `girlsPresent / totalGirls %`).
+    - Class cards and roster inspectors display gender badges and allow filtering by gender (All / Boys / Girls).
+  - **Analytics Panel Dimensions:**
+    - Period Toggle: Day-wise (दैनिक for selected date), Month-wise (इस माह), and Session-wise (पूरा सत्र).
+    - Mode: Class-wise and Student-wise.
+    - Summary metric cards above tables: Boys (Present / Enrolled / %), Girls (Present / Enrolled / %), Total (Present / Enrolled / %).
+  - **Class-wise Table Structure:** Detailed side-by-side columns:
+    - `Class & Section` | `Boys (Present/Total, %)` | `Girls (Present/Total, %)` | `Total (%)`.
+  - **Student-wise Table Structure:**
+    - Shows Gender badge (Boy/Girl), Total Days (or Day Status), Present Days, and %.
+    - Filterable by Gender (All / Boys / Girls), Class, and searchable by Student Name or Admission Number.
+  - **Teacher Portal Scope:** Teachers see the same gender-wise tracking scoped to their assigned class.
+* **Status:** ✅ Implemented
+
 ---
-*Document officially generated and archived for Composite Vidyalaya Chandpur Tarhar ERP Portal.*
+*Document officially generated and archived for Composite School Chandpur Tarhar ERP Portal.*
+
+
 

@@ -26,11 +26,16 @@ export interface ClassAttendanceSummary {
   totalStudents: number;
   presentCount: number;
   absentCount: number;
+  boysCount?: number;
+  boysPresent?: number;
+  girlsCount?: number;
+  girlsPresent?: number;
   isMarked: boolean;
   students: {
     id: string;
     fullName: string;
     admissionNo: string;
+    gender?: string;
     status: "PRESENT" | "ABSENT";
   }[];
 }
@@ -49,6 +54,7 @@ export function AdminAttendanceView({
   const [date, setDate] = useState(selectedDate);
   const [activeSection, setActiveSection] = useState<ClassAttendanceSummary | null>(null);
   const [rosterStatusMap, setRosterStatusMap] = useState<Record<string, "PRESENT" | "ABSENT">>({});
+  const [rosterGenderFilter, setRosterGenderFilter] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
@@ -59,6 +65,14 @@ export function AdminAttendanceView({
   const totalAbsent = classesSummary.reduce((acc, c) => acc + c.absentCount, 0);
   const overallRate = totalEnrolled > 0 ? Math.round((totalPresent / totalEnrolled) * 100) : 0;
   const classesMarkedCount = classesSummary.filter((c) => c.isMarked).length;
+
+  const totalBoys = classesSummary.reduce((acc, c) => acc + (c.boysCount ?? 0), 0);
+  const totalBoysPresent = classesSummary.reduce((acc, c) => acc + (c.boysPresent ?? 0), 0);
+  const boysRate = totalBoys > 0 ? Math.round((totalBoysPresent / totalBoys) * 100) : 0;
+
+  const totalGirls = classesSummary.reduce((acc, c) => acc + (c.girlsCount ?? 0), 0);
+  const totalGirlsPresent = classesSummary.reduce((acc, c) => acc + (c.girlsPresent ?? 0), 0);
+  const girlsRate = totalGirls > 0 ? Math.round((totalGirlsPresent / totalGirls) * 100) : 0;
 
   function handleDateChange(newDate: string) {
     setDate(newDate);
@@ -140,49 +154,77 @@ export function AdminAttendanceView({
         </div>
       </div>
 
-      {/* Overview Stat Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+      {/* Overview Stat Cards with Gender Breakdown */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-xs">
         {/* Total Enrolled */}
-        <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center gap-3">
-          <div className="p-2.5 rounded-lg bg-blue-50 text-blue-600">
-            <Users className="h-5 w-5" />
+        <div className="bg-white border border-gray-200 rounded-lg p-3.5 flex items-center gap-2.5">
+          <div className="p-2 rounded-lg bg-blue-50 text-blue-600 shrink-0">
+            <Users className="h-4 w-4" />
           </div>
           <div>
-            <p className="text-gray-400 font-medium">Total Enrolled</p>
-            <p className="text-lg font-bold text-gray-800">{totalEnrolled}</p>
+            <p className="text-gray-400 font-medium text-[11px]">Enrolled / कुल</p>
+            <p className="text-base font-bold text-gray-800">{totalEnrolled}</p>
           </div>
         </div>
 
         {/* Present Today */}
-        <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center gap-3">
-          <div className="p-2.5 rounded-lg bg-green-50 text-green-600">
-            <UserCheck className="h-5 w-5" />
+        <div className="bg-white border border-gray-200 rounded-lg p-3.5 flex items-center gap-2.5">
+          <div className="p-2 rounded-lg bg-green-50 text-green-600 shrink-0">
+            <UserCheck className="h-4 w-4" />
           </div>
           <div>
-            <p className="text-gray-400 font-medium">Present Today</p>
-            <p className="text-lg font-bold text-green-700">{totalPresent}</p>
+            <p className="text-gray-400 font-medium text-[11px]">Present / उपस्थित</p>
+            <p className="text-base font-bold text-green-700">{totalPresent}</p>
+          </div>
+        </div>
+
+        {/* Boys Present */}
+        <div className="bg-white border border-blue-100 rounded-lg p-3.5 flex items-center gap-2.5">
+          <div className="p-2 rounded-lg bg-blue-50 text-blue-700 font-bold text-xs shrink-0">
+            👦
+          </div>
+          <div>
+            <p className="text-gray-400 font-medium text-[11px]">Boys / बालक</p>
+            <p className="text-base font-bold text-blue-800">
+              {totalBoysPresent}<span className="text-xs text-gray-400 font-normal">/{totalBoys}</span>{" "}
+              <span className="text-xs font-semibold text-blue-600">({boysRate}%)</span>
+            </p>
+          </div>
+        </div>
+
+        {/* Girls Present */}
+        <div className="bg-white border border-rose-100 rounded-lg p-3.5 flex items-center gap-2.5">
+          <div className="p-2 rounded-lg bg-rose-50 text-rose-700 font-bold text-xs shrink-0">
+            👧
+          </div>
+          <div>
+            <p className="text-gray-400 font-medium text-[11px]">Girls / बालिका</p>
+            <p className="text-base font-bold text-rose-800">
+              {totalGirlsPresent}<span className="text-xs text-gray-400 font-normal">/{totalGirls}</span>{" "}
+              <span className="text-xs font-semibold text-rose-600">({girlsRate}%)</span>
+            </p>
           </div>
         </div>
 
         {/* Absent Today */}
-        <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center gap-3">
-          <div className="p-2.5 rounded-lg bg-red-50 text-red-600">
-            <UserX className="h-5 w-5" />
+        <div className="bg-white border border-gray-200 rounded-lg p-3.5 flex items-center gap-2.5">
+          <div className="p-2 rounded-lg bg-red-50 text-red-600 shrink-0">
+            <UserX className="h-4 w-4" />
           </div>
           <div>
-            <p className="text-gray-400 font-medium">Absent Today</p>
-            <p className="text-lg font-bold text-red-700">{totalAbsent}</p>
+            <p className="text-gray-400 font-medium text-[11px]">Absent / अनुपस्थित</p>
+            <p className="text-base font-bold text-red-700">{totalAbsent}</p>
           </div>
         </div>
 
         {/* Attendance Rate */}
-        <div className="bg-white border border-gray-200 rounded-sm p-4 flex items-center gap-3">
-          <div className="p-2.5 rounded-sm bg-[#3D5A80]/10 text-[#3D5A80]">
-            <Percent className="h-5 w-5" />
+        <div className="bg-white border border-gray-200 rounded-lg p-3.5 flex items-center gap-2.5">
+          <div className="p-2 rounded-lg bg-[#3D5A80]/10 text-[#3D5A80] shrink-0">
+            <Percent className="h-4 w-4" />
           </div>
           <div>
-            <p className="text-gray-400 font-medium">Attendance Rate</p>
-            <p className="text-lg font-bold text-[#3D5A80]">{overallRate}%</p>
+            <p className="text-gray-400 font-medium text-[11px]">Rate / प्रतिशत</p>
+            <p className="text-base font-bold text-[#3D5A80]">{overallRate}%</p>
           </div>
         </div>
       </div>
@@ -196,36 +238,55 @@ export function AdminAttendanceView({
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse min-w-[680px]">
+          <table className="w-full text-left text-xs border-collapse min-w-[750px]">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200 text-gray-600 font-bold uppercase tracking-wider">
-                <th className="py-3 px-4">Class & Section</th>
-                <th className="py-3 px-4">Class Teacher</th>
-                <th className="py-3 px-4 text-center">Enrolled</th>
-                <th className="py-3 px-4 text-center">Present</th>
-                <th className="py-3 px-4 text-center">Absent</th>
-                <th className="py-3 px-4 text-center">Rate</th>
-                <th className="py-3 px-4 text-center">Register Status</th>
-                <th className="py-3 px-4 text-right">Action</th>
+                <th className="py-3 px-3">Class & Section</th>
+                <th className="py-3 px-3">Class Teacher</th>
+                <th className="py-3 px-3 text-center">Boys / बालक</th>
+                <th className="py-3 px-3 text-center">Girls / बालिका</th>
+                <th className="py-3 px-3 text-center">Total Present</th>
+                <th className="py-3 px-3 text-center">Rate</th>
+                <th className="py-3 px-3 text-center">Register Status</th>
+                <th className="py-3 px-3 text-right">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 text-gray-700">
               {classesSummary.map((c) => {
                 const classRate =
                   c.totalStudents > 0 ? Math.round((c.presentCount / c.totalStudents) * 100) : 0;
+                const bCount = c.boysCount ?? 0;
+                const bPres = c.boysPresent ?? 0;
+                const bPct = bCount > 0 ? Math.round((bPres / bCount) * 100) : 0;
+
+                const gCount = c.girlsCount ?? 0;
+                const gPres = c.girlsPresent ?? 0;
+                const gPct = gCount > 0 ? Math.round((gPres / gCount) * 100) : 0;
 
                 return (
                   <tr key={c.sectionId} className="hover:bg-gray-50/80 transition-colors">
-                    <td className="py-3 px-4 font-bold text-gray-900">
+                    <td className="py-3 px-3 font-bold text-gray-900">
                       Class {c.className} ({c.sectionName})
                     </td>
-                    <td className="py-3 px-4 font-medium text-gray-600">
+                    <td className="py-3 px-3 font-medium text-gray-600">
                       {c.classTeacherName || <span className="text-gray-400 italic">Not Assigned</span>}
                     </td>
-                    <td className="py-3 px-4 text-center font-bold text-gray-800">{c.totalStudents}</td>
-                    <td className="py-3 px-4 text-center font-bold text-green-600">{c.presentCount}</td>
-                    <td className="py-3 px-4 text-center font-bold text-red-600">{c.absentCount}</td>
-                    <td className="py-3 px-4 text-center font-semibold text-[#3D5A80]">{classRate}%</td>
+                    <td className="py-3 px-3 text-center">
+                      <span className="font-semibold text-blue-800">
+                        {bPres}/{bCount}
+                      </span>{" "}
+                      <span className="text-[11px] font-bold text-blue-600">({bPct}%)</span>
+                    </td>
+                    <td className="py-3 px-3 text-center">
+                      <span className="font-semibold text-rose-800">
+                        {gPres}/{gCount}
+                      </span>{" "}
+                      <span className="text-[11px] font-bold text-rose-600">({gPct}%)</span>
+                    </td>
+                    <td className="py-3 px-3 text-center font-bold text-gray-800">
+                      {c.presentCount}/{c.totalStudents}
+                    </td>
+                    <td className="py-3 px-3 text-center font-semibold text-[#3D5A80]">{classRate}%</td>
                     <td className="py-3 px-4 text-center">
                       <span
                         className={[
@@ -301,56 +362,101 @@ export function AdminAttendanceView({
                 </div>
               )}
 
-              <p className="text-gray-500 font-medium">
-                Click any student row or toggle switch to toggle their Present / Absent status.
-              </p>
+              <div className="flex items-center justify-between gap-2 flex-wrap pb-1">
+                <p className="text-gray-500 font-medium">
+                  Click any student row or button to toggle their Present / Absent status.
+                </p>
+                {/* Gender filter tabs */}
+                <div className="flex items-center gap-1 bg-gray-100 p-0.5 rounded-sm">
+                  <button
+                    type="button"
+                    onClick={() => setRosterGenderFilter("")}
+                    className={`px-2.5 py-1 text-[11px] font-semibold rounded-sm transition-colors ${
+                      !rosterGenderFilter ? "bg-white text-gray-800 shadow-xs" : "text-gray-500 hover:text-gray-700"
+                    }`}
+                  >
+                    All ({activeSection.students.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRosterGenderFilter("MALE")}
+                    className={`px-2.5 py-1 text-[11px] font-semibold rounded-sm transition-colors ${
+                      rosterGenderFilter === "MALE" ? "bg-blue-600 text-white shadow-xs" : "text-blue-700 hover:text-blue-900"
+                    }`}
+                  >
+                    👦 Boys ({activeSection.students.filter((s) => s.gender === "MALE").length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRosterGenderFilter("FEMALE")}
+                    className={`px-2.5 py-1 text-[11px] font-semibold rounded-sm transition-colors ${
+                      rosterGenderFilter === "FEMALE" ? "bg-rose-600 text-white shadow-xs" : "text-rose-700 hover:text-rose-900"
+                    }`}
+                  >
+                    👧 Girls ({activeSection.students.filter((s) => s.gender === "FEMALE").length})
+                  </button>
+                </div>
+              </div>
 
               <div className="divide-y divide-gray-100 border border-gray-200 rounded-lg overflow-hidden">
-                {activeSection.students.map((s, idx) => {
-                  const currentStatus = rosterStatusMap[s.id] ?? s.status;
-                  const isPresent = currentStatus === "PRESENT";
+                {activeSection.students
+                  .filter((s) => !rosterGenderFilter || s.gender === rosterGenderFilter)
+                  .map((s, idx) => {
+                    const currentStatus = rosterStatusMap[s.id] ?? s.status;
+                    const isPresent = currentStatus === "PRESENT";
 
-                  return (
-                    <div
-                      key={s.id}
-                      onClick={() => toggleStudentStatus(s.id)}
-                      className="p-3 flex items-center justify-between bg-white hover:bg-gray-50 cursor-pointer transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="w-6 text-gray-400 text-[11px] font-mono text-right">
-                          {idx + 1}.
-                        </span>
-                        <div>
-                          <p className="font-bold text-gray-800">{s.fullName}</p>
-                          <p className="text-[10px] text-gray-400 font-mono">SR No: {s.admissionNo}</p>
+                    return (
+                      <div
+                        key={s.id}
+                        onClick={() => toggleStudentStatus(s.id)}
+                        className="p-3 flex items-center justify-between bg-white hover:bg-gray-50 cursor-pointer transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="w-6 text-gray-400 text-[11px] font-mono text-right">
+                            {idx + 1}.
+                          </span>
+                          <div>
+                            <p className="font-bold text-gray-800">{s.fullName}</p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="text-[10px] text-gray-400 font-mono">SR: {s.admissionNo}</span>
+                              <span
+                                className={`text-[9px] font-bold px-1.5 py-0.5 rounded-xs ${
+                                  s.gender === "FEMALE"
+                                    ? "bg-rose-50 text-rose-700 border border-rose-200"
+                                    : "bg-blue-50 text-blue-700 border border-blue-200"
+                                }`}
+                              >
+                                {s.gender === "FEMALE" ? "👧 बालिका" : "👦 बालक"}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            type="button"
+                            onClick={() => toggleStudentStatus(s.id)}
+                            className={[
+                              "px-3 py-1 rounded font-bold text-xs flex items-center gap-1 transition-colors",
+                              isPresent
+                                ? "bg-green-600 text-white"
+                                : "bg-red-600 text-white",
+                            ].join(" ")}
+                          >
+                            {isPresent ? (
+                              <>
+                                <Check className="h-3.5 w-3.5" /> PRESENT
+                              </>
+                            ) : (
+                              <>
+                                <X className="h-3.5 w-3.5" /> ABSENT
+                              </>
+                            )}
+                          </button>
                         </div>
                       </div>
-
-                      <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          type="button"
-                          onClick={() => toggleStudentStatus(s.id)}
-                          className={[
-                            "px-3 py-1 rounded font-bold text-xs flex items-center gap-1 transition-colors",
-                            isPresent
-                              ? "bg-green-600 text-white"
-                              : "bg-red-600 text-white",
-                          ].join(" ")}
-                        >
-                          {isPresent ? (
-                            <>
-                              <Check className="h-3.5 w-3.5" /> PRESENT
-                            </>
-                          ) : (
-                            <>
-                              <X className="h-3.5 w-3.5" /> ABSENT
-                            </>
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
               </div>
             </div>
 

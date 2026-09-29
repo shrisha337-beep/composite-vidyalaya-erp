@@ -6,7 +6,11 @@ import {
   AdminAttendanceView,
   ClassAttendanceSummary,
 } from "@/components/admin/admin-attendance-view";
-import { AttendanceAnalytics } from "@/components/admin/attendance-analytics";
+import {
+  AttendanceAnalytics,
+  StudentAttendanceData,
+  ClassSummaryData,
+} from "@/components/admin/attendance-analytics";
 
 export default async function AdminAttendancePage({
   params,
@@ -53,6 +57,7 @@ export default async function AdminAttendancePage({
               id: true,
               fullName: true,
               admissionNo: true,
+              gender: true,
             },
             orderBy: { fullName: "asc" },
           },
@@ -80,7 +85,7 @@ export default async function AdminAttendancePage({
     }
   });
 
-  // Build classesSummary matrix
+  // Build classesSummary matrix with gender breakdowns
   const classesSummary: ClassAttendanceSummary[] = [];
 
   for (const c of classes) {
@@ -88,18 +93,32 @@ export default async function AdminAttendancePage({
       let presentCount = 0;
       let absentCount = 0;
       let markedCount = 0;
+      let boysCount = 0;
+      let boysPresent = 0;
+      let girlsCount = 0;
+      let girlsPresent = 0;
 
       const studentRosters = sec.students.map((s) => {
+        const isBoy = s.gender === "MALE";
+        const isGirl = s.gender === "FEMALE";
+        if (isBoy) boysCount++;
+        if (isGirl) girlsCount++;
+
         const status = attendanceMap.get(s.id) ?? "ABSENT";
         if (attendanceMap.has(s.id)) {
           markedCount++;
-          if (status === "PRESENT") presentCount++;
+          if (status === "PRESENT") {
+            presentCount++;
+            if (isBoy) boysPresent++;
+            if (isGirl) girlsPresent++;
+          }
           if (status === "ABSENT") absentCount++;
         }
         return {
           id: s.id,
           fullName: s.fullName,
           admissionNo: s.admissionNo,
+          gender: s.gender,
           status,
         };
       });
@@ -114,6 +133,10 @@ export default async function AdminAttendancePage({
         totalStudents: sec.students.length,
         presentCount,
         absentCount: isMarked ? absentCount : sec.students.length,
+        boysCount,
+        boysPresent: isMarked ? boysPresent : 0,
+        girlsCount,
+        girlsPresent: isMarked ? girlsPresent : 0,
         isMarked,
         students: studentRosters,
       });
@@ -123,36 +146,59 @@ export default async function AdminAttendancePage({
   // ─── Attendance Analytics Data ───────────────────────────────────
   const classNames = [...new Set(classes.map((c) => c.name))];
 
-  // Session-wise analytics
-  const sessionStudentData: {
-    id: string;
-    fullName: string;
-    admissionNo: string;
-    className: string;
-    sectionName: string;
-    totalDays: number;
-    presentDays: number;
-  }[] = [];
+  // Daily attendance analytics data for the selected date
+  const dailyClassSummary: ClassSummaryData[] = classesSummary.map((cs) => ({
+    className: cs.className,
+    sectionName: cs.sectionName,
+    totalStudents: cs.totalStudents,
+    totalDaysMarked: cs.isMarked ? 1 : 0,
+    totalPresent: cs.presentCount,
+    boysCount: cs.boysCount,
+    boysPresent: cs.boysPresent,
+    girlsCount: cs.girlsCount,
+    girlsPresent: cs.girlsPresent,
+  }));
 
-  const sessionClassSummary: {
-    className: string;
-    sectionName: string;
-    totalStudents: number;
-    totalDaysMarked: number;
-    totalPresent: number;
-  }[] = [];
+  const dailyStudentData: StudentAttendanceData[] = [];
+  for (const c of classes) {
+    for (const sec of c.sections) {
+      for (const s of sec.students) {
+        const isMarked = attendanceMap.has(s.id);
+        const status = attendanceMap.get(s.id);
+        dailyStudentData.push({
+          id: s.id,
+          fullName: s.fullName,
+          admissionNo: s.admissionNo,
+          className: c.name,
+          sectionName: sec.name,
+          gender: s.gender,
+          totalDays: isMarked ? 1 : 0,
+          presentDays: status === "PRESENT" ? 1 : 0,
+          dayStatus: status,
+        });
+      }
+    }
+  }
+
+  // Session-wise analytics
+  const sessionStudentData: StudentAttendanceData[] = [];
+  const sessionClassSummary: ClassSummaryData[] = [];
 
   // Current month analytics
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
 
-  const monthlyStudentData: typeof sessionStudentData = [];
-  const monthlyClassSummary: typeof sessionClassSummary = [];
+  const monthlyStudentData: StudentAttendanceData[] = [];
+  const monthlyClassSummary: ClassSummaryData[] = [];
 
   for (const c of classes) {
     for (const sec of c.sections) {
       const studentIds = sec.students.map((s) => s.id);
+      const boyStudents = sec.students.filter((s) => s.gender === "MALE");
+      const girlStudents = sec.students.filter((s) => s.gender === "FEMALE");
+      const boyIds = boyStudents.map((s) => s.id);
+      const girlIds = girlStudents.map((s) => s.id);
 
       if (studentIds.length === 0) {
         sessionClassSummary.push({
@@ -161,6 +207,10 @@ export default async function AdminAttendancePage({
           totalStudents: 0,
           totalDaysMarked: 0,
           totalPresent: 0,
+          boysCount: 0,
+          boysPresent: 0,
+          girlsCount: 0,
+          girlsPresent: 0,
         });
         monthlyClassSummary.push({
           className: c.name,
@@ -168,23 +218,47 @@ export default async function AdminAttendancePage({
           totalStudents: 0,
           totalDaysMarked: 0,
           totalPresent: 0,
+          boysCount: 0,
+          boysPresent: 0,
+          girlsCount: 0,
+          girlsPresent: 0,
         });
         continue;
       }
 
-      // Session-wide: distinct days marked
-      const sessionDays = await prisma.attendance.groupBy({
-        by: ["date"],
-        where: { sessionId: currentSession.id, studentId: { in: studentIds } },
-      });
-
-      const sessionPresent = await prisma.attendance.count({
-        where: {
-          sessionId: currentSession.id,
-          studentId: { in: studentIds },
-          status: "PRESENT",
-        },
-      });
+      // Session-wide: distinct days marked, overall present, boys present, girls present
+      const [sessionDays, sessionPresent, sessionBoysPresent, sessionGirlsPresent] =
+        await Promise.all([
+          prisma.attendance.groupBy({
+            by: ["date"],
+            where: { sessionId: currentSession.id, studentId: { in: studentIds } },
+          }),
+          prisma.attendance.count({
+            where: {
+              sessionId: currentSession.id,
+              studentId: { in: studentIds },
+              status: "PRESENT",
+            },
+          }),
+          boyIds.length > 0
+            ? prisma.attendance.count({
+                where: {
+                  sessionId: currentSession.id,
+                  studentId: { in: boyIds },
+                  status: "PRESENT",
+                },
+              })
+            : Promise.resolve(0),
+          girlIds.length > 0
+            ? prisma.attendance.count({
+                where: {
+                  sessionId: currentSession.id,
+                  studentId: { in: girlIds },
+                  status: "PRESENT",
+                },
+              })
+            : Promise.resolve(0),
+        ]);
 
       sessionClassSummary.push({
         className: c.name,
@@ -192,26 +266,52 @@ export default async function AdminAttendancePage({
         totalStudents: studentIds.length,
         totalDaysMarked: sessionDays.length,
         totalPresent: sessionPresent,
+        boysCount: boyIds.length,
+        boysPresent: sessionBoysPresent,
+        girlsCount: girlIds.length,
+        girlsPresent: sessionGirlsPresent,
       });
 
-      // Monthly: distinct days marked
-      const monthDays = await prisma.attendance.groupBy({
-        by: ["date"],
-        where: {
-          sessionId: currentSession.id,
-          studentId: { in: studentIds },
-          date: { gte: monthStart, lte: monthEnd },
-        },
-      });
-
-      const monthPresent = await prisma.attendance.count({
-        where: {
-          sessionId: currentSession.id,
-          studentId: { in: studentIds },
-          status: "PRESENT",
-          date: { gte: monthStart, lte: monthEnd },
-        },
-      });
+      // Monthly: distinct days marked, overall present, boys present, girls present
+      const [monthDays, monthPresent, monthBoysPresent, monthGirlsPresent] =
+        await Promise.all([
+          prisma.attendance.groupBy({
+            by: ["date"],
+            where: {
+              sessionId: currentSession.id,
+              studentId: { in: studentIds },
+              date: { gte: monthStart, lte: monthEnd },
+            },
+          }),
+          prisma.attendance.count({
+            where: {
+              sessionId: currentSession.id,
+              studentId: { in: studentIds },
+              status: "PRESENT",
+              date: { gte: monthStart, lte: monthEnd },
+            },
+          }),
+          boyIds.length > 0
+            ? prisma.attendance.count({
+                where: {
+                  sessionId: currentSession.id,
+                  studentId: { in: boyIds },
+                  status: "PRESENT",
+                  date: { gte: monthStart, lte: monthEnd },
+                },
+              })
+            : Promise.resolve(0),
+          girlIds.length > 0
+            ? prisma.attendance.count({
+                where: {
+                  sessionId: currentSession.id,
+                  studentId: { in: girlIds },
+                  status: "PRESENT",
+                  date: { gte: monthStart, lte: monthEnd },
+                },
+              })
+            : Promise.resolve(0),
+        ]);
 
       monthlyClassSummary.push({
         className: c.name,
@@ -219,49 +319,56 @@ export default async function AdminAttendancePage({
         totalStudents: studentIds.length,
         totalDaysMarked: monthDays.length,
         totalPresent: monthPresent,
+        boysCount: boyIds.length,
+        boysPresent: monthBoysPresent,
+        girlsCount: girlIds.length,
+        girlsPresent: monthGirlsPresent,
       });
 
       // Per-student data
       for (const s of sec.students) {
-        // Session
-        const sTotalDays = await prisma.attendance.count({
-          where: { sessionId: currentSession.id, studentId: s.id },
-        });
-        const sPresent = await prisma.attendance.count({
-          where: { sessionId: currentSession.id, studentId: s.id, status: "PRESENT" },
-        });
+        const [sTotalDays, sPresent, mTotalDays, mPresent] = await Promise.all([
+          prisma.attendance.count({
+            where: { sessionId: currentSession.id, studentId: s.id },
+          }),
+          prisma.attendance.count({
+            where: { sessionId: currentSession.id, studentId: s.id, status: "PRESENT" },
+          }),
+          prisma.attendance.count({
+            where: {
+              sessionId: currentSession.id,
+              studentId: s.id,
+              date: { gte: monthStart, lte: monthEnd },
+            },
+          }),
+          prisma.attendance.count({
+            where: {
+              sessionId: currentSession.id,
+              studentId: s.id,
+              status: "PRESENT",
+              date: { gte: monthStart, lte: monthEnd },
+            },
+          }),
+        ]);
+
         sessionStudentData.push({
           id: s.id,
           fullName: s.fullName,
           admissionNo: s.admissionNo,
           className: c.name,
           sectionName: sec.name,
+          gender: s.gender,
           totalDays: sTotalDays,
           presentDays: sPresent,
         });
 
-        // Monthly
-        const mTotalDays = await prisma.attendance.count({
-          where: {
-            sessionId: currentSession.id,
-            studentId: s.id,
-            date: { gte: monthStart, lte: monthEnd },
-          },
-        });
-        const mPresent = await prisma.attendance.count({
-          where: {
-            sessionId: currentSession.id,
-            studentId: s.id,
-            status: "PRESENT",
-            date: { gte: monthStart, lte: monthEnd },
-          },
-        });
         monthlyStudentData.push({
           id: s.id,
           fullName: s.fullName,
           admissionNo: s.admissionNo,
           className: c.name,
           sectionName: sec.name,
+          gender: s.gender,
           totalDays: mTotalDays,
           presentDays: mPresent,
         });
@@ -304,6 +411,9 @@ export default async function AdminAttendancePage({
           classNames={classNames}
           monthlyStudentData={monthlyStudentData}
           monthlyClassSummary={monthlyClassSummary}
+          dailyStudentData={dailyStudentData}
+          dailyClassSummary={dailyClassSummary}
+          selectedDate={selectedDateStr}
         />
       </div>
     </main>

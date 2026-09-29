@@ -75,15 +75,17 @@ function SidebarContent({ locale, onClose }: { locale: string; onClose?: () => v
     <div className="flex flex-col h-full bg-[#6B1D30]">
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-5 border-b border-white/15">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-sm bg-white/15 text-white flex items-center justify-center font-bold text-sm">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-sm bg-gradient-to-b from-white/20 to-white/10 text-white flex items-center justify-center font-serif font-bold text-sm border border-white/25 shadow-xs ring-1 ring-black/10 shrink-0">
             CV
           </div>
           <div>
-            <p className="text-sm font-bold text-white tracking-tight leading-snug">
-              Composite Vidyalaya
+            <p className="font-school-header text-[15px] font-semibold text-white tracking-wide leading-snug">
+              Composite School
             </p>
-            <p className="text-[11px] text-white/70 font-medium mt-0.5">Teacher Portal</p>
+            <p className="text-[10px] text-white/75 font-medium tracking-wider uppercase mt-0.5">
+              Teacher Portal · Chandpur Tarhar
+            </p>
           </div>
         </div>
         {onClose && (
@@ -147,11 +149,14 @@ export function TeacherSidebar({ locale }: { locale: string }) {
           >
             <Menu className="h-5 w-5" />
           </button>
+          <div className="w-7 h-7 rounded-sm bg-gradient-to-b from-white/20 to-white/10 text-white flex items-center justify-center font-serif font-bold text-xs border border-white/25 shadow-xs shrink-0">
+            CV
+          </div>
           <div>
-            <p className="text-sm font-bold text-white leading-tight">
-              Composite Vidyalaya
+            <p className="font-school-header text-sm font-semibold text-white leading-tight">
+              Composite School
             </p>
-            <p className="text-[10px] text-white/70">Teacher Portal</p>
+            <p className="text-[10px] text-white/70 font-medium">Teacher Portal · Chandpur Tarhar</p>
           </div>
         </div>
         <div className="flex items-center gap-1.5">

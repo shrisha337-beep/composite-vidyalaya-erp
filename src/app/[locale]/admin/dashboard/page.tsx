@@ -135,12 +135,12 @@ export default async function AdminDashboardPage({
           <div>
             <div className="flex items-start justify-between gap-4 mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-sm bg-[#6B1D30] text-white flex items-center justify-center font-bold text-base shrink-0">
+                <div className="w-10 h-10 rounded-sm bg-gradient-to-b from-[#6B1D30] to-[#541624] text-white flex items-center justify-center font-serif font-bold text-base border border-[#541624] shadow-xs shrink-0">
                   CV
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-[#2D2A26] leading-tight">
-                    {stats.schoolSettings.schoolName || "Composite Vidyalaya Chandpur Tarhar"}
+                  <h2 className="font-school-header text-lg font-semibold text-[#2D2A26] leading-tight">
+                    {stats.schoolSettings.schoolName || "Composite School Chandpur Tarhar"}
                   </h2>
                   <p className="text-xs text-[#7A7267] font-medium mt-0.5">
                     कम्पोजिट विद्यालय चांदपुर तरहर
@@ -156,16 +156,20 @@ export default async function AdminDashboardPage({
               <div className="p-2 bg-[#F3EDE4]/50 rounded-sm border border-[#E8E0D4]/60">
                 <p className="text-[10px] uppercase font-bold text-[#7A7267]">UDISE Code</p>
                 <p className="text-xs font-bold text-[#2D2A26] mt-0.5 font-mono">
-                  {stats.schoolSettings.udiseCode || "09511105401"}
+                  {stats.schoolSettings.udiseCode || "09530607202"}
                 </p>
               </div>
               <div className="p-2 bg-[#F3EDE4]/50 rounded-sm border border-[#E8E0D4]/60">
                 <p className="text-[10px] uppercase font-bold text-[#7A7267]">Block / ब्लॉक</p>
-                <p className="text-xs font-bold text-[#2D2A26] mt-0.5">Paraspur</p>
+                <p className="text-xs font-bold text-[#2D2A26] mt-0.5">
+                  {stats.schoolSettings.schoolBlock || "Paraspur"}
+                </p>
               </div>
               <div className="p-2 bg-[#F3EDE4]/50 rounded-sm border border-[#E8E0D4]/60">
                 <p className="text-[10px] uppercase font-bold text-[#7A7267]">District / जनपद</p>
-                <p className="text-xs font-bold text-[#2D2A26] mt-0.5">Gonda</p>
+                <p className="text-xs font-bold text-[#2D2A26] mt-0.5">
+                  {stats.schoolSettings.schoolDistrict || "Gonda"}
+                </p>
               </div>
               <div className="p-2 bg-[#F3EDE4]/50 rounded-sm border border-[#E8E0D4]/60">
                 <p className="text-[10px] uppercase font-bold text-[#7A7267]">Classes / कक्षाएं</p>

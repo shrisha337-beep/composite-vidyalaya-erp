@@ -127,6 +127,7 @@ interface SiblingRow {
 export function AdmissionForm({
   locale,
   sessionLabel,
+  schoolName,
   schoolDistrict,
   schoolBlock,
   udiseCode,
@@ -136,6 +137,7 @@ export function AdmissionForm({
 }: {
   locale: string;
   sessionLabel: string;
+  schoolName?: string;
   schoolDistrict?: string;
   schoolBlock?: string;
   udiseCode?: string;
@@ -228,33 +230,35 @@ export function AdmissionForm({
             <input
               name="schoolName"
               type="text"
-              defaultValue="Composite Vidyalaya Chandpur Tarhar"
+              defaultValue={schoolName || "Composite School Chandpur Tarhar"}
               readOnly
-              className="w-full border border-gray-200 rounded px-2.5 py-1.5 text-sm bg-gray-50 text-gray-600"
+              className="w-full border border-gray-200 rounded px-2.5 py-1.5 text-sm bg-gray-50 text-gray-600 cursor-not-allowed"
             />
           </Field>
           <Field label="Block" labelHi="विकासखण्ड" name="block">
             <input
               name="block"
               type="text"
-              defaultValue={schoolBlock ?? ""}
-              className="w-full border border-gray-300 rounded px-2.5 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-[hsl(var(--ring))]"
+              defaultValue={schoolBlock || "Paraspur"}
+              readOnly
+              className="w-full border border-gray-200 rounded px-2.5 py-1.5 text-sm bg-gray-50 text-gray-600 cursor-not-allowed"
             />
           </Field>
           <Field label="District" labelHi="जनपद" name="headerDistrict">
             <input
               name="headerDistrict"
               type="text"
-              defaultValue={schoolDistrict ?? ""}
-              className="w-full border border-gray-300 rounded px-2.5 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-[hsl(var(--ring))]"
+              defaultValue={schoolDistrict || "Gonda"}
+              readOnly
+              className="w-full border border-gray-200 rounded px-2.5 py-1.5 text-sm bg-gray-50 text-gray-600 cursor-not-allowed"
             />
           </Field>
           <Field label="UDISE Code" labelHi="यू-डाइस कोड">
             <input
               type="text"
-              value={udiseCode || "— Not yet allotted"}
+              value={udiseCode || "09530607202"}
               readOnly
-              className="w-full border border-gray-200 rounded px-2.5 py-1.5 text-sm bg-gray-50 text-gray-500 cursor-not-allowed"
+              className="w-full border border-gray-200 rounded px-2.5 py-1.5 text-sm bg-gray-50 text-gray-600 cursor-not-allowed font-mono"
             />
           </Field>
         </div>

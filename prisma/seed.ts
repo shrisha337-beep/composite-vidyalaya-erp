@@ -60,7 +60,10 @@ async function main() {
     update: {},
     create: {
       id: "singleton",
-      schoolName: "Composite Vidyalaya Chandpur Tarahar",
+      schoolName: "Composite School Chandpur Tarhar",
+      udiseCode: "09530607202",
+      schoolBlock: "Paraspur",
+      schoolDistrict: "Gonda",
       defaultLocale: "hi",
     },
   });

@@ -10,7 +10,7 @@ export async function generateMetadata({
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "login" });
   return {
-    title: `${t("heading")} - Composite Vidyalaya Chandpur Tarhar`,
+    title: `${t("heading")} - Composite School Chandpur Tarhar`,
   };
 }
 
@@ -39,14 +39,14 @@ export default function LoginPage() {
 
         <div>
           {/* School emblem badge */}
-          <div className="w-16 h-16 rounded-sm flex items-center justify-center text-2xl font-bold mb-8 bg-white/15 text-white shadow-xs">
+          <div className="w-16 h-16 rounded-sm flex items-center justify-center text-2xl font-serif font-bold mb-8 bg-gradient-to-b from-white/25 to-white/10 text-white border border-white/30 shadow-md ring-1 ring-black/15">
             CV
           </div>
 
-          <h1 className="text-3xl xl:text-4xl font-bold leading-tight text-white mb-3 tracking-tight">
-            Composite Vidyalaya
+          <h1 className="font-school-header text-3xl xl:text-4xl font-semibold leading-tight text-white mb-2 tracking-wide">
+            Composite School
             <br />
-            Chandpur Tarhar
+            <span className="text-2xl xl:text-3xl font-normal text-white/90">Chandpur Tarhar</span>
           </h1>
           <p className="text-sm text-white/80 font-medium">
             कम्पोजिट विद्यालय चांदपुर तरहर
@@ -70,13 +70,16 @@ export default function LoginPage() {
       <div className="flex flex-1 flex-col items-center justify-center p-6 sm:p-12">
         {/* Mobile-only school title */}
         <div className="mb-6 text-center lg:hidden">
+          <div className="inline-flex w-12 h-12 rounded-sm items-center justify-center text-lg font-serif font-bold mb-3 bg-[#6B1D30] text-white border border-[#541624] shadow-sm">
+            CV
+          </div>
           <p className="text-xs font-bold uppercase tracking-widest text-[#7A7267] mb-1">
             Government School Portal
           </p>
-          <h1 className="text-2xl font-bold text-[#6B1D30]">
-            Composite Vidyalaya
+          <h1 className="font-school-header text-2xl font-semibold text-[#6B1D30]">
+            Composite School
           </h1>
-          <p className="text-xs text-[#7A7267]">Chandpur Tarhar</p>
+          <p className="text-xs text-[#7A7267]">Chandpur Tarhar · कम्पोजिट विद्यालय</p>
         </div>
 
         <div className="w-full max-w-md bg-white p-8 sm:p-10 rounded-sm border border-[#E8E0D4] shadow-xs">

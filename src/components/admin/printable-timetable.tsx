@@ -115,7 +115,7 @@ function TimetableGrid({
           {title}
         </h2>
         <p className="text-[11px] text-white/70 print:text-black print:text-center print:text-sm">
-          Composite Vidyalaya Chandpur Tarhar — समय सारणी
+          Composite School Chandpur Tarhar — समय सारणी
         </p>
       </div>
 

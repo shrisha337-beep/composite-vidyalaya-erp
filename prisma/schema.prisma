@@ -905,8 +905,10 @@ model Notification {
 
 model SchoolSettings {
   id            String  @id @default("singleton")
-  schoolName    String  @default("Composite Vidyalaya Chandpur Tarhar")
-  udiseCode     String?
+  schoolName    String  @default("Composite School Chandpur Tarhar")
+  udiseCode     String? @default("09530607202")
+  schoolBlock   String? @default("Paraspur")
+  schoolDistrict String? @default("Gonda")
   address       String?
   logoUrlSamagra String?
   logoUrlSarvaShiksha String?

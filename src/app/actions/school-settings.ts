@@ -10,6 +10,8 @@ export interface SchoolSettingsData {
   schoolName: string;
   address: string | null;
   udiseCode: string | null;
+  schoolBlock: string | null;
+  schoolDistrict: string | null;
   logoUrlSarvaShiksha: string | null;
   logoUrlSamagra: string | null;
   defaultLocale: string;
@@ -23,10 +25,12 @@ export interface SchoolSettingsData {
 
 const DEFAULT_SETTINGS = {
   id: "singleton",
-  schoolName: "Composite Vidyalaya Chandpur Tarahar",
+  schoolName: "Composite School Chandpur Tarhar",
   address:
-    "Composite Vidyalaya Chandpur Tarahar\nBlock - Paraspur, Tehsil - Colonel Ganj\nJanpad - Gonda",
-  udiseCode: null,
+    "Composite School Chandpur Tarhar\nBlock - Paraspur, Tehsil - Colonel Ganj\nJanpad - Gonda",
+  udiseCode: "09530607202",
+  schoolBlock: "Paraspur",
+  schoolDistrict: "Gonda",
   logoUrlSarvaShiksha: "/images/logo-sarva-shiksha.jpg",
   logoUrlSamagra: "/images/logo-samagra-shiksha.png",
   defaultLocale: "hi",
@@ -48,11 +52,24 @@ export async function getSchoolSettings(): Promise<SchoolSettingsData> {
   });
 
   if (existing) {
+    // If the database has the old placeholder name, auto-align it with the new official name
+    const effectiveSchoolName =
+      existing.schoolName === "Composite Vidyalaya Chandpur Tarhar" ||
+      existing.schoolName === "Composite Vidyalaya Chandpur Tarahar"
+        ? "Composite School Chandpur Tarhar"
+        : existing.schoolName;
+
+    const effectiveUdise = existing.udiseCode || "09530607202";
+    const effectiveBlock = existing.schoolBlock || "Paraspur";
+    const effectiveDistrict = existing.schoolDistrict || "Gonda";
+
     return {
       id: existing.id,
-      schoolName: existing.schoolName,
+      schoolName: effectiveSchoolName,
       address: existing.address,
-      udiseCode: existing.udiseCode,
+      udiseCode: effectiveUdise,
+      schoolBlock: effectiveBlock,
+      schoolDistrict: effectiveDistrict,
       logoUrlSarvaShiksha: existing.logoUrlSarvaShiksha,
       logoUrlSamagra: existing.logoUrlSamagra,
       defaultLocale: existing.defaultLocale,
@@ -75,6 +92,8 @@ export async function getSchoolSettings(): Promise<SchoolSettingsData> {
     schoolName: created.schoolName,
     address: created.address,
     udiseCode: created.udiseCode,
+    schoolBlock: created.schoolBlock,
+    schoolDistrict: created.schoolDistrict,
     logoUrlSarvaShiksha: created.logoUrlSarvaShiksha,
     logoUrlSamagra: created.logoUrlSamagra,
     defaultLocale: created.defaultLocale,
@@ -99,6 +118,8 @@ export async function updateSchoolSettingsAction(
   const schoolName = (formData.get("schoolName") as string)?.trim();
   const address = (formData.get("address") as string)?.trim() || null;
   const udiseCode = (formData.get("udiseCode") as string)?.trim() || null;
+  const schoolBlock = (formData.get("schoolBlock") as string)?.trim() || "Paraspur";
+  const schoolDistrict = (formData.get("schoolDistrict") as string)?.trim() || "Gonda";
   const conversionCostPrimary = parseFloat(formData.get("conversionCostPrimary") as string) || 6.78;
   const conversionCostJunior = parseFloat(formData.get("conversionCostJunior") as string) || 10.17;
   const fruitCostPerStudent = parseFloat(formData.get("fruitCostPerStudent") as string) || 4.0;
@@ -152,6 +173,8 @@ export async function updateSchoolSettingsAction(
         schoolName,
         address,
         udiseCode,
+        schoolBlock,
+        schoolDistrict,
         conversionCostPrimary,
         conversionCostJunior,
         fruitCostPerStudent,
@@ -166,6 +189,8 @@ export async function updateSchoolSettingsAction(
         schoolName,
         address,
         udiseCode,
+        schoolBlock,
+        schoolDistrict,
         conversionCostPrimary,
         conversionCostJunior,
         fruitCostPerStudent,

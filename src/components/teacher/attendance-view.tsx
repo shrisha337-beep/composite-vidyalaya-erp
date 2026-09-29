@@ -42,9 +42,23 @@ export function AttendanceView({
     return initial;
   });
 
+  const [genderFilter, setGenderFilter] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+
+  const boys = students.filter((s) => s.gender === "MALE");
+  const girls = students.filter((s) => s.gender === "FEMALE");
+
+  const boysPresent = boys.filter((s) => (statuses[s.id] || "PRESENT") === "PRESENT").length;
+  const girlsPresent = girls.filter((s) => (statuses[s.id] || "PRESENT") === "PRESENT").length;
+  const totalPresent = boysPresent + girlsPresent;
+
+  const boysRate = boys.length > 0 ? Math.round((boysPresent / boys.length) * 100) : 0;
+  const girlsRate = girls.length > 0 ? Math.round((girlsPresent / girls.length) * 100) : 0;
+  const overallRate = students.length > 0 ? Math.round((totalPresent / students.length) * 100) : 0;
+
+  const filteredStudents = students.filter((s) => !genderFilter || s.gender === genderFilter);
 
   function handleDateChange(val: string) {
     router.push(`/${locale}/teacher/attendance?date=${val}`);
@@ -150,9 +164,51 @@ export function AttendanceView({
         </div>
       </div>
 
+      {/* Gender Breakdown Metric Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+        <div className="bg-white border border-blue-100 rounded-sm p-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-base">👦</span>
+            <div>
+              <p className="text-[11px] font-semibold text-gray-500">Boys / बालक</p>
+              <p className="text-sm font-bold text-blue-900">
+                {boysPresent} / {boys.length}{" "}
+                <span className="text-xs text-blue-600 font-semibold">({boysRate}%)</span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white border border-rose-100 rounded-sm p-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-base">👧</span>
+            <div>
+              <p className="text-[11px] font-semibold text-gray-500">Girls / बालिका</p>
+              <p className="text-sm font-bold text-rose-900">
+                {girlsPresent} / {girls.length}{" "}
+                <span className="text-xs text-rose-600 font-semibold">({girlsRate}%)</span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white border border-[#E8E0D4] rounded-sm p-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-base">👥</span>
+            <div>
+              <p className="text-[11px] font-semibold text-gray-500">Total / कुल उपस्थिति</p>
+              <p className="text-sm font-bold text-[#2D2A26]">
+                {totalPresent} / {students.length}{" "}
+                <span className="text-xs text-emerald-700 font-semibold">({overallRate}%)</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Student List Checklist */}
       <div className="bg-white border border-[#E8E0D4] rounded-sm p-4 sm:p-5 shadow-xs">
-        <div className="border-b border-[#E8E0D4] pb-3 mb-4 flex justify-between items-center">
+        <div className="border-b border-[#E8E0D4] pb-3 mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h3 className="text-sm font-bold text-[#2D2A26]">
               Class {className} (Section {sectionName}) Register
@@ -161,15 +217,46 @@ export function AttendanceView({
               Tap the status button to toggle Present / Absent. Green indicates present, red indicates absent.
             </p>
           </div>
+
+          {/* Gender Filter Buttons */}
+          <div className="flex items-center gap-1 bg-[#F3EDE4] p-1 rounded-sm shrink-0">
+            <button
+              type="button"
+              onClick={() => setGenderFilter("")}
+              className={`px-2.5 py-1 text-xs font-semibold rounded-sm transition-colors ${
+                !genderFilter ? "bg-white text-[#2D2A26] shadow-xs" : "text-[#7A7267] hover:text-[#2D2A26]"
+              }`}
+            >
+              All ({students.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setGenderFilter("MALE")}
+              className={`px-2.5 py-1 text-xs font-semibold rounded-sm transition-colors ${
+                genderFilter === "MALE" ? "bg-blue-600 text-white shadow-xs" : "text-blue-800 hover:text-blue-900"
+              }`}
+            >
+              👦 Boys ({boys.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setGenderFilter("FEMALE")}
+              className={`px-2.5 py-1 text-xs font-semibold rounded-sm transition-colors ${
+                genderFilter === "FEMALE" ? "bg-rose-600 text-white shadow-xs" : "text-rose-800 hover:text-rose-900"
+              }`}
+            >
+              👧 Girls ({girls.length})
+            </button>
+          </div>
         </div>
 
-        {students.length === 0 ? (
+        {filteredStudents.length === 0 ? (
           <p className="text-sm text-[#7A7267] py-10 text-center border border-dashed border-[#E8E0D4] rounded-sm">
-            No active students enrolled in this class.
+            No students found matching the selected filter.
           </p>
         ) : (
           <div className="space-y-1">
-            {students.map((s, idx) => {
+            {filteredStudents.map((s, idx) => {
               const status = statuses[s.id] || "PRESENT";
               const isPresent = status === "PRESENT";
               return (

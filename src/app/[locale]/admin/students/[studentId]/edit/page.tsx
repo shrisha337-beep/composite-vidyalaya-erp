@@ -5,6 +5,7 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { AdmissionForm } from "@/components/admin/admission-form";
+import { getSchoolSettings } from "@/app/actions/school-settings";
 
 async function getStudent(studentId: string) {
   return await prisma.student.findUnique({
@@ -59,6 +60,8 @@ export default async function EditStudentPage({
       : null,
   };
 
+  const settings = await getSchoolSettings();
+
   return (
     <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-3xl">
       {/* Header */}
@@ -80,6 +83,10 @@ export default async function EditStudentPage({
       <AdmissionForm
         locale={locale}
         sessionLabel={session.label}
+        schoolName={settings.schoolName}
+        schoolDistrict={settings.schoolDistrict || "Gonda"}
+        schoolBlock={settings.schoolBlock || "Paraspur"}
+        udiseCode={settings.udiseCode || "09530607202"}
         isEdit={true}
         student={student}
         decrypted={decrypted}
