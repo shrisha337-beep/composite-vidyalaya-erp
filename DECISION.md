@@ -673,7 +673,7 @@ The following decisions were logged after requirements gathering and clarificati
 * **Context:** The existing timetable is a day-based slot manager. The school needs a printable grid timetable separated into Primary (classes 1-5) and Junior (classes 6-8), with 8 periods as rows and classes as columns. Each cell has a teacher dropdown and a subject dropdown. Teacher names and subjects are hardcoded per the stakeholder's specifications.
 * **Decisions Made (via stakeholder clarification):**
   - **Layout:** Two separate tables — Primary (Classes 1-5) and Junior (Classes 6-8).
-  - **Rows:** 8 periods. Period times are editable by admin (displayed in the period column).
+  - **Rows:** 8 teaching periods (numbered 1–8) excluding recess time. A distinct recess row is placed between Period 4 and Period 5. Both period times and recess time are independently editable by the admin.
   - **Columns:** Each class is a column.
   - **Cell content:** Two dropdowns per cell — one for teacher, one for subject.
   - **Teachers (hardcoded):**
