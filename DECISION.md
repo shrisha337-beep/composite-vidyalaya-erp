@@ -673,6 +673,7 @@ The following decisions were logged after requirements gathering and clarificati
 * **Context:** The existing timetable is a day-based slot manager. The school needs a printable grid timetable separated into Primary (classes 1-5) and Junior (classes 6-8), with 8 periods as rows and classes as columns. Each cell has a teacher dropdown and a subject dropdown. Teacher names and subjects are hardcoded per the stakeholder's specifications.
 * **Decisions Made (via stakeholder clarification):**
   - **Layout:** Two separate tables — Primary (Classes 1-5) and Junior (Classes 6-8).
+  - **Days:** Day tabs (Monday–Saturday / सोमवार–शनिवार) allow switching between days. Each day has independent cell data for both Primary and Junior.
   - **Rows:** 8 teaching periods (numbered 1–8) excluding recess time. A distinct recess row is placed between Period 4 and Period 5. Both period times and recess time are independently editable by the admin.
   - **Columns:** Each class is a column.
   - **Cell content:** Two dropdowns per cell — one for teacher, one for subject.
@@ -680,6 +681,7 @@ The following decisions were logged after requirements gathering and clarificati
     - *Primary:* Arti Pandey, Akahnd Pratap Singh, Komal Singh, Neelam Singh, Pallavi Tiwari, Vijay Kumar Mishra
     - *Junior:* Durga Prasad, Rajan Singh, Anand Kaushal Srivastava, Poonam Kannaujia, Babita Pandey
   - **Subjects (hardcoded):** Hindi, Maths (गणित), Science (विज्ञान), Social Science (सामाजिक विज्ञान), Sanskrit, English (अंग्रेजी), Environmental Science (पर्यावरण) / Home Science (गृह विज्ञान), Hamara Paryavaran, Sports & Health (खेल और स्वास्थ्य) / Home Craft (गृह शिल्प)
+  - **Print Output:** Opens a new window containing ONLY the school header (कम्पोजिट विद्यालय चांदपुर तरहर), both timetable grids with section headings and selected day, and a Headmaster / प्रधानाध्यापक signature line. Sidebar, navigation, controls, and other page chrome are excluded from print.
   - **Persistence:** Not saved to database — this is a printable page that admin fills and prints each time.
 * **Status:** ✅ Implemented
 
