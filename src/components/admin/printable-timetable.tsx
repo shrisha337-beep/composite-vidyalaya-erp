@@ -8,20 +8,20 @@ const PRIMARY_CLASSES = ["1", "2", "3", "4", "5"];
 const JUNIOR_CLASSES = ["6", "7", "8"];
 
 const PRIMARY_TEACHERS = [
-  "Durga Prasad",
-  "Rajan Singh",
-  "Anand Kaushal Srivastava",
-  "Poonam Kannaujia",
-  "Babita Pandey",
-];
-
-const JUNIOR_TEACHERS = [
   "Arti Pandey",
   "Akahnd Pratap Singh",
   "Komal Singh",
   "Neelam Singh",
   "Pallavi Tiwari",
   "Vijay Kumar Mishra",
+];
+
+const JUNIOR_TEACHERS = [
+  "Durga Prasad",
+  "Rajan Singh",
+  "Anand Kaushal Srivastava",
+  "Poonam Kannaujia",
+  "Babita Pandey",
 ];
 
 const SUBJECTS = [

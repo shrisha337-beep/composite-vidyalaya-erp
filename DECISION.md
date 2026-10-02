@@ -677,8 +677,8 @@ The following decisions were logged after requirements gathering and clarificati
   - **Columns:** Each class is a column.
   - **Cell content:** Two dropdowns per cell — one for teacher, one for subject.
   - **Teachers (hardcoded):**
-    - *Primary:* Durga Prasad, Rajan Singh, Anand Kaushal Srivastava, Poonam Kannaujia, Babita Pandey
-    - *Junior:* Arti Pandey, Akahnd Pratap Singh, Komal Singh, Neelam Singh, Pallavi Tiwari, Vijay Kumar Mishra
+    - *Primary:* Arti Pandey, Akahnd Pratap Singh, Komal Singh, Neelam Singh, Pallavi Tiwari, Vijay Kumar Mishra
+    - *Junior:* Durga Prasad, Rajan Singh, Anand Kaushal Srivastava, Poonam Kannaujia, Babita Pandey
   - **Subjects (hardcoded):** Hindi, Maths (गणित), Science (विज्ञान), Social Science (सामाजिक विज्ञान), Sanskrit, English (अंग्रेजी), Environmental Science (पर्यावरण) / Home Science (गृह विज्ञान), Hamara Paryavaran, Sports & Health (खेल और स्वास्थ्य) / Home Craft (गृह शिल्प)
   - **Persistence:** Not saved to database — this is a printable page that admin fills and prints each time.
 * **Status:** ✅ Implemented
