@@ -1,7 +1,7 @@
 import { requireRole } from "@/lib/rbac";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { ArrowLeft, CalendarCheck } from "lucide-react";
+import { ArrowLeft, CalendarCheck, Printer } from "lucide-react";
 import {
   AdminAttendanceView,
   ClassAttendanceSummary,
@@ -379,22 +379,33 @@ export default async function AdminAttendancePage({
   return (
     <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-6xl w-full">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <Link
-          href={`/${locale}/admin/dashboard`}
-          className="p-1.5 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Link>
-        <div>
-          <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-            <CalendarCheck className="h-5 w-5 text-gray-600" />
-            School Attendance Register / विद्यालय उपस्थिति रजिस्टर
-          </h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            Monitor and inspect school-wide student attendance logs across all classes
-          </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div className="flex items-center gap-3">
+          <Link
+            href={`/${locale}/admin/dashboard`}
+            className="p-1.5 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
+          <div>
+            <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <CalendarCheck className="h-5 w-5 text-gray-600" />
+              School Attendance Register / विद्यालय उपस्थिति रजिस्टर
+            </h1>
+            <p className="text-sm text-gray-500 mt-0.5">
+              Monitor and inspect school-wide student attendance logs across all classes
+            </p>
+          </div>
         </div>
+
+        <Link
+          href={`/${locale}/admin/reports/attendance-print?date=${selectedDateStr}`}
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-white rounded-md shadow-xs transition-colors hover:brightness-110 shrink-0 self-start sm:self-auto"
+          style={{ background: "#6B1D30" }}
+        >
+          <Printer className="h-4 w-4" />
+          <span>Printable Register / उपस्थिति प्रिंट</span>
+        </Link>
       </div>
 
       <AdminAttendanceView

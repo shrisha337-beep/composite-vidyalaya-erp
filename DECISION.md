@@ -713,10 +713,32 @@ The following decisions were logged after requirements gathering and clarificati
     - Shows Gender badge (Boy/Girl), Total Days (or Day Status), Present Days, and %.
     - Filterable by Gender (All / Boys / Girls), Class, and searchable by Student Name or Admission Number.
   - **Teacher Portal Scope:** Teachers see the same gender-wise tracking scoped to their assigned class.
+#### ADR-033: Printable Attendance Register with Primary/Junior Separation & Gender Breakdown
+* **Context:** The stakeholder requested an official, printable attendance register accessible from the Admin Reports hub (`/admin/reports`) and Attendance overview (`/admin/attendance`), separated by Primary (Classes 1–5) and Junior (Classes 6–8) sections, with comprehensive Boys and Girls statistics per section.
+* **Decisions Made (via stakeholder clarification):**
+  - **Location & Route:** New dedicated page at `/admin/reports/attendance-print` accessible via a new panel in the Reports Hub, a callout banner inside Attendance Summary, and a quick-action button in the header of `/admin/attendance`.
+  - **Structure & Sections:**
+    - Separate sections for **Primary (Classes 1–5)** and **Junior (Classes 6–8)**.
+    - Each section presents a detailed table: Class & Section, Boys Enrolled / Present / %, Girls Enrolled / Present / %, Total Enrolled / Present / Rate %.
+    - Sub-total rows for Primary and Junior sections.
+    - Grand Total (सम्पूर्ण विद्यालय) summary table for school-wide stats.
+  - **Time Periods Supported:**
+    - **Daily (दैनिक):** Single day's present vs enrolled counts and rate % per section.
+    - **Weekly (साप्ताहिक):** Monday–Saturday date range, total attendances, working days count, average daily attendance per category, and rate %.
+    - **Monthly (मासिक):** Full month range, total attendances, working days count, average daily attendance per category, and rate %.
+  - **Print Layout & Options:**
+    - Clean print preview window (same approach as timetable) excluding web app chrome, sidebars, and navigation.
+    - Official School Header: Hindi and English name (`Composite School Chandpur Tarhar`), Block (`Paraspur`), District (`Gonda`), UDISE code (`09530607202`), report mode badge, and period label.
+    - Print selection options:
+      - **Print All:** Primary section on Page 1, page break, Junior section + Grand Total on Page 2.
+      - **Print Primary (1–5):** Primary section only on a single clean page.
+      - **Print Junior (6–8):** Junior section + Grand Total on a single clean page.
+    - Dual signature blocks on each printed page: **कक्षा अध्यापक हस्ताक्षर (Class Teacher Signature)** and **प्रधानाध्यापक हस्ताक्षर एवं मुहर (Headmaster Signature & Seal)**.
 * **Status:** ✅ Implemented
 
 ---
 *Document officially generated and archived for Composite School Chandpur Tarhar ERP Portal.*
+
 
 
 

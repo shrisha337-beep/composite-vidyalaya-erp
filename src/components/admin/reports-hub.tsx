@@ -12,6 +12,7 @@ import {
   ChevronUp,
   Search,
   Filter,
+  Printer,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -243,10 +244,12 @@ function AttendanceSummaryPanel({
   summary,
   studentRows,
   classNames,
+  locale,
 }: {
   summary: ReportsAttendanceRow[];
   studentRows: ReportsAttendanceStudentRow[];
   classNames: string[];
+  locale: string;
 }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [classFilter, setClassFilter] = useState("");
@@ -267,6 +270,26 @@ function AttendanceSummaryPanel({
 
   return (
     <div className="mt-4 space-y-3">
+      {/* Printable Register Callout */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-[#6B1D30]/5 border border-[#6B1D30]/20 rounded-sm p-3">
+        <div>
+          <p className="text-xs font-bold text-[#6B1D30]">
+            🖨️ Printable Attendance Register / उपस्थिति प्रिंट
+          </p>
+          <p className="text-[11px] text-[#7A7267] mt-0.5">
+            Primary (1–5) and Junior (6–8) sections with Boys and Girls statistics · Daily, Weekly &amp; Monthly
+          </p>
+        </div>
+        <Link
+          href={`/${locale}/admin/reports/attendance-print`}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white rounded-sm shadow-xs transition-colors shrink-0"
+          style={{ background: "#6B1D30" }}
+        >
+          <Printer className="h-3.5 w-3.5" />
+          <span>Open Printable Register</span>
+        </Link>
+      </div>
+
       {/* Toggle + Filter */}
       <div className="flex flex-col sm:flex-row gap-2">
         <div className="flex items-center gap-1 bg-gray-100 rounded-sm p-0.5">
@@ -526,8 +549,18 @@ export function ReportsHub({
             summary={attendanceSummary}
             studentRows={attendanceStudents}
             classNames={classNames}
+            locale={locale}
           />
         </ExpandablePanel>
+
+        {/* Printable Attendance Register — dedicated link */}
+        <ExpandablePanel
+          title="Printable Attendance Register / उपस्थिति प्रिंट"
+          description="Official printable attendance register with Primary (1–5) and Junior (6–8) sections, Boys and Girls statistics, Headmaster signature, and Daily/Weekly/Monthly reports."
+          icon={Printer}
+          color="#6B1D30"
+          externalHref={`/${locale}/admin/reports/attendance-print`}
+        />
 
         {/* Marks / Results — links to existing page */}
         <ExpandablePanel
