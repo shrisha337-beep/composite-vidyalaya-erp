@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { requireRole } from "@/lib/rbac";
 import Link from "next/link";
-import { getSchoolSettings } from "@/app/actions/school-settings";
+import { getSchoolSettings } from "@/lib/data/school-settings";
 
 // --- Data fetching ---
 

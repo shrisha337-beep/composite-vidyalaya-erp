@@ -1,5 +1,5 @@
 import { requireRole } from "@/lib/rbac";
-import { getSchoolSettings } from "@/app/actions/school-settings";
+import { getSchoolSettings } from "@/lib/data/school-settings";
 import Link from "next/link";
 import { ArrowLeft, Settings } from "lucide-react";
 import { SchoolSettingsForm } from "@/components/admin/school-settings-form";

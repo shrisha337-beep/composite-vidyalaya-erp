@@ -7,7 +7,7 @@ import {
   SectionAttendanceData,
   SchoolInfo,
 } from "@/components/admin/printable-attendance-report";
-import { getSchoolSettings } from "@/app/actions/school-settings";
+import { getSchoolSettings } from "@/lib/data/school-settings";
 
 export default async function AttendancePrintPage({
   params,

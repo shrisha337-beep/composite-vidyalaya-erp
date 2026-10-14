@@ -1,6 +1,6 @@
 import { requireRole } from "@/lib/rbac";
 import { prisma } from "@/lib/prisma";
-import { getSchoolSettings } from "@/app/actions/school-settings";
+import { getSchoolSettings } from "@/lib/data/school-settings";
 import { AdmissionForm } from "@/components/admin/admission-form";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";

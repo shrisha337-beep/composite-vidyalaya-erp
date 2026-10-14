@@ -11,6 +11,8 @@ import {
   StudentAttendanceData,
   ClassSummaryData,
 } from "@/components/admin/attendance-analytics";
+import { getCurrentSession } from "@/lib/data/academic-session";
+import { buildPeriodAttendanceAnalytics } from "@/lib/attendance-analytics";
 
 export default async function AdminAttendancePage({
   params,
@@ -29,10 +31,7 @@ export default async function AdminAttendancePage({
   const selectedDate = new Date(selectedDateStr);
 
   // Active academic session
-  const currentSession = await prisma.academicSession.findFirst({
-    where: { isCurrent: true },
-    select: { id: true },
-  });
+  const currentSession = await getCurrentSession();
 
   if (!currentSession) {
     return (
@@ -43,40 +42,41 @@ export default async function AdminAttendancePage({
     );
   }
 
-  // Fetch all sections in current session with students & class teacher
-  const classes = await prisma.class.findMany({
-    where: { sessionId: currentSession.id },
-    orderBy: { name: "asc" },
-    include: {
-      sections: {
-        include: {
-          classTeacher: { select: { fullName: true } },
-          students: {
-            where: { isActive: true },
-            select: {
-              id: true,
-              fullName: true,
-              admissionNo: true,
-              gender: true,
+  // Classes/rosters and the selected day's attendance are independent —
+  // fetch them in one parallel round trip instead of two sequential ones.
+  const [classes, attendanceLogs] = await Promise.all([
+    prisma.class.findMany({
+      where: { sessionId: currentSession.id },
+      orderBy: { name: "asc" },
+      include: {
+        sections: {
+          include: {
+            classTeacher: { select: { fullName: true } },
+            students: {
+              where: { isActive: true },
+              select: {
+                id: true,
+                fullName: true,
+                admissionNo: true,
+                gender: true,
+              },
+              orderBy: { fullName: "asc" },
             },
-            orderBy: { fullName: "asc" },
           },
         },
       },
-    },
-  });
-
-  // Fetch all attendance logs for the selected date
-  const attendanceLogs = await prisma.attendance.findMany({
-    where: {
-      date: selectedDate,
-      sessionId: currentSession.id,
-    },
-    select: {
-      studentId: true,
-      status: true,
-    },
-  });
+    }),
+    prisma.attendance.findMany({
+      where: {
+        date: selectedDate,
+        sessionId: currentSession.id,
+      },
+      select: {
+        studentId: true,
+        status: true,
+      },
+    }),
+  ]);
 
   const attendanceMap = new Map<string, "PRESENT" | "ABSENT">();
   attendanceLogs.forEach((log) => {
@@ -180,201 +180,29 @@ export default async function AdminAttendancePage({
     }
   }
 
-  // Session-wise analytics
-  const sessionStudentData: StudentAttendanceData[] = [];
-  const sessionClassSummary: ClassSummaryData[] = [];
-
-  // Current month analytics
+  // Session-wise + current-month analytics — one parallel query wave
+  // (was 4 COUNTs per student + 8 per section, awaited per student).
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
 
-  const monthlyStudentData: StudentAttendanceData[] = [];
-  const monthlyClassSummary: ClassSummaryData[] = [];
-
-  for (const c of classes) {
-    for (const sec of c.sections) {
-      const studentIds = sec.students.map((s) => s.id);
-      const boyStudents = sec.students.filter((s) => s.gender === "MALE");
-      const girlStudents = sec.students.filter((s) => s.gender === "FEMALE");
-      const boyIds = boyStudents.map((s) => s.id);
-      const girlIds = girlStudents.map((s) => s.id);
-
-      if (studentIds.length === 0) {
-        sessionClassSummary.push({
-          className: c.name,
-          sectionName: sec.name,
-          totalStudents: 0,
-          totalDaysMarked: 0,
-          totalPresent: 0,
-          boysCount: 0,
-          boysPresent: 0,
-          girlsCount: 0,
-          girlsPresent: 0,
-        });
-        monthlyClassSummary.push({
-          className: c.name,
-          sectionName: sec.name,
-          totalStudents: 0,
-          totalDaysMarked: 0,
-          totalPresent: 0,
-          boysCount: 0,
-          boysPresent: 0,
-          girlsCount: 0,
-          girlsPresent: 0,
-        });
-        continue;
-      }
-
-      // Session-wide: distinct days marked, overall present, boys present, girls present
-      const [sessionDays, sessionPresent, sessionBoysPresent, sessionGirlsPresent] =
-        await Promise.all([
-          prisma.attendance.groupBy({
-            by: ["date"],
-            where: { sessionId: currentSession.id, studentId: { in: studentIds } },
-          }),
-          prisma.attendance.count({
-            where: {
-              sessionId: currentSession.id,
-              studentId: { in: studentIds },
-              status: "PRESENT",
-            },
-          }),
-          boyIds.length > 0
-            ? prisma.attendance.count({
-                where: {
-                  sessionId: currentSession.id,
-                  studentId: { in: boyIds },
-                  status: "PRESENT",
-                },
-              })
-            : Promise.resolve(0),
-          girlIds.length > 0
-            ? prisma.attendance.count({
-                where: {
-                  sessionId: currentSession.id,
-                  studentId: { in: girlIds },
-                  status: "PRESENT",
-                },
-              })
-            : Promise.resolve(0),
-        ]);
-
-      sessionClassSummary.push({
+  const {
+    sessionStudentData,
+    sessionClassSummary,
+    monthlyStudentData,
+    monthlyClassSummary,
+  } = await buildPeriodAttendanceAnalytics(
+    currentSession.id,
+    classes.flatMap((c) =>
+      c.sections.map((sec) => ({
         className: c.name,
         sectionName: sec.name,
-        totalStudents: studentIds.length,
-        totalDaysMarked: sessionDays.length,
-        totalPresent: sessionPresent,
-        boysCount: boyIds.length,
-        boysPresent: sessionBoysPresent,
-        girlsCount: girlIds.length,
-        girlsPresent: sessionGirlsPresent,
-      });
-
-      // Monthly: distinct days marked, overall present, boys present, girls present
-      const [monthDays, monthPresent, monthBoysPresent, monthGirlsPresent] =
-        await Promise.all([
-          prisma.attendance.groupBy({
-            by: ["date"],
-            where: {
-              sessionId: currentSession.id,
-              studentId: { in: studentIds },
-              date: { gte: monthStart, lte: monthEnd },
-            },
-          }),
-          prisma.attendance.count({
-            where: {
-              sessionId: currentSession.id,
-              studentId: { in: studentIds },
-              status: "PRESENT",
-              date: { gte: monthStart, lte: monthEnd },
-            },
-          }),
-          boyIds.length > 0
-            ? prisma.attendance.count({
-                where: {
-                  sessionId: currentSession.id,
-                  studentId: { in: boyIds },
-                  status: "PRESENT",
-                  date: { gte: monthStart, lte: monthEnd },
-                },
-              })
-            : Promise.resolve(0),
-          girlIds.length > 0
-            ? prisma.attendance.count({
-                where: {
-                  sessionId: currentSession.id,
-                  studentId: { in: girlIds },
-                  status: "PRESENT",
-                  date: { gte: monthStart, lte: monthEnd },
-                },
-              })
-            : Promise.resolve(0),
-        ]);
-
-      monthlyClassSummary.push({
-        className: c.name,
-        sectionName: sec.name,
-        totalStudents: studentIds.length,
-        totalDaysMarked: monthDays.length,
-        totalPresent: monthPresent,
-        boysCount: boyIds.length,
-        boysPresent: monthBoysPresent,
-        girlsCount: girlIds.length,
-        girlsPresent: monthGirlsPresent,
-      });
-
-      // Per-student data
-      for (const s of sec.students) {
-        const [sTotalDays, sPresent, mTotalDays, mPresent] = await Promise.all([
-          prisma.attendance.count({
-            where: { sessionId: currentSession.id, studentId: s.id },
-          }),
-          prisma.attendance.count({
-            where: { sessionId: currentSession.id, studentId: s.id, status: "PRESENT" },
-          }),
-          prisma.attendance.count({
-            where: {
-              sessionId: currentSession.id,
-              studentId: s.id,
-              date: { gte: monthStart, lte: monthEnd },
-            },
-          }),
-          prisma.attendance.count({
-            where: {
-              sessionId: currentSession.id,
-              studentId: s.id,
-              status: "PRESENT",
-              date: { gte: monthStart, lte: monthEnd },
-            },
-          }),
-        ]);
-
-        sessionStudentData.push({
-          id: s.id,
-          fullName: s.fullName,
-          admissionNo: s.admissionNo,
-          className: c.name,
-          sectionName: sec.name,
-          gender: s.gender,
-          totalDays: sTotalDays,
-          presentDays: sPresent,
-        });
-
-        monthlyStudentData.push({
-          id: s.id,
-          fullName: s.fullName,
-          admissionNo: s.admissionNo,
-          className: c.name,
-          sectionName: sec.name,
-          gender: s.gender,
-          totalDays: mTotalDays,
-          presentDays: mPresent,
-        });
-      }
-    }
-  }
+        students: sec.students,
+      }))
+    ),
+    monthStart,
+    monthEnd
+  );
 
   return (
     <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-6xl w-full">

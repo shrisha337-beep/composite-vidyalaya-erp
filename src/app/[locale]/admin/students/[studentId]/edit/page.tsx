@@ -5,7 +5,7 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { AdmissionForm } from "@/components/admin/admission-form";
-import { getSchoolSettings } from "@/app/actions/school-settings";
+import { getSchoolSettings } from "@/lib/data/school-settings";
 
 async function getStudent(studentId: string) {
   return await prisma.student.findUnique({
