@@ -420,6 +420,7 @@ model Student {
   reportCards            ReportCard[]
   promotionApplications  AdmissionApplication[] @relation("PromotionApplications")
   newAdmissionApplication AdmissionApplication? @relation("NewAdmissionResult")
+  enrollmentHistory       EnrollmentHistory[]
 
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -510,6 +511,30 @@ model BehaviourNote {
   createdAt DateTime @default(now())
 
   @@map("behaviour_notes")
+}
+
+/// Immutable log of every class/section change in a student's lifecycle.
+/// Written on promotion, retention, pass-out (class 8), and initial admission.
+/// Gives last-year rosters for reports and an auditable movement trail.
+model EnrollmentHistory {
+  id             String   @id @default(cuid())
+  studentId      String
+  student        Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  sessionId      String   // academic session this enrollment belongs to
+  sectionId      String?  // null for PASS_OUT (student leaves the system)
+  className      String   // denormalised snapshot: "1" … "8" or "PASSED_OUT"
+  sectionName    String   // denormalised snapshot: "A" or "—"
+
+  action         String   // "ADMIT" | "PROMOTE" | "RETAIN" | "PASS_OUT"
+  previousClass  String?  // class before this move, null for first admission
+  remarks        String?
+  performedById  String   // admin userId who triggered this
+  performedAt    DateTime @default(now())
+
+  @@unique([studentId, sessionId]) // one enrollment per student per session
+  @@index([sessionId])
+  @@map("enrollment_history")
 }
 
 // ============================================================

@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/rbac";
 import { revalidatePath } from "next/cache";
+import { getCurrentSession } from "@/lib/data/academic-session";
 
 export interface StudentFruitEntry {
   studentId: string;
@@ -32,10 +33,7 @@ export async function saveMDMFruitLogAction({
   logDate.setHours(0, 0, 0, 0);
 
   // 1. Fetch active session
-  const activeSession = await prisma.academicSession.findFirst({
-    where: { isCurrent: true },
-    select: { id: true },
-  });
+  const activeSession = await getCurrentSession();
 
   if (!activeSession) {
     return { success: false, message: "No active academic session found." };
@@ -87,23 +85,18 @@ export async function saveMDMFruitLogAction({
         },
       });
 
-      // Upsert student fruit consumption records
-      for (const entry of fruitEntries) {
-        await tx.mDMStudentAttendance.upsert({
-          where: {
-            dailyLogId_studentId: {
-              dailyLogId: dailyLog.id,
-              studentId: entry.studentId,
-            },
-          },
-          create: {
+      // Batch fruit consumption records: delete existing + bulk insert.
+      // Two queries instead of N upserts.
+      await tx.mDMStudentAttendance.deleteMany({
+        where: { dailyLogId: dailyLog.id },
+      });
+      if (fruitEntries.length > 0) {
+        await tx.mDMStudentAttendance.createMany({
+          data: fruitEntries.map((entry) => ({
             dailyLogId: dailyLog.id,
             studentId: entry.studentId,
             didEat: entry.didEat,
-          },
-          update: {
-            didEat: entry.didEat,
-          },
+          })),
         });
       }
     });

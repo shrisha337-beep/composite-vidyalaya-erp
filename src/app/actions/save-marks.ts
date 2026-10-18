@@ -88,31 +88,28 @@ export async function saveStudentMarksAction({
 
   try {
     await prisma.$transaction(async (tx) => {
-      for (const rec of marksRecords) {
-        await tx.mark.upsert({
-          where: {
-            studentId_subjectId_sessionId_examTerm: {
-              studentId: rec.studentId,
-              subjectId,
-              sessionId: activeSessionId,
-              examTerm,
-            },
-          },
-          create: {
-            studentId: rec.studentId,
-            subjectId,
-            sessionId: activeSessionId,
-            examTerm,
-            marksObtained: rec.marksObtained,
-            maxMarks,
-            enteredById: teacherUserId,
-          },
-          update: {
-            marksObtained: rec.marksObtained,
-            enteredById: teacherUserId,
-          },
-        });
-      }
+      // Delete existing marks for these students + subject + session + term,
+      // then bulk insert. Two queries instead of N upserts.
+      const studentIds = marksRecords.map((r) => r.studentId);
+      await tx.mark.deleteMany({
+        where: {
+          studentId: { in: studentIds },
+          subjectId,
+          sessionId: activeSessionId,
+          examTerm,
+        },
+      });
+      await tx.mark.createMany({
+        data: marksRecords.map((rec) => ({
+          studentId: rec.studentId,
+          subjectId,
+          sessionId: activeSessionId,
+          examTerm,
+          marksObtained: rec.marksObtained,
+          maxMarks,
+          enteredById: teacherUserId,
+        })),
+      });
     });
 
     revalidatePath(`/${locale}/teacher/marks-entry`);

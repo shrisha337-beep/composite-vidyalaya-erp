@@ -86,11 +86,47 @@ export default async function AdminReportsPage({
     }
   }
 
-  // Build attendance summary
+  // Build attendance summary — batched queries instead of per-student loop.
+  // Previously ran ~600 sequential COUNT queries for 302 students (2 per student).
+  // Now: 2 groupBy queries for the entire school + in-memory aggregation.
   const attendanceSummary: ReportsAttendanceRow[] = [];
   const attendanceStudents: ReportsAttendanceStudentRow[] = [];
 
   if (session) {
+    // Collect all student IDs across all sections
+    const allStudentIds = session.classes.flatMap((cls) =>
+      cls.sections.flatMap((sec) => sec.students.map((s) => s.id))
+    );
+
+    // Two batched queries: per-student total days and per-student present days
+    const [totalRows, presentRows, sectionDaysRows] = allStudentIds.length > 0
+      ? await Promise.all([
+          prisma.attendance.groupBy({
+            by: ["studentId"],
+            where: { sessionId: session.id, studentId: { in: allStudentIds } },
+            _count: { _all: true },
+          }),
+          prisma.attendance.groupBy({
+            by: ["studentId"],
+            where: { sessionId: session.id, studentId: { in: allStudentIds }, status: "PRESENT" },
+            _count: { _all: true },
+          }),
+          prisma.attendance.groupBy({
+            by: ["studentId", "date"],
+            where: { sessionId: session.id, studentId: { in: allStudentIds } },
+          }),
+        ])
+      : [[], [], []];
+
+    // Build lookup maps
+    const totalMap = new Map<string, number>();
+    for (const r of totalRows) totalMap.set(r.studentId, r._count._all);
+
+    const presentMap = new Map<string, number>();
+    for (const r of presentRows) presentMap.set(r.studentId, r._count._all);
+
+    // Count distinct days per student (for totalDays per student)
+    // and collect unique dates per section (for section-level totalDaysMarked)
     for (const cls of session.classes) {
       for (const sec of cls.sections) {
         const studentIds = sec.students.map((s) => s.id);
@@ -106,52 +142,37 @@ export default async function AdminReportsPage({
           continue;
         }
 
-        // Count distinct days marked for this section
-        const rawDays = await prisma.attendance.groupBy({
-          by: ["date"],
-          where: {
-            sessionId: session.id,
-            studentId: { in: studentIds },
-          },
-        });
-        const totalDaysMarked = rawDays.length;
+        // Count distinct dates for this section from the groupBy result
+        const sectionDates = new Set<string>();
+        for (const r of sectionDaysRows) {
+          if (studentIds.includes(r.studentId)) {
+            sectionDates.add(r.date.toISOString());
+          }
+        }
+        const totalDaysMarked = sectionDates.size;
 
-        // Count total present records
-        const presentCount = await prisma.attendance.count({
-          where: {
-            sessionId: session.id,
-            studentId: { in: studentIds },
-            status: "PRESENT",
-          },
-        });
+        // Sum present counts across section students
+        let sectionPresent = 0;
+        for (const sid of studentIds) {
+          sectionPresent += presentMap.get(sid) ?? 0;
+        }
 
         const totalPossible = totalDaysMarked * studentIds.length;
-        const percentage = totalPossible > 0 ? Math.round((presentCount / totalPossible) * 100) : 0;
+        const percentage = totalPossible > 0 ? Math.round((sectionPresent / totalPossible) * 100) : 0;
 
         attendanceSummary.push({
           className: cls.name,
           sectionName: sec.name,
           totalStudents: studentIds.length,
           totalDaysMarked,
-          totalPresent: presentCount,
+          totalPresent: sectionPresent,
           percentage,
         });
 
-        // Per-student attendance
+        // Per-student attendance from the maps (no extra queries)
         for (const s of sec.students) {
-          const studentTotalDays = await prisma.attendance.count({
-            where: {
-              sessionId: session.id,
-              studentId: s.id,
-            },
-          });
-          const studentPresent = await prisma.attendance.count({
-            where: {
-              sessionId: session.id,
-              studentId: s.id,
-              status: "PRESENT",
-            },
-          });
+          const studentTotalDays = totalMap.get(s.id) ?? 0;
+          const studentPresent = presentMap.get(s.id) ?? 0;
           attendanceStudents.push({
             id: s.id,
             fullName: s.fullName,

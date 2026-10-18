@@ -58,28 +58,43 @@ export async function saveDailyAttendanceAction({
   const activeSessionId = section.class.sessionId;
 
   try {
+    // G6: Verify all submitted students belong to this section
+    const validStudents = await prisma.student.findMany({
+      where: {
+        id: { in: attendanceRecords.map((r) => r.studentId) },
+        sectionId,
+        isActive: true,
+      },
+      select: { id: true },
+    });
+    const validIds = new Set(validStudents.map((s) => s.id));
+    const invalidIds = attendanceRecords.filter((r) => !validIds.has(r.studentId));
+    if (invalidIds.length > 0) {
+      return {
+        success: false,
+        message: `${invalidIds.length} student(s) do not belong to this section.`,
+      };
+    }
+
     await prisma.$transaction(async (tx) => {
-      for (const rec of attendanceRecords) {
-        await tx.attendance.upsert({
-          where: {
-            studentId_date: {
-              studentId: rec.studentId,
-              date: attendanceDate,
-            },
-          },
-          create: {
-            studentId: rec.studentId,
-            sessionId: activeSessionId,
-            date: attendanceDate,
-            status: rec.status,
-            markedById: userId,
-          },
-          update: {
-            status: rec.status,
-            markedById: userId,
-          },
-        });
-      }
+      // Delete existing records for this date + these students, then bulk insert.
+      // Two queries instead of N upserts.
+      const studentIds = attendanceRecords.map((r) => r.studentId);
+      await tx.attendance.deleteMany({
+        where: {
+          studentId: { in: studentIds },
+          date: attendanceDate,
+        },
+      });
+      await tx.attendance.createMany({
+        data: attendanceRecords.map((rec) => ({
+          studentId: rec.studentId,
+          sessionId: activeSessionId,
+          date: attendanceDate,
+          status: rec.status,
+          markedById: userId,
+        })),
+      });
     });
 
     revalidatePath(`/${locale}/teacher/attendance`);

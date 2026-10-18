@@ -5,9 +5,11 @@ import { ArrowLeft, AlertTriangle } from "lucide-react";
 import { AttendanceView } from "@/components/teacher/attendance-view";
 import {
   AttendanceAnalytics,
-  StudentAttendanceData,
-  ClassSummaryData,
+  type StudentAttendanceData,
+  type ClassSummaryData,
 } from "@/components/admin/attendance-analytics";
+import { getCurrentSession } from "@/lib/data/academic-session";
+import { buildPeriodAttendanceAnalytics } from "@/lib/attendance-analytics";
 
 async function getTeacherClassInfo(userId: string) {
   const teacher = await prisma.teacher.findUnique({
@@ -31,11 +33,10 @@ export default async function TeacherAttendancePage({
   params: Promise<{ locale: string }>;
   searchParams: Promise<{ date?: string }>;
 }) {
-  await requireRole(["TEACHER"]);
+  const session = await requireRole(["TEACHER"]);
   const { locale } = await params;
   const sparams = await searchParams;
 
-  const session = await requireRole(["TEACHER"]);
   const teacher = await getTeacherClassInfo(session.user.id);
 
   const assignedSection = teacher?.classTeacherOf?.[0];
@@ -106,19 +107,13 @@ export default async function TeacherAttendancePage({
   }));
 
   // ─── Attendance Analytics for Teacher ─────────────────────────────
-  const currentSession = await prisma.academicSession.findFirst({
-    where: { isCurrent: true },
-    select: { id: true },
-  });
+  const currentSession = await getCurrentSession();
 
   const classNames = [assignedSection.class.name];
-  const studentIds = rawStudents.map((s) => s.id);
   const boyStudents = rawStudents.filter((s) => s.gender === "MALE");
   const girlStudents = rawStudents.filter((s) => s.gender === "FEMALE");
-  const boyIds = boyStudents.map((s) => s.id);
-  const girlIds = girlStudents.map((s) => s.id);
 
-  // Daily data for teacher
+  // Daily data — computed from already-fetched attendance records (no extra queries)
   const boysPresentToday = boyStudents.filter(
     (s) => s.attendances?.[0]?.status === "PRESENT"
   ).length;
@@ -157,190 +152,30 @@ export default async function TeacherAttendancePage({
     };
   });
 
-  // Session-wise data
-  const sessionStudentData: StudentAttendanceData[] = [];
-  const sessionClassSummary: ClassSummaryData[] = [];
-
-  // Monthly data
+  // Session-wise + current-month analytics — one parallel query wave
+  // via the batched helper (replaces the per-student loop that was
+  // running ~140 sequential COUNT queries for 35 students).
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
 
-  const monthlyStudentData: StudentAttendanceData[] = [];
-  const monthlyClassSummary: ClassSummaryData[] = [];
-
-  if (currentSession && studentIds.length > 0) {
-    // Session-wise class summary
-    const [sessionDays, sessionPresent, sessionBoysPresent, sessionGirlsPresent] =
-      await Promise.all([
-        prisma.attendance.groupBy({
-          by: ["date"],
-          where: { sessionId: currentSession.id, studentId: { in: studentIds } },
-        }),
-        prisma.attendance.count({
-          where: {
-            sessionId: currentSession.id,
-            studentId: { in: studentIds },
-            status: "PRESENT",
-          },
-        }),
-        boyIds.length > 0
-          ? prisma.attendance.count({
-              where: {
-                sessionId: currentSession.id,
-                studentId: { in: boyIds },
-                status: "PRESENT",
-              },
-            })
-          : Promise.resolve(0),
-        girlIds.length > 0
-          ? prisma.attendance.count({
-              where: {
-                sessionId: currentSession.id,
-                studentId: { in: girlIds },
-                status: "PRESENT",
-              },
-            })
-          : Promise.resolve(0),
-      ]);
-
-    sessionClassSummary.push({
-      className: assignedSection.class.name,
-      sectionName: assignedSection.name,
-      totalStudents: studentIds.length,
-      totalDaysMarked: sessionDays.length,
-      totalPresent: sessionPresent,
-      boysCount: boyIds.length,
-      boysPresent: sessionBoysPresent,
-      girlsCount: girlIds.length,
-      girlsPresent: sessionGirlsPresent,
-    });
-
-    // Monthly class summary
-    const [monthDays, monthPresent, monthBoysPresent, monthGirlsPresent] =
-      await Promise.all([
-        prisma.attendance.groupBy({
-          by: ["date"],
-          where: {
-            sessionId: currentSession.id,
-            studentId: { in: studentIds },
-            date: { gte: monthStart, lte: monthEnd },
-          },
-        }),
-        prisma.attendance.count({
-          where: {
-            sessionId: currentSession.id,
-            studentId: { in: studentIds },
-            status: "PRESENT",
-            date: { gte: monthStart, lte: monthEnd },
-          },
-        }),
-        boyIds.length > 0
-          ? prisma.attendance.count({
-              where: {
-                sessionId: currentSession.id,
-                studentId: { in: boyIds },
-                status: "PRESENT",
-                date: { gte: monthStart, lte: monthEnd },
-              },
-            })
-          : Promise.resolve(0),
-        girlIds.length > 0
-          ? prisma.attendance.count({
-              where: {
-                sessionId: currentSession.id,
-                studentId: { in: girlIds },
-                status: "PRESENT",
-                date: { gte: monthStart, lte: monthEnd },
-              },
-            })
-          : Promise.resolve(0),
-      ]);
-
-    monthlyClassSummary.push({
-      className: assignedSection.class.name,
-      sectionName: assignedSection.name,
-      totalStudents: studentIds.length,
-      totalDaysMarked: monthDays.length,
-      totalPresent: monthPresent,
-      boysCount: boyIds.length,
-      boysPresent: monthBoysPresent,
-      girlsCount: girlIds.length,
-      girlsPresent: monthGirlsPresent,
-    });
-
-    // Per-student data
-    for (const s of rawStudents) {
-      const [sTotalDays, sPresent, mTotalDays, mPresent] = await Promise.all([
-        prisma.attendance.count({
-          where: { sessionId: currentSession.id, studentId: s.id },
-        }),
-        prisma.attendance.count({
-          where: { sessionId: currentSession.id, studentId: s.id, status: "PRESENT" },
-        }),
-        prisma.attendance.count({
-          where: {
-            sessionId: currentSession.id,
-            studentId: s.id,
-            date: { gte: monthStart, lte: monthEnd },
-          },
-        }),
-        prisma.attendance.count({
-          where: {
-            sessionId: currentSession.id,
-            studentId: s.id,
-            status: "PRESENT",
-            date: { gte: monthStart, lte: monthEnd },
-          },
-        }),
-      ]);
-
-      sessionStudentData.push({
-        id: s.id,
-        fullName: s.fullName,
-        admissionNo: s.admissionNo,
+  const {
+    sessionStudentData,
+    sessionClassSummary,
+    monthlyStudentData,
+    monthlyClassSummary,
+  } = await buildPeriodAttendanceAnalytics(
+    currentSession?.id ?? null,
+    [
+      {
         className: assignedSection.class.name,
         sectionName: assignedSection.name,
-        gender: s.gender,
-        totalDays: sTotalDays,
-        presentDays: sPresent,
-      });
-
-      monthlyStudentData.push({
-        id: s.id,
-        fullName: s.fullName,
-        admissionNo: s.admissionNo,
-        className: assignedSection.class.name,
-        sectionName: assignedSection.name,
-        gender: s.gender,
-        totalDays: mTotalDays,
-        presentDays: mPresent,
-      });
-    }
-  } else {
-    sessionClassSummary.push({
-      className: assignedSection.class.name,
-      sectionName: assignedSection.name,
-      totalStudents: studentIds.length,
-      totalDaysMarked: 0,
-      totalPresent: 0,
-      boysCount: boyIds.length,
-      boysPresent: 0,
-      girlsCount: girlIds.length,
-      girlsPresent: 0,
-    });
-    monthlyClassSummary.push({
-      className: assignedSection.class.name,
-      sectionName: assignedSection.name,
-      totalStudents: studentIds.length,
-      totalDaysMarked: 0,
-      totalPresent: 0,
-      boysCount: boyIds.length,
-      boysPresent: 0,
-      girlsCount: girlIds.length,
-      girlsPresent: 0,
-    });
-  }
+        students: rawStudents,
+      },
+    ],
+    monthStart,
+    monthEnd
+  );
 
   return (
     <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-4xl w-full">
