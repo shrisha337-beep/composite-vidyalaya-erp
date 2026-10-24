@@ -33,7 +33,7 @@ export function heuristicMapping(headers: string[]): Record<string, string> {
   const patterns: [string, RegExp[]][] = [
     ["admissionNo", [/admi?ss?ion\s*n/i, /पंजीयन/i, /adm\s*no/i, /reg.*no/i, /sr\s*no/i, /क्रमांक/i]],
     ["fullName", [/student.*name/i, /छात्र.*नाम/i, /बालक.*नाम/i, /^name$/i, /^नाम$/i, /full\s*name/i, /pupil/i]],
-    ["fatherName", [/father/i, /पिता/i, /s\/?o/i, /d\/?o/i]],
+    ["fatherName", [/father/i, /पिता/i, /\bs\/?o\b/i, /\bd\/?o\b/i]],
     ["motherName", [/mother/i, /माता/i]],
     ["gender", [/gender/i, /sex/i, /लिंग/i]],
     ["dob", [/d\.?o\.?b/i, /birth/i, /जन्म.*तिथि/i, /जन्म.*दिनांक/i, /date.*birth/i]],
