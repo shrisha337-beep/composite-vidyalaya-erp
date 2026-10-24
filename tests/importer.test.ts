@@ -261,7 +261,7 @@ describe("Importer - Zod Row Validation & Normalization", () => {
       dob: "12/04/2016",
       classNumber: "Class 4",
       category: "OBC",
-      mobile: "9876543210",
+      mobile: "9123456789",
       village: "Kalyanpur",
       district: "Lucknow",
     };
