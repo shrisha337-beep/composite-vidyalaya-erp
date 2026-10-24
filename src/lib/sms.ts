@@ -7,10 +7,7 @@
  * accidental messaging to actual recipients.
  */
 
-export async function sendSMS({
-  phone: _phone,
-  message: _message,
-}: {
+export async function sendSMS(_params: {
   phone: string;
   message: string;
 }): Promise<{ success: boolean; error?: string }> {
@@ -19,12 +16,6 @@ export async function sendSMS({
     return { success: true };
   }
 
-  const apiKey = process.env.SMS_API_KEY;
-  if (!apiKey) {
-    console.warn("[sms] SMS_API_KEY is not configured");
-    return { success: false, error: "SMS_API_KEY is not configured" };
-  }
-
-  // Production SMS dispatch logic
-  return { success: true };
+  // Production gateway dispatch is not yet implemented
+  return { success: false, error: "SMS delivery not implemented" };
 }

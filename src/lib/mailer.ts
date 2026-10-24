@@ -27,7 +27,7 @@ export async function sendPasswordResetEmail({
   recipientName: string;
 }): Promise<{ success: boolean; error?: string }> {
   if (process.env.VERCEL_ENV !== "production") {
-    console.log("[skipped in non-production]");
+    console.log("[skipped in non-production]", resetLink);
     return { success: true };
   }
 
