@@ -3,7 +3,6 @@ import {
   calculateTierMDM,
   calculateSchoolMDM,
   calculateGrainStock,
-  DEFAULT_MDM_RATES,
   type MDMItemsServed,
   type MDMRates,
 } from "@/lib/mdm-engine";
