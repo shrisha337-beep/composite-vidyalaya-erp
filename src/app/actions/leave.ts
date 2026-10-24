@@ -3,6 +3,14 @@
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/rbac";
 import { revalidatePath } from "next/cache";
+import {
+  calculateLeaveDays,
+  validateTeacherLeaveEligibility,
+  calculateDaysInYear,
+  calculateCLBalance,
+  checkCLExhaustion,
+  CL_ANNUAL_LIMIT,
+} from "@/lib/leave-rules";
 
 export async function applyStudentLeaveAction({
   studentId,
@@ -27,8 +35,10 @@ export async function applyStudentLeaveAction({
     return { success: false, message: "Invalid date format." };
   }
 
-  if (fromDate > toDate) {
-    return { success: false, message: "From Date must be before or on To Date." };
+  try {
+    calculateLeaveDays(fromDate, toDate);
+  } catch (err) {
+    return { success: false, message: err instanceof Error ? err.message : "From Date must be before or on To Date." };
   }
 
   if (!reason.trim()) {
@@ -90,24 +100,14 @@ export async function applyTeacherLeaveAction({
     return { success: false, message: "Invalid date format." };
   }
 
-  if (fromDate > toDate) {
-    return { success: false, message: "From Date must be before or on To Date." };
+  try {
+    calculateLeaveDays(fromDate, toDate);
+  } catch (err) {
+    return { success: false, message: err instanceof Error ? err.message : "From Date must be before or on To Date." };
   }
 
   if (!reason.trim()) {
     return { success: false, message: "Reason is required." };
-  }
-
-  // Validate leaveType
-  const validTypes = [
-    "CASUAL_LEAVE",
-    "MEDICAL_LEAVE",
-    "CHILD_CARE_LEAVE",
-    "MATERNITY_LEAVE",
-    "ABORTION_LEAVE",
-  ] as const;
-  if (!leaveType || !validTypes.includes(leaveType as typeof validTypes[number])) {
-    return { success: false, message: "Please select a valid leave type." };
   }
 
   // Find Teacher linked to user
@@ -120,50 +120,41 @@ export async function applyTeacherLeaveAction({
     return { success: false, message: "Teacher record not found." };
   }
 
-  // ─── Gender validation for female-only leave types ──────────────────────
-  const femaleOnlyTypes = ["CHILD_CARE_LEAVE", "MATERNITY_LEAVE", "ABORTION_LEAVE"];
-  if (femaleOnlyTypes.includes(leaveType) && teacher.gender !== "FEMALE") {
+  // ─── Eligibility & gender validation via pure rules ─────────────────────
+  const eligibility = validateTeacherLeaveEligibility(teacher.gender, leaveType);
+  if (!eligibility.allowed) {
     return {
       success: false,
-      message: "This leave type is available for female teachers only.",
+      message: eligibility.reason || "You are not eligible for this leave type.",
     };
   }
 
-  // ─── CL limit enforcement (14 days per calendar year) ───────────────────
+  // ─── CL limit enforcement (14 days per calendar year with cross-year overlap) ───
   if (leaveType === "CASUAL_LEAVE") {
-    const CL_ANNUAL_LIMIT = 14;
+    const targetYear = fromDate.getFullYear();
+    const requestedDays = calculateDaysInYear(fromDate, toDate, targetYear);
 
-    // Calculate requested days
-    const timeDiff = toDate.getTime() - fromDate.getTime();
-    const requestedDays = Math.floor(timeDiff / (1000 * 60 * 60 * 24)) + 1;
-
-    // Count approved CL days in the current calendar year
-    const yearStart = new Date(fromDate.getFullYear(), 0, 1); // Jan 1
-    const yearEnd = new Date(fromDate.getFullYear(), 11, 31, 23, 59, 59); // Dec 31
+    const yearStart = new Date(targetYear, 0, 1);
+    const yearEnd = new Date(targetYear, 11, 31, 23, 59, 59);
 
     const approvedCLRequests = await prisma.leaveRequest.findMany({
       where: {
         teacherId: teacher.id,
         leaveType: "CASUAL_LEAVE",
         status: "APPROVED",
-        fromDate: { gte: yearStart },
-        toDate: { lte: yearEnd },
+        fromDate: { lte: yearEnd },
+        toDate: { gte: yearStart },
       },
       select: { fromDate: true, toDate: true },
     });
 
-    let usedDays = 0;
-    approvedCLRequests.forEach((req) => {
-      const diff = req.toDate.getTime() - req.fromDate.getTime();
-      usedDays += Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
-    });
+    const balance = calculateCLBalance(approvedCLRequests, targetYear, CL_ANNUAL_LIMIT);
+    const check = checkCLExhaustion(balance.remaining, requestedDays);
 
-    const remainingDays = CL_ANNUAL_LIMIT - usedDays;
-
-    if (requestedDays > remainingDays) {
+    if (!check.canApply) {
       return {
         success: false,
-        message: `Cannot apply for ${requestedDays} day(s) of Casual Leave. You have only ${Math.max(0, remainingDays)} day(s) remaining out of ${CL_ANNUAL_LIMIT} for this year.`,
+        message: `Cannot apply for ${requestedDays} day(s) of Casual Leave. You have only ${balance.remaining} day(s) remaining out of ${CL_ANNUAL_LIMIT} for this year.`,
       };
     }
   }
@@ -199,33 +190,23 @@ export async function getTeacherCLBalance(teacherId: string): Promise<{
   remaining: number;
   limit: number;
 }> {
-  const CL_ANNUAL_LIMIT = 14;
   const now = new Date();
-  const yearStart = new Date(now.getFullYear(), 0, 1);
-  const yearEnd = new Date(now.getFullYear(), 11, 31, 23, 59, 59);
+  const targetYear = now.getFullYear();
+  const yearStart = new Date(targetYear, 0, 1);
+  const yearEnd = new Date(targetYear, 11, 31, 23, 59, 59);
 
   const approvedCLRequests = await prisma.leaveRequest.findMany({
     where: {
       teacherId,
       leaveType: "CASUAL_LEAVE",
       status: "APPROVED",
-      fromDate: { gte: yearStart },
-      toDate: { lte: yearEnd },
+      fromDate: { lte: yearEnd },
+      toDate: { gte: yearStart },
     },
     select: { fromDate: true, toDate: true },
   });
 
-  let usedDays = 0;
-  approvedCLRequests.forEach((req) => {
-    const diff = req.toDate.getTime() - req.fromDate.getTime();
-    usedDays += Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
-  });
-
-  return {
-    used: usedDays,
-    remaining: Math.max(0, CL_ANNUAL_LIMIT - usedDays),
-    limit: CL_ANNUAL_LIMIT,
-  };
+  return calculateCLBalance(approvedCLRequests, targetYear, CL_ANNUAL_LIMIT);
 }
 
 export async function reviewLeaveAction({

@@ -131,6 +131,24 @@ describe("Leave Rules - Casual Leave Cap (14 Days) & Exhaustion Blocking", () =>
     expect(balance.remaining).toBe(8.5);
   });
 
+  it("regression: cross-year overlapping leaves are correctly apportioned in annual Casual Leave balance calculation", () => {
+    // Leave spanning from Dec 28, 2026 to Jan 3, 2027 (7 calendar days)
+    const crossYearLeave = [
+      { fromDate: new Date("2026-12-28"), toDate: new Date("2027-01-03"), isHalfDay: false },
+    ];
+
+    // Under the fixed apportioned calculation:
+    // 2026 balance must account for exactly 4 days (Dec 28, 29, 30, 31)
+    const balance2026 = calculateCLBalance(crossYearLeave, 2026);
+    expect(balance2026.used).toBe(4);
+    expect(balance2026.remaining).toBe(10);
+
+    // 2027 balance must account for exactly 3 days (Jan 1, 2, 3)
+    const balance2027 = calculateCLBalance(crossYearLeave, 2027);
+    expect(balance2027.used).toBe(3);
+    expect(balance2027.remaining).toBe(11);
+  });
+
   it("allows application when requested days is within remaining balance", () => {
     const result = checkCLExhaustion(5, 3);
     expect(result.canApply).toBe(true);
