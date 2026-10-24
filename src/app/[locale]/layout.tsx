@@ -5,6 +5,7 @@ import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { Providers } from "@/components/provider";
+import { DemoBanner } from "@/components/demo-banner";
 import "../globals.css";
 
 const notoSerifDisplay = Noto_Serif_Display({
@@ -44,6 +45,7 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} className="h-full antialiased">
       <body className={`min-h-full flex flex-col ${notoSerifDisplay.variable}`}>
+        <DemoBanner />
         <NextIntlClientProvider locale={locale} messages={messages}>
           {/* SessionProvider must wrap all client components that call useSession / signIn */}
           <Providers>{children}</Providers>

@@ -295,33 +295,39 @@ export function TcEditForm({
           Cancel
         </button>
 
-        {/* Delete TC Button */}
-        <button
-          type="button"
-          disabled={deleting || saving}
-          onClick={async () => {
-            if (!confirm(
-              `Are you sure you want to DELETE TC #${tc.tcNumber}?\n\nThis will:\n- Permanently delete the Transfer Certificate\n- Re-activate the student (${student.fullName})\n- Re-enable their portal login\n\nThis action cannot be undone.`
-            )) return;
-            setDeleting(true);
-            setError(null);
-            try {
-              const res = await deleteTransferCertificateAction({ tcId: tc.id, locale });
-              if (res.success) {
-                router.push(`/${locale}/admin/students/${student.id}`);
-              } else {
-                setError(res.message);
+        {/* Delete TC Button (disabled in demo mode) */}
+        {process.env.NEXT_PUBLIC_DEMO_MODE === "true" ? (
+          <span className="ml-auto text-xs text-gray-500 italic py-2.5">
+            Delete TC disabled in demo mode
+          </span>
+        ) : (
+          <button
+            type="button"
+            disabled={deleting || saving}
+            onClick={async () => {
+              if (!confirm(
+                `Are you sure you want to DELETE TC #${tc.tcNumber}?\n\nThis will:\n- Permanently delete the Transfer Certificate\n- Re-activate the student (${student.fullName})\n- Re-enable their portal login\n\nThis action cannot be undone.`
+              )) return;
+              setDeleting(true);
+              setError(null);
+              try {
+                const res = await deleteTransferCertificateAction({ tcId: tc.id, locale });
+                if (res.success) {
+                  router.push(`/${locale}/admin/students/${student.id}`);
+                } else {
+                  setError(res.message);
+                }
+              } catch {
+                setError("Failed to delete TC.");
+              } finally {
+                setDeleting(false);
               }
-            } catch {
-              setError("Failed to delete TC.");
-            } finally {
-              setDeleting(false);
-            }
-          }}
-          className="ml-auto px-4 py-2.5 rounded text-sm font-semibold text-red-700 border border-red-300 bg-red-50 hover:bg-red-100 transition-colors disabled:opacity-50"
-        >
-          {deleting ? "Deleting..." : "Delete TC / TC हटाएं"}
-        </button>
+            }}
+            className="ml-auto px-4 py-2.5 rounded text-sm font-semibold text-red-700 border border-red-300 bg-red-50 hover:bg-red-100 transition-colors disabled:opacity-50"
+          >
+            {deleting ? "Deleting..." : "Delete TC / TC हटाएं"}
+          </button>
+        )}
       </div>
     </form>
   );
