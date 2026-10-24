@@ -154,6 +154,8 @@ export function calculateSchoolMDM(
   };
 }
 
+export const calculateMDMDayTotal = calculateSchoolMDM;
+
 export interface GrainLedger {
   openingBalanceKg: number;
   receivedKg: number;
@@ -181,3 +183,5 @@ export function calculateGrainStock(
     closingBalanceKg,
   };
 }
+
+export const calculateStockLedger = calculateGrainStock;

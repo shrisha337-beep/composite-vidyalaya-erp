@@ -25,6 +25,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { saveMDMFruitLogAction, type StudentFruitEntry } from "@/app/actions/save-mdm";
 import { saveMdmItemSelectionAction } from "@/app/actions/save-mdm-items";
+import { calculateTierMDM } from "@/lib/mdm-engine";
 
 export interface StudentItem {
   id: string;
@@ -246,26 +247,14 @@ export function MdmDashboardView({
   const conversionCostPerStudent = schoolLevel === "primary" ? CONVERSION_COST_PRIMARY : CONVERSION_COST_JUNIOR;
   const currentMonthlyLogs = schoolLevel === "primary" ? primaryMonthlyLogs : juniorMonthlyLogs;
 
-  // ─── Calculate daily totals for current school level ────────────────────────
+  // ─── Calculate daily totals for current school level via pure engine ──────
   let totalEnrolled = 0;
   let totalPresent = 0;
-  let totalWheatGrams = 0;
-  let totalRiceGrams = 0;
   let totalFruitEaten = 0;
-  let totalConversionCost = 0;
-  let totalNutritionCost = 0;
-  let totalMilkStudents = 0;
-  let totalMilkLitres = 0;
 
   currentClasses.forEach((c) => {
     totalEnrolled += c.totalStudents;
-    const presentCount = c.presentStudents.length;
-    totalPresent += presentCount;
-    // Only count grain if that item is selected
-    totalWheatGrams += itemWheat ? presentCount * grainPerStudent : 0;
-    totalRiceGrams += itemRice ? presentCount * grainPerStudent : 0;
-    totalConversionCost += presentCount * conversionCostPerStudent;
-
+    totalPresent += c.presentStudents.length;
     if (itemFruits) {
       c.presentStudents.forEach((s) => {
         if (fruitState[s.id] !== false) {
@@ -273,20 +262,42 @@ export function MdmDashboardView({
         }
       });
     }
-    if (itemNutrition) {
-      totalNutritionCost += presentCount * NUTRITION_COST_PER_STUDENT;
-    }
-    if (itemMilk) {
-      totalMilkStudents += presentCount;
-      totalMilkLitres += (presentCount * milkMlPerStudent) / 1000;
-    }
   });
 
-  const totalFruitDidNotEat = totalPresent - totalFruitEaten;
-  const totalFruitRupees = totalFruitEaten * FRUIT_COST_PER_STUDENT;
+  const tierResult = calculateTierMDM(
+    schoolLevel,
+    { presentStudents: totalPresent, fruitsEaten: totalFruitEaten },
+    {
+      rice: itemRice,
+      wheat: itemWheat,
+      fruits: itemFruits,
+      nutrition: itemNutrition,
+      milk: itemMilk,
+    },
+    {
+      grainPrimaryGrams: GRAIN_PER_STUDENT_PRIMARY,
+      grainJuniorGrams: GRAIN_PER_STUDENT_JUNIOR,
+      conversionCostPrimary: CONVERSION_COST_PRIMARY,
+      conversionCostJunior: CONVERSION_COST_JUNIOR,
+      fruitCostPerStudent: FRUIT_COST_PER_STUDENT,
+      nutritionCostPerStudent: NUTRITION_COST_PER_STUDENT,
+      milkMlPrimary: 150,
+      milkMlJunior: 200,
+    }
+  );
 
-  const totalWheatKg = (totalWheatGrams / 1000).toFixed(2);
-  const totalRiceKg = (totalRiceGrams / 1000).toFixed(2);
+  const totalWheatGrams = tierResult.wheatGrams;
+  const totalRiceGrams = tierResult.riceGrams;
+  const totalConversionCost = tierResult.conversionCost;
+  const totalNutritionCost = tierResult.nutritionCost;
+  const totalMilkStudents = tierResult.milkStudents;
+  const totalMilkLitres = tierResult.milkLitres;
+
+  const totalFruitDidNotEat = totalPresent - totalFruitEaten;
+  const totalFruitRupees = tierResult.fruitCost;
+
+  const totalWheatKg = tierResult.wheatKg.toFixed(2);
+  const totalRiceKg = tierResult.riceKg.toFixed(2);
 
   // Format selected date nicely
   const displayDate = new Date(selectedDateStr).toLocaleDateString("en-IN", {

@@ -6,6 +6,8 @@ import { MdmDashboardView, type ClassSectionMDM, type MonthlyDayLog } from "@/co
 import {
   DEFAULT_MDM_RATES,
   calculateTierMDM,
+  calculateMDMDayTotal,
+  calculateStockLedger,
   isPrimaryClass,
   type MDMRates,
   type MDMItemsServed,
@@ -297,13 +299,15 @@ export default async function AdminMDMPage({
       milk: !!dayItems?.milk,
     };
 
-    // Primary tier calculated via pure engine
-    const primaryCalc = calculateTierMDM(
-      "primary",
+    // Primary & Junior tiers calculated via pure engine calculateMDMDayTotal
+    const dayTotal = calculateMDMDayTotal(
       { presentStudents: levelCounts.primary, fruitsEaten: fruitCounts?.primary },
+      { presentStudents: levelCounts.junior, fruitsEaten: fruitCounts?.junior },
       items,
       rates
     );
+    const primaryCalc = dayTotal.primary;
+    const juniorCalc = dayTotal.junior;
 
     primaryMonthlyLogs.push({
       dateStr: dayStr,
@@ -323,14 +327,6 @@ export default async function AdminMDMPage({
       hasAttendance: primaryCalc.present > 0,
     });
 
-    // Junior tier calculated via pure engine
-    const juniorCalc = calculateTierMDM(
-      "junior",
-      { presentStudents: levelCounts.junior, fruitsEaten: fruitCounts?.junior },
-      items,
-      rates
-    );
-
     juniorMonthlyLogs.push({
       dateStr: dayStr,
       dayOfWeek,
@@ -349,6 +345,19 @@ export default async function AdminMDMPage({
       hasAttendance: juniorCalc.present > 0,
     });
   }
+
+  // Monthly food grain stock ledger reconciliation via pure engine
+  const monthlyWheatConsumedKg = Math.round(
+    (primaryMonthlyLogs.reduce((s, l) => s + l.wheatGrams, 0) +
+     juniorMonthlyLogs.reduce((s, l) => s + l.wheatGrams, 0)) / 10
+  ) / 100;
+  const monthlyRiceConsumedKg = Math.round(
+    (primaryMonthlyLogs.reduce((s, l) => s + l.riceGrams, 0) +
+     juniorMonthlyLogs.reduce((s, l) => s + l.riceGrams, 0)) / 10
+  ) / 100;
+
+  const wheatStockLedger = calculateStockLedger(0, monthlyWheatConsumedKg, monthlyWheatConsumedKg);
+  const riceStockLedger = calculateStockLedger(0, monthlyRiceConsumedKg, monthlyRiceConsumedKg);
 
   return (
     <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
