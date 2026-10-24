@@ -11,14 +11,18 @@ jobs:
     name: Lint, Typecheck & Test
     runs-on: ubuntu-latest
 
+    # Dummy value so prisma generate can load prisma.config.ts; no DB connection is made in CI.
+    env:
+      DATABASE_URL: "postgresql://ci:ci@localhost:5432/ci"
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js 20
+      - name: Set up Node.js 24
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
 
       - name: Install dependencies
