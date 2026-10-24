@@ -13,8 +13,6 @@
 
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 // Update this once the school domain is verified on Resend
 const FROM_EMAIL = process.env.FROM_EMAIL ?? "onboarding@resend.dev";
 const SCHOOL_NAME = "Composite School Chandpur Tarhar";
@@ -28,7 +26,13 @@ export async function sendPasswordResetEmail({
   resetLink: string;
   recipientName: string;
 }): Promise<{ success: boolean; error?: string }> {
+  if (process.env.VERCEL_ENV !== "production") {
+    console.log("[skipped in non-production]");
+    return { success: true };
+  }
+
   try {
+    const resend = new Resend(process.env.RESEND_API_KEY);
     await resend.emails.send({
       from: FROM_EMAIL,
       to: toEmail,
