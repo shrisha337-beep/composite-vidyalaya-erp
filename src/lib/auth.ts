@@ -2,12 +2,11 @@ import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-
-// Account lockout config — DB-backed (not in-memory) on purpose: this runs
-// on Vercel serverless functions, so an in-memory counter would reset on
-// every cold start and wouldn't be shared across instances anyway.
-const MAX_FAILED_ATTEMPTS = 5;
-const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+import {
+  isAccountLocked,
+  evaluateFailedAttempt,
+  evaluateSuccessfulLogin,
+} from "@/lib/auth-lockout";
 
 // Session lifetime — NextAuth's default is 30 days, which is way too long
 // for a portal holding minors' Aadhaar/bank data. 8h covers a school day;
@@ -62,34 +61,33 @@ export const authOptions: NextAuthOptions = {
 
         // Locked — tell the client explicitly so it can show a distinct
         // "try again in N minutes" message instead of "wrong password".
-        if (user.lockedUntil && user.lockedUntil > new Date()) {
+        if (isAccountLocked(user.lockedUntil)) {
           throw new Error("ACCOUNT_LOCKED");
         }
 
         const isValid = await bcrypt.compare(credentials.password, user.passwordHash);
 
         if (!isValid) {
-          const attempts = user.failedLoginAttempts + 1;
-          const hitLimit = attempts >= MAX_FAILED_ATTEMPTS;
+          const evalResult = evaluateFailedAttempt(user.failedLoginAttempts);
 
           await prisma.user.update({
             where: { id: user.id },
-            data: hitLimit
+            data: evalResult.hitLimit
               ? {
                   failedLoginAttempts: 0,
-                  lockedUntil: new Date(Date.now() + LOCKOUT_DURATION_MS),
+                  lockedUntil: evalResult.lockedUntil,
                 }
-              : { failedLoginAttempts: attempts },
+              : { failedLoginAttempts: evalResult.failedLoginAttempts },
           });
 
-          throw new Error(hitLimit ? "ACCOUNT_LOCKED" : "INVALID_CREDENTIALS");
+          throw new Error(evalResult.hitLimit ? "ACCOUNT_LOCKED" : "INVALID_CREDENTIALS");
         }
 
         // Successful login — clear any prior failed-attempt state and
         // stamp lastLoginAt.
         await prisma.user.update({
           where: { id: user.id },
-          data: { failedLoginAttempts: 0, lockedUntil: null, lastLoginAt: new Date() },
+          data: evaluateSuccessfulLogin(),
         });
 
         return {

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/rbac";
 import { revalidatePath } from "next/cache";
 import { getCurrentSession } from "@/lib/data/academic-session";
+import { DEFAULT_MDM_RATES } from "@/lib/mdm-engine";
 
 export interface StudentFruitEntry {
   studentId: string;
@@ -71,7 +72,7 @@ export async function saveMDMFruitLogAction({
           sessionId: activeSession.id,
           date: logDate,
           mealType: "LUNCH",
-          menuDescription: "Primary: 100g + Junior: 150g + Fruit (₹4) + Conversion Cost",
+          menuDescription: `Primary: ${DEFAULT_MDM_RATES.grainPrimaryGrams}g + Junior: ${DEFAULT_MDM_RATES.grainJuniorGrams}g + Fruit (₹${DEFAULT_MDM_RATES.fruitCostPerStudent}) + Conversion Cost`,
           eligibleStudents: totalStudents,
           presentStudents: presentStudentIds.size,
           mealsServed: presentStudentIds.size,

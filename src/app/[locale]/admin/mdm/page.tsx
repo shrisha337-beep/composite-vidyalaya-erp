@@ -3,15 +3,16 @@ import { prisma } from "@/lib/prisma";
 import { getSchoolSettings } from "@/lib/data/school-settings";
 import { MdmDashboardView, type ClassSectionMDM, type MonthlyDayLog } from "@/components/admin/mdm-dashboard-view";
 
-// ── Constants matching the client component ──────────────────────────────────
-const PRIMARY_CLASSES = ["1", "2", "3", "4", "5"];
-const GRAIN_PRIMARY = 100;
-const GRAIN_JUNIOR = 150;
-const MILK_ML_PRIMARY = 150;
-const MILK_ML_JUNIOR = 200;
+import {
+  DEFAULT_MDM_RATES,
+  calculateTierMDM,
+  isPrimaryClass,
+  type MDMRates,
+  type MDMItemsServed,
+} from "@/lib/mdm-engine";
 
 function isPrimary(className: string) {
-  return PRIMARY_CLASSES.includes(className);
+  return isPrimaryClass(className);
 }
 
 export default async function AdminMDMPage({
@@ -277,49 +278,75 @@ export default async function AdminMDMPage({
     const fruitCounts = monthFruitByLevel.get(dayStr);
     const dayItems = itemSelectionByDate.get(dayStr);
 
-    // Primary
-    const primaryPresent = levelCounts.primary;
-    const primaryFruit = fruitCounts ? fruitCounts.primary : primaryPresent;
+    const rates: MDMRates = {
+      grainPrimaryGrams: DEFAULT_MDM_RATES.grainPrimaryGrams,
+      grainJuniorGrams: DEFAULT_MDM_RATES.grainJuniorGrams,
+      conversionCostPrimary: settings.conversionCostPrimary,
+      conversionCostJunior: settings.conversionCostJunior,
+      fruitCostPerStudent: settings.fruitCostPerStudent,
+      nutritionCostPerStudent: settings.nutritionCostPerStudent,
+      milkMlPrimary: DEFAULT_MDM_RATES.milkMlPrimary,
+      milkMlJunior: DEFAULT_MDM_RATES.milkMlJunior,
+    };
+
+    const items: MDMItemsServed = {
+      rice: !!dayItems?.rice,
+      wheat: !!dayItems?.wheat,
+      fruits: !!dayItems?.fruits,
+      nutrition: !!dayItems?.nutrition,
+      milk: !!dayItems?.milk,
+    };
+
+    // Primary tier calculated via pure engine
+    const primaryCalc = calculateTierMDM(
+      "primary",
+      { presentStudents: levelCounts.primary, fruitsEaten: fruitCounts?.primary },
+      items,
+      rates
+    );
+
     primaryMonthlyLogs.push({
       dateStr: dayStr,
       dayOfWeek,
-      totalPresent: primaryPresent,
-      // Only calculate grain amounts if that item is selected for the day
-      wheatGrams: dayItems?.wheat ? primaryPresent * GRAIN_PRIMARY : 0,
-      riceGrams: dayItems?.rice ? primaryPresent * GRAIN_PRIMARY : 0,
-      fruitsEaten: dayItems?.fruits ? primaryFruit : 0,
-      fruitCost: dayItems?.fruits ? primaryFruit * FRUIT_COST : 0,
-      conversionCost: primaryPresent > 0 ? primaryPresent * CONVERSION_COST_PRIMARY : 0,
-      // New fields
-      nutritionCost: dayItems?.nutrition ? primaryPresent * NUTRITION_COST : 0,
-      milkStudents: dayItems?.milk ? primaryPresent : 0,
-      milkLitres: dayItems?.milk ? (primaryPresent * MILK_ML_PRIMARY) / 1000 : 0,
+      totalPresent: primaryCalc.present,
+      wheatGrams: primaryCalc.wheatGrams,
+      riceGrams: primaryCalc.riceGrams,
+      fruitsEaten: primaryCalc.fruitsEaten,
+      fruitCost: primaryCalc.fruitCost,
+      conversionCost: primaryCalc.conversionCost,
+      nutritionCost: primaryCalc.nutritionCost,
+      milkStudents: primaryCalc.milkStudents,
+      milkLitres: primaryCalc.milkLitres,
       riceMenu: dayItems?.riceMenu || null,
       wheatMenu: dayItems?.wheatMenu || null,
       itemsServed: dayItems || null,
-      hasAttendance: primaryPresent > 0,
+      hasAttendance: primaryCalc.present > 0,
     });
 
-    // Junior
-    const juniorPresent = levelCounts.junior;
-    const juniorFruit = fruitCounts ? fruitCounts.junior : juniorPresent;
+    // Junior tier calculated via pure engine
+    const juniorCalc = calculateTierMDM(
+      "junior",
+      { presentStudents: levelCounts.junior, fruitsEaten: fruitCounts?.junior },
+      items,
+      rates
+    );
+
     juniorMonthlyLogs.push({
       dateStr: dayStr,
       dayOfWeek,
-      totalPresent: juniorPresent,
-      wheatGrams: dayItems?.wheat ? juniorPresent * GRAIN_JUNIOR : 0,
-      riceGrams: dayItems?.rice ? juniorPresent * GRAIN_JUNIOR : 0,
-      fruitsEaten: dayItems?.fruits ? juniorFruit : 0,
-      fruitCost: dayItems?.fruits ? juniorFruit * FRUIT_COST : 0,
-      conversionCost: juniorPresent > 0 ? juniorPresent * CONVERSION_COST_JUNIOR : 0,
-      // New fields
-      nutritionCost: dayItems?.nutrition ? juniorPresent * NUTRITION_COST : 0,
-      milkStudents: dayItems?.milk ? juniorPresent : 0,
-      milkLitres: dayItems?.milk ? (juniorPresent * MILK_ML_JUNIOR) / 1000 : 0,
+      totalPresent: juniorCalc.present,
+      wheatGrams: juniorCalc.wheatGrams,
+      riceGrams: juniorCalc.riceGrams,
+      fruitsEaten: juniorCalc.fruitsEaten,
+      fruitCost: juniorCalc.fruitCost,
+      conversionCost: juniorCalc.conversionCost,
+      nutritionCost: juniorCalc.nutritionCost,
+      milkStudents: juniorCalc.milkStudents,
+      milkLitres: juniorCalc.milkLitres,
       riceMenu: dayItems?.riceMenu || null,
       wheatMenu: dayItems?.wheatMenu || null,
       itemsServed: dayItems || null,
-      hasAttendance: juniorPresent > 0,
+      hasAttendance: juniorCalc.present > 0,
     });
   }
 

@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { validateImportRow, parseDDMMYYYY } from "@/lib/importer-validation";
 
 interface ImportRow {
   admissionNo?: string;
@@ -71,66 +72,37 @@ export async function POST(req: NextRequest) {
     const row = body.rows[i];
     const rowNum = i + 2; // 1-indexed + header row
 
-    // ── Validate required fields ──────────────────────────────────────────
-    if (!row.fullName?.trim()) {
-      results.push({ row: rowNum, name: row.fullName ?? "(blank)", status: "error", reason: "Name is required" });
-      continue;
-    }
-    if (!row.fatherName?.trim()) {
-      results.push({ row: rowNum, name: row.fullName, status: "error", reason: "Father's name is required" });
-      continue;
-    }
-    if (!["male", "female", "other"].includes(row.gender?.toLowerCase?.() ?? "")) {
-      results.push({ row: rowNum, name: row.fullName, status: "error", reason: `Invalid gender "${row.gender}" — use Male, Female, or Other` });
-      continue;
-    }
-    if (!row.dob?.trim()) {
-      results.push({ row: rowNum, name: row.fullName, status: "error", reason: "Date of birth is required" });
-      continue;
-    }
-    // Normalise class: accept "Class 6", "class-6", "Std 6", "VI", or just "6"
-    const rawClass = String(row.classNumber).trim();
-    const romanMap: Record<string, string> = { I: "1", II: "2", III: "3", IV: "4", V: "5", VI: "6", VII: "7", VIII: "8" };
-    let normalised = rawClass
-      .replace(/^(class|std|grade|standard)[\s\-.:]*(\d+)$/i, "$2")  // "Class 6" → "6"
-      .trim();
-    if (romanMap[normalised.toUpperCase()]) {
-      normalised = romanMap[normalised.toUpperCase()];
-    }
-    // Overwrite for downstream use
-    row.classNumber = normalised;
-
-    if (!["1","2","3","4","5","6","7","8"].includes(normalised)) {
-      results.push({ row: rowNum, name: row.fullName, status: "error", reason: `Invalid class "${rawClass}" — must be 1 to 8` });
+    // ── Validate row with pure importer-validation ────────────────────────
+    const validation = validateImportRow(row);
+    if (!validation.success) {
+      const reason = validation.error.issues[0]?.message ?? "Validation failed";
+      results.push({
+        row: rowNum,
+        name: row.fullName?.trim() || "(blank)",
+        status: "error",
+        reason,
+      });
       continue;
     }
 
-    // ── Parse DOB ─────────────────────────────────────────────────────────
-    let dob: Date;
-    try {
-      const [dd, mm, yyyy] = row.dob.trim().split("/");
-      dob = new Date(`${yyyy}-${mm}-${dd}`);
-      if (isNaN(dob.getTime())) throw new Error();
-    } catch {
-      results.push({ row: rowNum, name: row.fullName, status: "error", reason: `Invalid date "${row.dob}" — use DD/MM/YYYY` });
-      continue;
-    }
+    const validatedRow = validation.data;
+    const dob = parseDDMMYYYY(validatedRow.dob);
 
     // ── Admission number ──────────────────────────────────────────────────
-    let admissionNo = row.admissionNo?.trim();
+    let admissionNo = validatedRow.admissionNo?.trim();
     if (!admissionNo) {
       admissionNo = String(autoCounter++).padStart(3, "0");
     }
     if (existingAdmNos.has(admissionNo)) {
-      results.push({ row: rowNum, name: row.fullName, status: "error", reason: `Admission number "${admissionNo}" already exists` });
+      results.push({ row: rowNum, name: validatedRow.fullName, status: "error", reason: `Admission number "${admissionNo}" already exists` });
       continue;
     }
     existingAdmNos.add(admissionNo); // reserve for rest of this batch
 
     // ── Section lookup ────────────────────────────────────────────────────
-    const sectionId = sectionByClass.get(String(row.classNumber).trim());
+    const sectionId = sectionByClass.get(validatedRow.classNumber);
     if (!sectionId) {
-      results.push({ row: rowNum, name: row.fullName, status: "error", reason: `Class ${row.classNumber} not found — run session setup first` });
+      results.push({ row: rowNum, name: validatedRow.fullName, status: "error", reason: `Class ${validatedRow.classNumber} not found — run session setup first` });
       continue;
     }
 
@@ -139,13 +111,13 @@ export async function POST(req: NextRequest) {
       male: "MALE", female: "FEMALE", other: "OTHER",
       "m": "MALE", "f": "FEMALE",
     };
-    const gender = genderMap[row.gender.toLowerCase()] ?? "OTHER";
+    const gender = genderMap[validatedRow.gender.toLowerCase()] ?? "OTHER";
 
     // ── Create User + Student ─────────────────────────────────────────────
     try {
       // Phone: use provided mobile, or a placeholder that won't collide
-      const phone = row.mobile?.trim()
-        ? row.mobile.trim()
+      const phone = validatedRow.mobile?.trim()
+        ? validatedRow.mobile.trim()
         : `IMPORT-${admissionNo}-${Date.now()}`;
 
       // Temporary password hash (student changes on first login)
@@ -165,23 +137,23 @@ export async function POST(req: NextRequest) {
           data: {
             userId: user.id,
             admissionNo,
-            fullName: row.fullName.trim(),
+            fullName: validatedRow.fullName.trim(),
             dob,
             gender,
             sectionId,
-            mobileNumber: row.mobile?.trim() || null,
-            category: row.category?.trim() || null,
-            villageOrMohalla: row.village?.trim() || null,
-            district: row.district?.trim() || null,
+            mobileNumber: validatedRow.mobile?.trim() || null,
+            category: validatedRow.category?.trim() || null,
+            villageOrMohalla: validatedRow.village?.trim() || null,
+            district: validatedRow.district?.trim() || null,
             guardians: {
               create: [
                 {
                   relation: "FATHER",
-                  fullName: row.fatherName.trim(),
+                  fullName: validatedRow.fatherName.trim(),
                   isPrimaryContact: true,
                 },
-                ...(row.motherName?.trim()
-                  ? [{ relation: "MOTHER" as const, fullName: row.motherName.trim() }]
+                ...(validatedRow.motherName?.trim()
+                  ? [{ relation: "MOTHER" as const, fullName: validatedRow.motherName.trim() }]
                   : []),
               ],
             },
