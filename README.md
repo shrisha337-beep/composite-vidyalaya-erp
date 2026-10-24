@@ -2,6 +2,7 @@
 
 Institutional bilingual school management and statutory reporting platform for Uttar Pradesh government composite schools (Classes 1 to 8).
 
+[![CI](https://github.com/shrisha337-beep/composite-vidyalaya-erp/actions/workflows/ci.yml/badge.svg)](https://github.com/shrisha337-beep/composite-vidyalaya-erp/actions/workflows/ci.yml)
 [![Live Demo](https://img.shields.io/badge/demo-live-brightgreen.svg)](https://composite-vidyalaya-erp.vercel.app)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Next.js](https://img.shields.io/badge/Next.js-16.2.11-black?logo=next.js)](https://nextjs.org/)
@@ -11,30 +12,30 @@ Institutional bilingual school management and statutory reporting platform for U
 [![GitHub last commit](https://img.shields.io/github/last-commit/shrisha337-beep/composite-vidyalaya-erp)](https://github.com/shrisha337-beep/composite-vidyalaya-erp/commits/main)
 
 ### Live Demo
-- Production URL: [https://composite-vidyalaya-erp.vercel.app](https://composite-vidyalaya-erp.vercel.app)
-- Administrator (Principal): Phone `[DEMO_PHONE]` / Password `[DEMO_PASSWORD]` (Default seeded test account: `9999999999` / `ChangeMe@123`)
-- Instructional Faculty (Teacher): Phone `[DEMO_PHONE]` / Password `[DEMO_PASSWORD]` (Default seeded test account: `9876543210` / `ChangeMe@123`)
+- Demo URL: [DEMO_URL]
+- Demo access is provided on request. The demo instance uses synthetic data only.
 
 ---
 
 ## Table of Contents
 1. [Overview](#1-overview)
-2. [Screenshots](#2-screenshots)
-3. [Features](#3-features)
-4. [Tech Stack](#4-tech-stack)
-5. [System Architecture](#5-system-architecture)
-6. [Key Flows](#6-key-flows)
-7. [Database Design](#7-database-design)
-8. [Security](#8-security)
-9. [Bilingual Support](#9-bilingual-support)
-10. [Project Structure](#10-project-structure)
-11. [Getting Started](#11-getting-started)
-12. [Environment Variables](#12-environment-variables)
-13. [Scripts](#13-scripts)
-14. [Deployment](#14-deployment)
-15. [Design Decisions](#15-design-decisions)
-16. [Status and Roadmap](#16-status-and-roadmap)
-17. [Contributing, License, and Author](#17-contributing-license-and-author)
+2. [Impact](#2-impact)
+3. [Screenshots](#3-screenshots)
+4. [Features](#4-features)
+5. [Tech Stack](#5-tech-stack)
+6. [System Architecture](#6-system-architecture)
+7. [Key Flows](#7-key-flows)
+8. [Database Design](#8-database-design)
+9. [Security](#9-security)
+10. [Bilingual Support](#10-bilingual-support)
+11. [Project Structure](#11-project-structure)
+12. [Getting Started](#12-getting-started)
+13. [Environment Variables](#13-environment-variables)
+14. [Scripts](#14-scripts)
+15. [Deployment](#15-deployment)
+16. [Design Decisions](#16-design-decisions)
+17. [Status and Roadmap](#17-status-and-roadmap)
+18. [Contributing, License, and Author](#18-contributing-license-and-author)
 
 ---
 
@@ -49,12 +50,23 @@ Government composite schools under the Uttar Pradesh Basic Shiksha Parishad educ
 
 ### User Roles and Scope
 - **Active Accounts (12 to 15 Users):** Restricted strictly to the Headmaster/Principal (`ADMIN`) and Assistant Teachers (`TEACHER`). Staff authenticate via phone number and password to mark daily attendance, input marks, inspect rosters, download inspection registers, and manage leave.
-- **Centrally Managed Records (300+ Students):** Students and parents do **not** have login accounts by deliberate architectural design (reference [ADR-009](file:///e:/composite-vidyalaya-erp/DECISION.md#L319-L323)). This decision eliminates credential distribution overhead for young rural pupils, minimizes attack surfaces, and keeps administrative focus on institutional governance.
-- **The Outcome:** A unified, server-rendered portal replacing physical ledgers with automated two-tier calculations, tamper-proof legal PDF certificate generation, and an AI-powered spreadsheet ingestion pipeline.
+- **Centrally Managed Records (300+ Students):** Students and parents do not have login accounts by deliberate architectural design (reference [ADR-009](file:///e:/composite-vidyalaya-erp/DECISION.md#L319-L323)). This decision eliminates credential distribution overhead for young rural pupils, minimizes attack surfaces, and keeps administrative focus on institutional governance.
+- **The Outcome:** A unified, server-rendered portal replacing physical ledgers with automated two-tier calculations, tamper-resistant legal PDF certificate generation, and an AI-powered spreadsheet ingestion pipeline.
 
 ---
 
-## 2. Screenshots
+## 2. Impact
+
+This system was developed and deployed as a pro bono engagement for a rural government composite school (Composite School Chandpur Tarhar, Basic Shiksha Parishad, Gonda, Uttar Pradesh) to replace paper-based administrative workflows and automate statutory reporting.
+
+| Process | Before | After | How Measured |
+|---|---|---|---|
+| Mid-Day Meal (MDM) Monthly Reporting | [BEFORE] | [AFTER] | Logged time spent by school administration compiling and reconciling monthly food grain and conversion expenditure registers for the Block Education Officer (BEO). |
+| Student Bulk Admissions / Onboarding | [BEFORE] | [AFTER] | Timed duration required to ingest and validate a 300+ student enrollment batch from external government portal spreadsheets into the school database. |
+
+---
+
+## 3. Screenshots
 
 > Note: All data shown in screenshots represents simulated, anonymized test records. No real student Personally Identifiable Information (PII) is committed to this repository.
 
@@ -74,7 +86,7 @@ Government composite schools under the Uttar Pradesh Basic Shiksha Parishad educ
 
 ---
 
-## 3. Features
+## 4. Features
 
 ### Authentication and RBAC
 - Phone number credentials authentication matching rural staff operational workflows with Bcrypt password hashing.
@@ -133,7 +145,7 @@ Government composite schools under the Uttar Pradesh Basic Shiksha Parishad educ
 
 ---
 
-## 4. Tech Stack
+## 5. Tech Stack
 
 | Layer | Technology | Purpose |
 |---|---|---|
@@ -155,7 +167,7 @@ Government composite schools under the Uttar Pradesh Basic Shiksha Parishad educ
 
 ---
 
-## 5. System Architecture
+## 6. System Architecture
 
 ```mermaid
 flowchart TD
@@ -206,7 +218,7 @@ flowchart TD
 
 ---
 
-## 6. Key Flows
+## 7. Key Flows
 
 ### A. Authentication, Lockout, and Rolling JWT
 
@@ -310,7 +322,7 @@ sequenceDiagram
 
 ---
 
-## 7. Database Design
+## 8. Database Design
 
 The schema is defined across **41 models** in [prisma/schema.prisma](file:///e:/composite-vidyalaya-erp/prisma/schema.prisma).
 
@@ -320,16 +332,15 @@ The schema is defined across **41 models** in [prisma/schema.prisma](file:///e:/
 erDiagram
     User ||--o| AdminProfile : "has profile"
     User ||--o| Teacher : "has profile"
-    User ||--o| Student : "has profile"
     User ||--o{ AuditLog : "initiates"
 
-    AcademicSession ||--|{ Class : "defines"
+    AcademicSession ||--|{ SchoolClass : "defines"
     AcademicSession ||--|{ Attendance : "scopes"
     AcademicSession ||--|{ Mark : "scopes"
     AcademicSession ||--|{ MDMDailyLog : "records"
 
-    Class ||--|{ Section : "subdivides"
-    Class ||--|{ Subject : "teaches"
+    SchoolClass ||--|{ Section : "subdivides"
+    SchoolClass ||--|{ Subject : "teaches"
 
     Section ||--o{ Student : "contains"
     Teacher ||--o{ Section : "acts as class teacher"
@@ -438,7 +449,7 @@ erDiagram
 
 ---
 
-## 8. Security
+## 9. Security
 
 - **Dual-Layer Defense-in-Depth RBAC:** Implements access control at two distinct boundaries:
   - *Layer 1 (Fast-Path UX):* Edge proxy middleware (`src/proxy.ts`) bounces unauthenticated requests to `/login`.
@@ -447,14 +458,14 @@ erDiagram
 - **Database-Backed Account Lockout:** Accounts are locked for 15 minutes after 5 consecutive failed login attempts. State is persisted in PostgreSQL (`failedLoginAttempts`, `lockedUntil` columns on `User`), ensuring lockouts survive serverless cold starts and are enforced across all Vercel function instances.
 - **In-Memory IP Rate Limiting:** Supplements database lockout with client IP rate limiting (`src/lib/ip-rate-limit.ts`) to throttle automated brute-force attacks.
 - **Rolling JWT Session Strategy:** Sessions run on signed JWTs with a maximum lifetime of **8 hours** (aligned with a school working day rather than default 30-day sessions), rolling forward every **30 minutes** on user activity. Role claims are embedded in the token to prevent database round-trips on every page render.
-- **AES-256-GCM Field-Level PII Encryption:** Sensitive national identifiers (Student Aadhaar, Guardian Aadhaar, and Bank Account Numbers) are encrypted at the application layer ([src/lib/encryption.ts](file:///e:/composite-vidyalaya-erp/src/lib/encryption.ts)) using 256-bit AES-GCM with unique 96-bit initialization vectors. Values are stored as authenticated strings (`enc:v1:<iv>:<tag>:<ciphertext>`), protecting data even if database dumps are compromised.
+- **AES-256-GCM Field-Level PII Encryption:** Sensitive national identifiers (Student Aadhaar, Guardian Aadhaar, and Bank Account Numbers) are encrypted at the application layer ([src/lib/encryption.ts](file:///e:/composite-vidyalaya-erp/src/lib/encryption.ts)) using 256-bit AES-GCM with unique 96-bit initialization vectors. Values are stored as authenticated strings (`enc:v1:<iv>:<tag>:<ciphertext>`), protecting sensitive fields at rest even if database dumps are compromised.
 - **Uniform Authentication Errors:** Generic error codes (`INVALID_CREDENTIALS`) are returned for both nonexistent phone numbers and incorrect passwords, preventing username enumeration.
 - **Input Sanitization and Validation:** All form submissions, URL search params, and import rows are parsed against strict **Zod** schemas.
 - **Data Privacy Assurance:** This repository contains zero real student data. All seeded data and test fixtures utilize synthetic names and dummy identifiers.
 
 ---
 
-## 9. Bilingual Support
+## 10. Bilingual Support
 
 The portal is built with `next-intl` to support seamless dual-language usage, reflecting the working language of Uttar Pradesh state educators:
 
@@ -492,7 +503,7 @@ The portal is built with `next-intl` to support seamless dual-language usage, re
 
 ---
 
-## 10. Project Structure
+## 11. Project Structure
 
 ```text
 composite-vidyalaya-erp/
@@ -539,7 +550,7 @@ composite-vidyalaya-erp/
 
 ---
 
-## 11. Getting Started
+## 12. Getting Started
 
 ### Prerequisites
 - Node.js 20.x or higher
@@ -572,7 +583,7 @@ composite-vidyalaya-erp/
 
 5. **Deploy database schema migrations:**
    ```bash
-   npx prisma db push
+   npx prisma migrate deploy
    ```
 
 6. **Seed baseline demonstration data:**
@@ -593,7 +604,7 @@ composite-vidyalaya-erp/
 
 ---
 
-## 12. Environment Variables
+## 13. Environment Variables
 
 The table below lists all configuration variables parsed from `.env.example` and application source files. Never commit production secrets.
 
@@ -613,7 +624,7 @@ The table below lists all configuration variables parsed from `.env.example` and
 
 ---
 
-## 13. Scripts
+## 14. Scripts
 
 All available scripts defined in `package.json`:
 
@@ -623,11 +634,14 @@ All available scripts defined in `package.json`:
 | `npm run build` | `prisma generate && next build` | Compiles Prisma Client and creates the production Next.js build |
 | `npm run start` | `next start` | Runs the compiled production application server |
 | `npm run lint` | `eslint` | Runs ESLint 9 static code analysis across the codebase |
+| `npm test` | `vitest run` | Runs the automated offline unit test suite |
+| `npm run test:watch` | `vitest` | Starts the Vitest interactive watch mode |
+| `npm run test:coverage` | `vitest run --coverage` | Generates V8 code coverage reports for core libraries and actions |
 | `npm run postinstall` | `prisma generate` | Automatically triggers Prisma Client generation after package installation |
 
 ---
 
-## 14. Deployment
+## 15. Deployment
 
 ### Production Deployment (Vercel + Neon + Vercel Blob)
 
@@ -651,12 +665,12 @@ All available scripts defined in `package.json`:
    - Add `ENCRYPTION_KEY` (generate with `openssl rand -hex 32`).
    - Add `GEMINI_API_KEY` (from Google AI Studio).
 
-5. **Initialize Database Schema:**
-   - Run the initial schema push and database seed against the production database:
+5. **Deploy Database Migrations:**
+   - Run production migrations:
      ```bash
-     npx prisma db push
-     npx prisma db seed
+     npx prisma migrate deploy
      ```
+   - Note: Database seeding (`npx prisma db seed`) is for local and demo environments only; do not run seed scripts in production.
 
 6. **Trigger Deployment:**
    - Push to `main` or trigger a manual deploy on Vercel.
@@ -664,25 +678,25 @@ All available scripts defined in `package.json`:
 
 ---
 
-## 15. Design Decisions
+## 16. Design Decisions
 
 Key architectural choices documented in [DECISION.md](file:///e:/composite-vidyalaya-erp/DECISION.md):
 
 - **ADR-001: Next.js App Router & Server Actions:** Adopted server-rendered architecture to minimize client bundles on low-powered school hardware and eliminate client-side state synchronization bugs.
 - **ADR-002: Prisma 7 with Neon Serverless Driver Adapter:** Upgraded to Prisma 7 using `@prisma/adapter-neon` over WebSockets to eliminate connection exhaustion in serverless environments.
 - **ADR-003: Dual-Layer RBAC Architecture:** Mitigates CVE-2025-29927 by placing mandatory server-side `requireRole()` checks in route layouts rather than trusting edge middleware alone.
-- **ADR-005: AES-256-GCM Field-Level PII Encryption:** Aadhaar numbers and bank accounts are encrypted before database persistence, satisfying statutory data protection norms.
+- **ADR-005: AES-256-GCM Field-Level PII Encryption:** Aadhaar numbers and bank accounts are encrypted before database persistence, protecting sensitive fields at rest.
 - **ADR-007: Hindi as Primary Default Locale:** Configured `hi` as the default locale via `next-intl` to reflect the operational working language of Uttar Pradesh state educators.
 - **ADR-009: Exclusion of Student/Parent Direct Logins:** Authentication is strictly restricted to administrative and instructional staff. Students exist purely as data records.
 - **ADR-010: Statutory Two-Tier Mid-Day Meal Accounting Engine:** Codifies UP state nutrition quotas (Primary 100g / ₹6.78 vs Junior 150g / ₹10.17) directly into attendance calculations.
 - **ADR-012: Hybrid Gemini AI + Regex Heuristic Excel Import Pipeline:** Combines an LLM for semantic header recognition with local regex fallbacks to ensure uninterrupted operation.
 
 ### Why There Is No Fee Module
-Government composite schools (Classes 1 to 8) under the Basic Shiksha Parishad, Uttar Pradesh operate under the **Right of Children to Free and Compulsory Education (RTE) Act, 2009**. Tuition fees, textbooks, uniforms, and mid-day meals are completely free. Uniform and supply allowances are disbursed directly to parent bank accounts through government **Direct Benefit Transfer (DBT)** portals. Including a student fee collection module would violate state regulatory standards.
+Government composite schools (Classes 1 to 8) under the Basic Shiksha Parishad, Uttar Pradesh operate under the **Right of Children to Free and Compulsory Education (RTE) Act, 2009**. Tuition fees, textbooks, uniforms, and mid-day meals are completely free. Uniform and supply allowances are disbursed directly to parent bank accounts through government **Direct Benefit Transfer (DBT)** portals. Including a student fee collection module is not applicable under RTE Act provisions.
 
 ---
 
-## 16. Status and Roadmap
+## 17. Status and Roadmap
 
 ### Completed Modules
 - [x] Multi-role authentication (Admin / Teacher) with DB-backed account lockout and IP throttling.
@@ -707,12 +721,12 @@ Government composite schools (Classes 1 to 8) under the Basic Shiksha Parishad, 
 - [ ] Automated export integration matching official U-DISE+ bulk upload formats.
 
 ### Limitations and Quality Notice
-- **Automated Tests:** There is currently no automated test suite (Jest/Vitest/Playwright) configured in this repository. Stability is maintained via TypeScript strict mode, comprehensive Zod runtime schema boundaries, and manual user acceptance testing.
-- **CI/CD Workflows:** Automated GitHub Actions workflows are not yet configured; deployments are triggered directly via Vercel Git integration.
+- **Automated Tests:** Unit and integration testing is implemented using Vitest, covering core business logic, cryptographic operations, and server action validation.
+- **CI/CD Workflows:** Automated GitHub Actions workflow executes linting, TypeScript type-checking, and the Vitest test suite on every pull request and push to main.
 
 ---
 
-## 17. Contributing, License, and Author
+## 18. Contributing, License, and Author
 
 ### Contributing
 Contributions to improve functionality, accessibility, and documentation are welcome:
@@ -723,11 +737,10 @@ Contributions to improve functionality, accessibility, and documentation are wel
 5. Push to your branch and open a Pull Request.
 
 ### License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.  
-*(Note: If a `LICENSE` file is not present in the root directory, this project defaults to proprietary rights reserved by the author).*
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
 ### Author
 - **Developer:** shrisha337-beep
 - **GitHub:** [https://github.com/shrisha337-beep](https://github.com/shrisha337-beep)
-- **LinkedIn:** [TODO: Add LinkedIn Profile URL]
+- **LinkedIn:** [LINKEDIN_URL]
 - **Email:** [shrisha337@gmail.com](mailto:shrisha337@gmail.com)

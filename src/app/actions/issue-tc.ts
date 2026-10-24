@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/rbac";
 import { decrypt } from "@/lib/encryption";
+import { buildTCSnapshot } from "@/lib/tc-snapshot";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -105,43 +106,27 @@ export async function issueTransferCertificate(formData: FormData): Promise<void
 
   await prisma.$transaction(async (tx) => {
     // 1. Create TransferCertificate snapshot
+    const snapshot = buildTCSnapshot(student, {
+      tcNumber,
+      dateOfIssue,
+      dateOfLeaving,
+      reasonForLeaving,
+      conduct,
+      lastClassStudied,
+      currentSessionLabel,
+      promotedTo: promotedToClass || null,
+      workingDaysTotal: schoolWorkingDays,
+      workingDaysPresent: studentWorkingDays,
+      remarks,
+      dobInWordsOverride: dobInWordsForm,
+      decryptedAadhaar: studentAadhaarDecrypted,
+      subjectsStudied,
+    });
+
     await tx.transferCertificate.create({
       data: {
-        studentId,
-        tcNumber,
-        studentNameSnapshot: student.fullName,
-        fatherNameSnapshot: fatherName,
-        motherNameSnapshot: motherName,
-        dobSnapshot: student.dob,
-        dobWordsSnapshot: dobInWordsForm || student.dobInWords,
-        aadhaarSnapshot: studentAadhaarDecrypted,
-        penNumberSnapshot: student.penNumber,
-        apaarIdSnapshot: student.apaarId,
-        categorySnapshot: student.category,
-        religionSnapshot: student.religion,
-        addressSnapshot: [
-          student.villageOrMohalla,
-          student.postOffice,
-          student.developmentBlock,
-          student.district,
-          student.pincode,
-        ]
-          .filter(Boolean)
-          .join(", "),
-        dateOfIssue,
-        admissionDateSnapshot: student.admissionDate,
-        classOfAdmissionSnapshot: student.previousClassPassed,
-        lastClassStudied,
-        currentSessionLabel,
-        dateOfLeaving,
-        reasonForLeaving,
-        conduct,
-        subjectsStudied,
-        promotedTo: promotedToClass || null,
-        workingDaysTotal: schoolWorkingDays,
-        workingDaysPresent: studentWorkingDays,
-        remarks,
-        issuedById: "SYSTEM", // Placeholder for actual issuing user session
+        ...snapshot,
+        issuedById: "SYSTEM",
       },
     });
 

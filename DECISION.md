@@ -502,12 +502,12 @@ This directory records all active, verified administrative and instructional tes
 
 | Role | Designatory Title | Registered Name | Mobile Number (Username) | Default Password | Primary Portal URL | Access Scope |
 |---|---|---|---|---|---|---|
-| **ADMIN** | Principal / Headmaster | Principal | `9999999999` | `ChangeMe@123` | `http://localhost:3000/hi/login` | Full institutional authority: sessions, settings, classes, admissions, MDM governance, staff registers, Transfer Certificates, global reports. |
-| **TEACHER** | Assistant Teacher | Ramesh Sharma | `9876543210` | `ChangeMe@123` | `http://localhost:3000/hi/login` | Faculty authority: daily student attendance register, marks & grades entry, student directory inspection, personal leave requests, homework management. |
+| **ADMIN** | Principal / Headmaster | Principal | `[REDACTED_PHONE]` | `[REDACTED_PASSWORD]` | `http://localhost:3000/hi/login` | Full institutional authority: sessions, settings, classes, admissions, MDM governance, staff registers, Transfer Certificates, global reports. |
+| **TEACHER** | Assistant Teacher | Ramesh Sharma | `[REDACTED_PHONE]` | `[REDACTED_PASSWORD]` | `http://localhost:3000/hi/login` | Faculty authority: daily student attendance register, marks & grades entry, student directory inspection, personal leave requests, homework management. |
 
 ### B. Security & Credential Rules:
 1. **Phone-Number-First Authentication:**
-   - The primary identifier for all staff accounts is their 10-digit Indian mobile number (e.g. `9999999999`, `9876543210`).
+   - The primary identifier for all staff accounts is their 10-digit Indian mobile number.
    - Email is an optional secondary attribute used exclusively for password reset tokens via Resend.
 2. **Account Lockout Policy:**
    - Exceeding 5 consecutive failed login attempts locks the phone number for 15 minutes.
