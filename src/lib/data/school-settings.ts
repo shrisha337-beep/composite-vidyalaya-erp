@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import type { SchoolSettings } from "@/generated/prisma/client";
+import { getSchoolBranding } from "@/lib/branding";
 
 export interface SchoolSettingsData {
   id: string;
@@ -48,6 +49,28 @@ const LEGACY_SCHOOL_NAMES = new Set([
 type SettingsRow = SchoolSettings;
 
 function toSettingsData(row: SettingsRow): SchoolSettingsData {
+  const branding = getSchoolBranding();
+
+  if (branding.isDemo) {
+    return {
+      id: row.id,
+      schoolName: branding.schoolNameEnglish,
+      address: `${branding.schoolNameEnglish}\nBlock - ${branding.schoolBlock}\nJanpad - ${branding.schoolDistrict}`,
+      udiseCode: branding.udiseCode,
+      schoolBlock: branding.schoolBlock,
+      schoolDistrict: branding.schoolDistrict,
+      logoUrlSarvaShiksha: row.logoUrlSarvaShiksha,
+      logoUrlSamagra: row.logoUrlSamagra,
+      defaultLocale: row.defaultLocale,
+      conversionCostPrimary: row.conversionCostPrimary,
+      conversionCostJunior: row.conversionCostJunior,
+      fruitCostPerStudent: row.fruitCostPerStudent,
+      nutritionCostPerStudent: row.nutritionCostPerStudent,
+      riceMenuOptions: row.riceMenuOptions,
+      wheatMenuOptions: row.wheatMenuOptions,
+    };
+  }
+
   return {
     id: row.id,
     schoolName: LEGACY_SCHOOL_NAMES.has(row.schoolName)

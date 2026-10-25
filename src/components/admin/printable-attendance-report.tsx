@@ -33,10 +33,12 @@ export interface SectionAttendanceData {
 
 export interface SchoolInfo {
   schoolName: string;
+  schoolNameHindi?: string;
   address: string;
   udiseCode: string;
   schoolBlock: string;
   schoolDistrict: string;
+  registerSubtitle?: string;
 }
 
 export interface PrintableAttendanceReportProps {
@@ -145,7 +147,7 @@ export function PrintableAttendanceReport({
       return;
     }
 
-    const schoolTitleHindi = "कम्पोजिट विद्यालय चांदपुर तरहर";
+    const schoolTitleHindi = schoolInfo.schoolNameHindi || "कम्पोजिट विद्यालय चांदपुर तरहर";
     const schoolTitleEnglish = schoolInfo.schoolName || "Composite School Chandpur Tarhar";
     const blockDistrictText = `विकास खंड - ${schoolInfo.schoolBlock || "परसपुर"}, जनपद - ${schoolInfo.schoolDistrict || "गोंडा"} | यू-डायस कोड: ${schoolInfo.udiseCode || "09530607202"}`;
 
@@ -657,7 +659,7 @@ export function PrintableAttendanceReport({
             )}
           </div>
           <div className="text-[11px] text-[#A89F91]">
-            कम्पोजिट विद्यालय चांदपुर तरहर · आधिकारिक छात्र-छात्रा उपस्थिति पंजीका
+            {schoolInfo.schoolNameHindi || "कम्पोजिट विद्यालय चांदपुर तरहर"} · {schoolInfo.registerSubtitle || "आधिकारिक छात्र-छात्रा उपस्थिति पंजीका"}
           </div>
         </div>
       </div>

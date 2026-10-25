@@ -1,6 +1,7 @@
 import { requireRole } from "@/lib/rbac";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
+import { getSchoolBranding } from "@/lib/branding";
 import {
   CalendarCheck,
   BookOpen,
@@ -156,7 +157,7 @@ export default async function TeacherDashboardPage({
           </div>
 
           <div className="mt-4 pt-3 border-t border-[#E8E0D4] flex items-center justify-between text-xs text-[#7A7267]">
-            <span>Basic Education Department, UP</span>
+            <span>{getSchoolBranding().governanceShort}</span>
             {className && (
               <Link
                 href={`/${locale}/teacher/my-classes`}

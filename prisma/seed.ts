@@ -43,7 +43,7 @@ async function main() {
     update: {},
     create: {
       id: "singleton",
-      schoolName: "Composite Model School (Demo Instance)",
+      schoolName: "Demo Composite School",
       udiseCode: "09000000000",
       schoolBlock: "Demo Block",
       schoolDistrict: "Demo District",

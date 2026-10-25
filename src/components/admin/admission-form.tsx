@@ -6,6 +6,7 @@ import { createStudent } from "@/app/actions/create-student";
 import { updateStudent } from "@/app/actions/update-student";
 import { ArrowLeft, Plus, Trash2, Upload, X } from "lucide-react";
 import Link from "next/link";
+import { getSchoolBranding } from "@/lib/branding";
 
 // ── Small reusable field components ──────────────────────────────────────────
 
@@ -182,6 +183,12 @@ export function AdmissionForm({
   const mother = decrypted?.guardians?.find((g: any) => g.relation === "MOTHER") || student?.guardians?.find((g: any) => g.relation === "MOTHER");
   const guardian = decrypted?.guardians?.find((g: any) => g.relation === "GUARDIAN") || student?.guardians?.find((g: any) => g.relation === "GUARDIAN");
 
+  const branding = getSchoolBranding();
+  const defaultSchoolName = schoolName || branding.schoolNameEnglish;
+  const defaultBlock = schoolBlock || branding.schoolBlock;
+  const defaultDistrict = schoolDistrict || branding.schoolDistrict;
+  const defaultUdise = udiseCode || branding.udiseCode;
+
   return (
     <form action={isEdit ? updateStudent : createStudent}>
       {isEdit && (
@@ -230,7 +237,7 @@ export function AdmissionForm({
             <input
               name="schoolName"
               type="text"
-              defaultValue={schoolName || "Composite School Chandpur Tarhar"}
+              defaultValue={defaultSchoolName}
               readOnly
               className="w-full border border-gray-200 rounded px-2.5 py-1.5 text-sm bg-gray-50 text-gray-600 cursor-not-allowed"
             />
@@ -239,7 +246,7 @@ export function AdmissionForm({
             <input
               name="block"
               type="text"
-              defaultValue={schoolBlock || "Paraspur"}
+              defaultValue={defaultBlock}
               readOnly
               className="w-full border border-gray-200 rounded px-2.5 py-1.5 text-sm bg-gray-50 text-gray-600 cursor-not-allowed"
             />
@@ -248,7 +255,7 @@ export function AdmissionForm({
             <input
               name="headerDistrict"
               type="text"
-              defaultValue={schoolDistrict || "Gonda"}
+              defaultValue={defaultDistrict}
               readOnly
               className="w-full border border-gray-200 rounded px-2.5 py-1.5 text-sm bg-gray-50 text-gray-600 cursor-not-allowed"
             />
@@ -256,7 +263,7 @@ export function AdmissionForm({
           <Field label="UDISE Code" labelHi="यू-डाइस कोड">
             <input
               type="text"
-              value={udiseCode || "09530607202"}
+              value={defaultUdise}
               readOnly
               className="w-full border border-gray-200 rounded px-2.5 py-1.5 text-sm bg-gray-50 text-gray-600 cursor-not-allowed font-mono"
             />

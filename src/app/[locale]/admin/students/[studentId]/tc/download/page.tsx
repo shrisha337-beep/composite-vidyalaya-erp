@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { TcDownloadClient } from "@/components/admin/tc-download-client";
+import { getSchoolBranding } from "@/lib/branding";
 
 async function getStudentAndTc(studentId: string) {
   const student = await prisma.student.findUnique({
@@ -28,6 +29,7 @@ export default async function DownloadTcPage({
 }) {
   await requireRole(["ADMIN"]);
   const { locale, studentId } = await params;
+  const branding = getSchoolBranding();
 
   const student = await getStudentAndTc(studentId);
   if (!student) notFound();
@@ -60,6 +62,7 @@ export default async function DownloadTcPage({
         locale={locale}
         student={student}
         tc={tc}
+        branding={branding}
       />
     </main>
   );

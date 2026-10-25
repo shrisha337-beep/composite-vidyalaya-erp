@@ -1,6 +1,7 @@
 import { requireRole } from "@/lib/rbac";
 import { prisma } from "@/lib/prisma";
 import { getSchoolSettings } from "@/lib/data/school-settings";
+import { getSchoolBranding } from "@/lib/branding";
 import { AdmissionForm } from "@/components/admin/admission-form";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -28,6 +29,7 @@ export default async function NewStudentPage({
   }
 
   const settings = await getSchoolSettings();
+  const branding = getSchoolBranding();
 
   return (
     <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-3xl">
@@ -50,10 +52,10 @@ export default async function NewStudentPage({
       <AdmissionForm
         locale={locale}
         sessionLabel={session.label}
-        schoolName={settings.schoolName}
-        schoolDistrict={settings.schoolDistrict || "Gonda"}
-        schoolBlock={settings.schoolBlock || "Paraspur"}
-        udiseCode={settings.udiseCode || "09530607202"}
+        schoolName={settings.schoolName || branding.schoolNameEnglish}
+        schoolDistrict={settings.schoolDistrict || branding.schoolDistrict}
+        schoolBlock={settings.schoolBlock || branding.schoolBlock}
+        udiseCode={settings.udiseCode || branding.udiseCode}
       />
     </main>
   );

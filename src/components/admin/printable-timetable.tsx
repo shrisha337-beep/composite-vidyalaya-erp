@@ -219,7 +219,13 @@ function TimetableGrid({
 }
 
 // ─── Main Timetable Page Component ─────────────────────────────────
-export function PrintableTimetable() {
+export function PrintableTimetable({
+  schoolNameHindi = "कम्पोजिट विद्यालय चांदपुर तरहर",
+  schoolNameEnglish = "Composite School Chandpur Tarhar",
+}: {
+  schoolNameHindi?: string;
+  schoolNameEnglish?: string;
+} = {}) {
   // 8 period times (editable)
   const [periodTimes, setPeriodTimes] = useState<PeriodTime[]>(DEFAULT_PERIOD_TIMES);
   // Recess time (editable, separate from periods)
@@ -276,7 +282,7 @@ export function PrintableTimetable() {
       <!DOCTYPE html>
       <html>
         <head>
-          <title>समय सारणी — Composite School Chandpur Tarhar</title>
+          <title>समय सारणी — ${schoolNameEnglish}</title>
           <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
             body { font-family: "Times New Roman", Georgia, serif; font-size: 11px; color: #000; padding: 12px; }
@@ -513,8 +519,8 @@ export function PrintableTimetable() {
       {/* Hidden Print-Only Content (rendered via popup window) */}
       <div ref={printAreaRef} style={{ display: "none" }}>
         <div className="print-header">
-          <h1>कम्पोजिट विद्यालय चांदपुर तरहर</h1>
-          <p>Composite School Chandpur Tarhar</p>
+          <h1>{schoolNameHindi}</h1>
+          <p>{schoolNameEnglish}</p>
           <p style={{ marginTop: "4px", fontSize: "13px", fontWeight: "bold" }}>
             समय सारणी / Timetable — {activeDayLabel}
           </p>

@@ -1,7 +1,8 @@
 import { isDemoMode } from "@/lib/demo-mode";
 
-export function DemoBanner() {
-  if (!isDemoMode()) return null;
+export function DemoBanner({ isDemo }: { isDemo?: boolean } = {}) {
+  const showBanner = isDemo !== undefined ? isDemo : isDemoMode();
+  if (!showBanner) return null;
 
   return (
     <div
