@@ -22,17 +22,25 @@ import {
 export function SchoolSettingsForm({
   locale,
   settings,
+  defaultUdise = "",
+  defaultBlock = "",
+  defaultDistrict = "",
+  showGovtMarks = true,
 }: {
   locale: string;
   settings: SchoolSettingsData;
+  defaultUdise?: string;
+  defaultBlock?: string;
+  defaultDistrict?: string;
+  showGovtMarks?: boolean;
 }) {
   const router = useRouter();
 
   const [schoolName, setSchoolName] = useState(settings.schoolName);
   const [address, setAddress] = useState(settings.address ?? "");
-  const [udiseCode, setUdiseCode] = useState(settings.udiseCode ?? "09530607202");
-  const [schoolBlock, setSchoolBlock] = useState(settings.schoolBlock ?? "Paraspur");
-  const [schoolDistrict, setSchoolDistrict] = useState(settings.schoolDistrict ?? "Gonda");
+  const [udiseCode, setUdiseCode] = useState(settings.udiseCode ?? defaultUdise);
+  const [schoolBlock, setSchoolBlock] = useState(settings.schoolBlock ?? defaultBlock);
+  const [schoolDistrict, setSchoolDistrict] = useState(settings.schoolDistrict ?? defaultDistrict);
 
   const [sarvaLogoPreview, setSarvaLogoPreview] = useState<string | null>(
     settings.logoUrlSarvaShiksha
@@ -148,7 +156,7 @@ export function SchoolSettingsForm({
                 required
                 value={schoolBlock}
                 onChange={(e) => setSchoolBlock(e.target.value)}
-                placeholder="Paraspur"
+                placeholder={defaultBlock}
                 className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               />
               <p className="text-[11px] text-gray-400 mt-1">
@@ -166,7 +174,7 @@ export function SchoolSettingsForm({
                 required
                 value={schoolDistrict}
                 onChange={(e) => setSchoolDistrict(e.target.value)}
-                placeholder="Gonda"
+                placeholder={defaultDistrict}
                 className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               />
               <p className="text-[11px] text-gray-400 mt-1">
@@ -185,83 +193,85 @@ export function SchoolSettingsForm({
               name="udiseCode"
               value={udiseCode}
               onChange={(e) => setUdiseCode(e.target.value)}
-              placeholder="09530607202"
+              placeholder={defaultUdise}
               className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white font-mono"
             />
             <p className="text-[11px] text-gray-400 mt-1">
-              Official school UDISE+ Code (e.g. 09530607202). Auto-fills into admission forms.
+              Official school UDISE+ Code (e.g. {defaultUdise}). Auto-fills into admission forms.
             </p>
           </div>
         </div>
       </div>
 
       {/* Government Branding Logos Block */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-4">
-        <h2 className="text-sm font-bold text-gray-800 border-b border-gray-100 pb-3 flex items-center gap-2">
-          <Upload className="h-4 w-4 text-[hsl(var(--primary))]" />
-          Government Branding Logos / शासकीय प्रतीक चिन्ह
-        </h2>
+      {showGovtMarks && (
+        <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-4">
+          <h2 className="text-sm font-bold text-gray-800 border-b border-gray-100 pb-3 flex items-center gap-2">
+            <Upload className="h-4 w-4 text-[hsl(var(--primary))]" />
+            Government Branding Logos / शासकीय प्रतीक चिन्ह
+          </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
-          {/* Sarva Shiksha Abhiyan */}
-          <div className="border border-gray-100 rounded-lg p-4 bg-gray-50 flex flex-col items-center text-center space-y-3">
-            <span className="font-semibold text-gray-700">
-              Sarva Shiksha Abhiyan Logo
-            </span>
-            <div className="w-48 h-24 relative bg-white border border-gray-200 rounded flex items-center justify-center p-2">
-              {sarvaLogoPreview ? (
-                <img
-                  src={sarvaLogoPreview}
-                  alt="Sarva Shiksha Abhiyan"
-                  className="max-h-full max-w-full object-contain"
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+            {/* Sarva Shiksha Abhiyan */}
+            <div className="border border-gray-100 rounded-lg p-4 bg-gray-50 flex flex-col items-center text-center space-y-3">
+              <span className="font-semibold text-gray-700">
+                Sarva Shiksha Abhiyan Logo
+              </span>
+              <div className="w-48 h-24 relative bg-white border border-gray-200 rounded flex items-center justify-center p-2">
+                {sarvaLogoPreview ? (
+                  <img
+                    src={sarvaLogoPreview}
+                    alt="Sarva Shiksha Abhiyan"
+                    className="max-h-full max-w-full object-contain"
+                  />
+                ) : (
+                  <span className="text-gray-400 text-[11px]">No Logo</span>
+                )}
+              </div>
+              <label className="cursor-pointer px-3 py-1.5 bg-white border border-gray-300 rounded text-gray-700 font-medium hover:bg-gray-100 transition-colors text-xs flex items-center gap-1.5">
+                <Upload className="h-3.5 w-3.5 text-gray-500" />
+                Change Logo
+                <input
+                  type="file"
+                  name="logoSarvaShiksha"
+                  accept="image/*"
+                  onChange={handleSarvaLogoChange}
+                  className="hidden"
                 />
-              ) : (
-                <span className="text-gray-400 text-[11px]">No Logo</span>
-              )}
+              </label>
             </div>
-            <label className="cursor-pointer px-3 py-1.5 bg-white border border-gray-300 rounded text-gray-700 font-medium hover:bg-gray-100 transition-colors text-xs flex items-center gap-1.5">
-              <Upload className="h-3.5 w-3.5 text-gray-500" />
-              Change Logo
-              <input
-                type="file"
-                name="logoSarvaShiksha"
-                accept="image/*"
-                onChange={handleSarvaLogoChange}
-                className="hidden"
-              />
-            </label>
-          </div>
 
-          {/* Samagra Shiksha */}
-          <div className="border border-gray-100 rounded-lg p-4 bg-gray-50 flex flex-col items-center text-center space-y-3">
-            <span className="font-semibold text-gray-700">
-              Samagra Shiksha Logo
-            </span>
-            <div className="w-48 h-24 relative bg-white border border-gray-200 rounded flex items-center justify-center p-2">
-              {samagraLogoPreview ? (
-                <img
-                  src={samagraLogoPreview}
-                  alt="Samagra Shiksha"
-                  className="max-h-full max-w-full object-contain"
+            {/* Samagra Shiksha */}
+            <div className="border border-gray-100 rounded-lg p-4 bg-gray-50 flex flex-col items-center text-center space-y-3">
+              <span className="font-semibold text-gray-700">
+                Samagra Shiksha Logo
+              </span>
+              <div className="w-48 h-24 relative bg-white border border-gray-200 rounded flex items-center justify-center p-2">
+                {samagraLogoPreview ? (
+                  <img
+                    src={samagraLogoPreview}
+                    alt="Samagra Shiksha"
+                    className="max-h-full max-w-full object-contain"
+                  />
+                ) : (
+                  <span className="text-gray-400 text-[11px]">No Logo</span>
+                )}
+              </div>
+              <label className="cursor-pointer px-3 py-1.5 bg-white border border-gray-300 rounded text-gray-700 font-medium hover:bg-gray-100 transition-colors text-xs flex items-center gap-1.5">
+                <Upload className="h-3.5 w-3.5 text-gray-500" />
+                Change Logo
+                <input
+                  type="file"
+                  name="logoSamagra"
+                  accept="image/*"
+                  onChange={handleSamagraLogoChange}
+                  className="hidden"
                 />
-              ) : (
-                <span className="text-gray-400 text-[11px]">No Logo</span>
-              )}
+              </label>
             </div>
-            <label className="cursor-pointer px-3 py-1.5 bg-white border border-gray-300 rounded text-gray-700 font-medium hover:bg-gray-100 transition-colors text-xs flex items-center gap-1.5">
-              <Upload className="h-3.5 w-3.5 text-gray-500" />
-              Change Logo
-              <input
-                type="file"
-                name="logoSamagra"
-                accept="image/*"
-                onChange={handleSamagraLogoChange}
-                className="hidden"
-              />
-            </label>
           </div>
         </div>
-      </div>
+      )}
 
       {/* MDM Cost Configuration */}
       <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-4">

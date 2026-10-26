@@ -6,7 +6,6 @@ import { createStudent } from "@/app/actions/create-student";
 import { updateStudent } from "@/app/actions/update-student";
 import { ArrowLeft, Plus, Trash2, Upload, X } from "lucide-react";
 import Link from "next/link";
-import { getSchoolBranding } from "@/lib/branding";
 
 // ── Small reusable field components ──────────────────────────────────────────
 
@@ -138,10 +137,10 @@ export function AdmissionForm({
 }: {
   locale: string;
   sessionLabel: string;
-  schoolName?: string;
-  schoolDistrict?: string;
-  schoolBlock?: string;
-  udiseCode?: string;
+  schoolName: string;
+  schoolDistrict: string;
+  schoolBlock: string;
+  udiseCode: string;
   isEdit?: boolean;
   student?: any;
   decrypted?: any;
@@ -183,11 +182,10 @@ export function AdmissionForm({
   const mother = decrypted?.guardians?.find((g: any) => g.relation === "MOTHER") || student?.guardians?.find((g: any) => g.relation === "MOTHER");
   const guardian = decrypted?.guardians?.find((g: any) => g.relation === "GUARDIAN") || student?.guardians?.find((g: any) => g.relation === "GUARDIAN");
 
-  const branding = getSchoolBranding();
-  const defaultSchoolName = schoolName || branding.schoolNameEnglish;
-  const defaultBlock = schoolBlock || branding.schoolBlock;
-  const defaultDistrict = schoolDistrict || branding.schoolDistrict;
-  const defaultUdise = udiseCode || branding.udiseCode;
+  const defaultSchoolName = schoolName;
+  const defaultBlock = schoolBlock;
+  const defaultDistrict = schoolDistrict;
+  const defaultUdise = udiseCode;
 
   return (
     <form action={isEdit ? updateStudent : createStudent}>
@@ -386,8 +384,8 @@ export function AdmissionForm({
           {/* Address */}
           <Field label="Village / Mohalla" labelHi="निवास स्थान ग्राम/मोहल्ला" name="villageOrMohalla" defaultValue={student?.villageOrMohalla || ""} />
           <Field label="Post Office" labelHi="पोस्ट" name="postOffice" defaultValue={student?.postOffice || ""} />
-          <Field label="Development Block" labelHi="विकास खण्ड/नगरखेड़ा" name="developmentBlock" defaultValue={student?.developmentBlock || "Paraspur"} />
-          <Field label="District" labelHi="जनपद" name="district" defaultValue={student?.district || "Gonda"} />
+          <Field label="Development Block" labelHi="विकास खण्ड/नगरखेड़ा" name="developmentBlock" defaultValue={student?.developmentBlock || defaultBlock} />
+          <Field label="District" labelHi="जनपद" name="district" defaultValue={student?.district || defaultDistrict} />
           <Field label="Pincode" labelHi="पिनकोड" name="pincode" type="text" placeholder="6 digits" defaultValue={student?.pincode || ""} />
           <Field label="Mobile Number" labelHi="मोबाइल नंबर" name="mobileNumber" type="tel" placeholder="10 digits" defaultValue={student?.mobileNumber || ""} />
           <Field label="WhatsApp Number" labelHi="व्हाट्सऐप नंबर" name="whatsappNumber" type="tel" placeholder="10 digits" defaultValue={student?.whatsappNumber || ""} />

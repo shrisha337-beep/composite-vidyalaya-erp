@@ -23,7 +23,7 @@ export function TcDownloadClient({
   locale: string;
   student: any;
   tc: any;
-  branding?: SchoolBranding;
+  branding: SchoolBranding;
 }) {
   const [mounted, setMounted] = useState(false);
   const [pdfDataUrl, setPdfDataUrl] = useState<string | null>(null);

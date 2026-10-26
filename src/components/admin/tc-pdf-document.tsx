@@ -1,7 +1,7 @@
 "use client";
 
 import { Document, Page, Text, View, StyleSheet, Font } from "@react-pdf/renderer";
-import { getSchoolBranding, type SchoolBranding } from "@/lib/branding";
+import type { SchoolBranding } from "@/lib/branding";
 
 // Register Noto Sans Devanagari font to support Hindi text rendering in PDF
 Font.register({
@@ -133,9 +133,9 @@ export function TcPdfDocument({
 }: {
   tc: any;
   student: any;
-  branding?: SchoolBranding;
+  branding: SchoolBranding;
 }) {
-  const activeBranding = branding ?? getSchoolBranding();
+  const activeBranding = branding;
   const dob = new Date(tc.dobSnapshot);
   const dobFormatted = dob.toLocaleDateString("en-IN", {
     day: "2-digit",

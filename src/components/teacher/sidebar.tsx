@@ -74,7 +74,7 @@ function SidebarContent({
   locale,
   onClose,
   schoolName = "Composite School",
-  location = "Chandpur Tarhar",
+  location = "",
 }: {
   locale: string;
   onClose?: () => void;
@@ -136,7 +136,7 @@ function SidebarContent({
 export function TeacherSidebar({
   locale,
   schoolName = "Composite School",
-  location = "Chandpur Tarhar",
+  location = "",
 }: {
   locale: string;
   schoolName?: string;

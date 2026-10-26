@@ -59,12 +59,8 @@ export default async function AttendancePrintPage({
     schoolNameHindi: branding.schoolNameHindi,
     address: settings.address || "",
     udiseCode: settings.udiseCode || branding.udiseCode,
-    schoolBlock:
-      settings.schoolBlock ||
-      (branding.isDemo ? branding.schoolBlockHindi : "परसपुर"),
-    schoolDistrict:
-      settings.schoolDistrict ||
-      (branding.isDemo ? branding.schoolDistrictHindi : "गोंडा"),
+    schoolBlock: settings.schoolBlock || branding.schoolBlockHindi,
+    schoolDistrict: settings.schoolDistrict || branding.schoolDistrictHindi,
     registerSubtitle: branding.isDemo
       ? "छात्र-छात्रा उपस्थिति पंजीका"
       : "आधिकारिक छात्र-छात्रा उपस्थिति पंजीका",

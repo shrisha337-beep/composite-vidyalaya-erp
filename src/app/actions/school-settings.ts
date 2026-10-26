@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/rbac";
 import { revalidatePath } from "next/cache";
 import { put } from "@vercel/blob";
+import { getSchoolBranding } from "@/lib/branding";
 
 // Read path lives in lib/data/school-settings.ts (cached, not a public action).
 // Only the type is re-exported — re-exporting the function from this
@@ -18,12 +19,13 @@ export async function updateSchoolSettingsAction(
 ): Promise<{ success: boolean; message: string }> {
   const session = await requireRole(["ADMIN"]);
   const locale = (formData.get("locale") as string) ?? "en";
+  const branding = getSchoolBranding();
 
   const schoolName = (formData.get("schoolName") as string)?.trim();
   const address = (formData.get("address") as string)?.trim() || null;
   const udiseCode = (formData.get("udiseCode") as string)?.trim() || null;
-  const schoolBlock = (formData.get("schoolBlock") as string)?.trim() || "Paraspur";
-  const schoolDistrict = (formData.get("schoolDistrict") as string)?.trim() || "Gonda";
+  const schoolBlock = (formData.get("schoolBlock") as string)?.trim() || branding.schoolBlock;
+  const schoolDistrict = (formData.get("schoolDistrict") as string)?.trim() || branding.schoolDistrict;
   const conversionCostPrimary = parseFloat(formData.get("conversionCostPrimary") as string) || 6.78;
   const conversionCostJunior = parseFloat(formData.get("conversionCostJunior") as string) || 10.17;
   const fruitCostPerStudent = parseFloat(formData.get("fruitCostPerStudent") as string) || 4.0;

@@ -220,8 +220,8 @@ function TimetableGrid({
 
 // ─── Main Timetable Page Component ─────────────────────────────────
 export function PrintableTimetable({
-  schoolNameHindi = "कम्पोजिट विद्यालय चांदपुर तरहर",
-  schoolNameEnglish = "Composite School Chandpur Tarhar",
+  schoolNameHindi = "",
+  schoolNameEnglish = "",
 }: {
   schoolNameHindi?: string;
   schoolNameEnglish?: string;

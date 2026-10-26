@@ -19,8 +19,18 @@ const notoSerifDisplay = Noto_Serif_Display({
 
 export async function generateMetadata(): Promise<Metadata> {
   const branding = getSchoolBranding();
+  let metadataBase: URL | undefined = undefined;
+  const rawUrl = process.env.NEXT_PUBLIC_APP_URL;
+  if (rawUrl) {
+    try {
+      metadataBase = new URL(rawUrl);
+    } catch {
+      metadataBase = undefined;
+    }
+  }
+
   return {
-    metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || branding.metaUrl),
+    ...(metadataBase ? { metadataBase } : {}),
     title: branding.metaTitle,
     description: branding.metaDescription,
   };

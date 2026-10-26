@@ -48,15 +48,15 @@ export default function LoginPage() {
           </div>
 
           <h1 className="font-school-header text-3xl xl:text-4xl font-semibold leading-tight text-white mb-2 tracking-wide">
-            {branding.isDemo ? (
-              branding.schoolNameEnglish
-            ) : (
+            {branding.schoolTitleLine1}
+            {branding.schoolTitleLine2 ? (
               <>
-                Composite School
                 <br />
-                <span className="text-2xl xl:text-3xl font-normal text-white/90">Chandpur Tarhar</span>
+                <span className="text-2xl xl:text-3xl font-normal text-white/90">
+                  {branding.schoolTitleLine2}
+                </span>
               </>
-            )}
+            ) : null}
           </h1>
           <p className="text-sm text-white/80 font-medium">
             {branding.schoolNameHindi}
@@ -87,10 +87,10 @@ export default function LoginPage() {
             {branding.portalCategory}
           </p>
           <h1 className="font-school-header text-2xl font-semibold text-[#6B1D30]">
-            {branding.isDemo ? branding.schoolNameEnglish : "Composite School"}
+            {branding.schoolTitleLine1}
           </h1>
           <p className="text-xs text-[#7A7267]">
-            {branding.isDemo ? "Demo School · कम्पोजिट विद्यालय" : "Chandpur Tarhar · कम्पोजिट विद्यालय"}
+            {branding.loginMobileSubtitle}
           </p>
         </div>
 

@@ -3,6 +3,7 @@ import { getSchoolSettings } from "@/lib/data/school-settings";
 import Link from "next/link";
 import { ArrowLeft, Settings } from "lucide-react";
 import { SchoolSettingsForm } from "@/components/admin/school-settings-form";
+import { getSchoolBranding } from "@/lib/branding";
 
 export default async function AdminSettingsPage({
   params,
@@ -13,6 +14,7 @@ export default async function AdminSettingsPage({
   const { locale } = await params;
 
   const settings = await getSchoolSettings();
+  const branding = getSchoolBranding();
 
   return (
     <main className="flex-1 p-6 lg:p-8 max-w-5xl">
@@ -30,12 +32,21 @@ export default async function AdminSettingsPage({
             School Settings / विद्यालय विवरण सेटिंग्स
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">
-            Configure school name, address, UDISE code, and government branding logos
+            {branding.showGovtMarks
+              ? "Configure school name, address, UDISE code, and government branding logos"
+              : "Configure school name, address, UDISE code, and meal cost settings"}
           </p>
         </div>
       </div>
 
-      <SchoolSettingsForm locale={locale} settings={settings} />
+      <SchoolSettingsForm
+        locale={locale}
+        settings={settings}
+        defaultUdise={branding.udiseCode}
+        defaultBlock={branding.schoolBlock}
+        defaultDistrict={branding.schoolDistrict}
+        showGovtMarks={branding.showGovtMarks}
+      />
     </main>
   );
 }

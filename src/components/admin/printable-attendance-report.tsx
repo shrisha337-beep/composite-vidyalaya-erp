@@ -147,9 +147,9 @@ export function PrintableAttendanceReport({
       return;
     }
 
-    const schoolTitleHindi = schoolInfo.schoolNameHindi || "कम्पोजिट विद्यालय चांदपुर तरहर";
-    const schoolTitleEnglish = schoolInfo.schoolName || "Composite School Chandpur Tarhar";
-    const blockDistrictText = `विकास खंड - ${schoolInfo.schoolBlock || "परसपुर"}, जनपद - ${schoolInfo.schoolDistrict || "गोंडा"} | यू-डायस कोड: ${schoolInfo.udiseCode || "09530607202"}`;
+    const schoolTitleHindi = schoolInfo.schoolNameHindi || schoolInfo.schoolName;
+    const schoolTitleEnglish = schoolInfo.schoolName;
+    const blockDistrictText = `विकास खंड - ${schoolInfo.schoolBlock}, जनपद - ${schoolInfo.schoolDistrict} | यू-डायस कोड: ${schoolInfo.udiseCode}`;
 
     const modeTitle =
       mode === "daily"
@@ -659,7 +659,7 @@ export function PrintableAttendanceReport({
             )}
           </div>
           <div className="text-[11px] text-[#A89F91]">
-            {schoolInfo.schoolNameHindi || "कम्पोजिट विद्यालय चांदपुर तरहर"} · {schoolInfo.registerSubtitle || "आधिकारिक छात्र-छात्रा उपस्थिति पंजीका"}
+            {schoolInfo.schoolNameHindi || schoolInfo.schoolName} · {schoolInfo.registerSubtitle || "छात्र-छात्रा उपस्थिति पंजीका"}
           </div>
         </div>
       </div>

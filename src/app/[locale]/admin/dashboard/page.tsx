@@ -115,7 +115,7 @@ export default async function AdminDashboardPage({
         <div>
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold uppercase tracking-widest text-[#6B1D30] bg-[#6B1D30]/10 px-2 py-0.5 rounded-sm">
-              {branding.isDemo ? "Demo Academic System" : "UP Basic Shiksha"}
+              {branding.systemTag}
             </span>
             <span className="text-xs text-[#7A7267]">{branding.isDemo ? "Demo School Portal" : "Official ERP Portal"}</span>
           </div>
