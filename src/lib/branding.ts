@@ -30,8 +30,6 @@ export interface SchoolBranding {
   schoolTitleLine1: string;
   schoolTitleLine2: string;
   systemTag: string;
-  showGovtMarks: boolean;
-  sampleVillage: string;
   metaTitle: string;
   metaDescription: string;
   metaUrl: string;
@@ -43,8 +41,6 @@ export function getSchoolBranding(overrideDemo?: boolean): SchoolBranding {
   if (isDemo) {
     return {
       isDemo: true,
-      showGovtMarks: false,
-      sampleVillage: "Shantinagar",
       schoolNameEnglish: "Demo Composite School",
       schoolNameHindi: "डेमो कम्पोजिट विद्यालय",
       schoolNameCombined: "डेमो कम्पोजिट विद्यालय (Demo Composite School)",
@@ -73,8 +69,6 @@ export function getSchoolBranding(overrideDemo?: boolean): SchoolBranding {
 
   return {
     isDemo: false,
-    showGovtMarks: true,
-    sampleVillage: "Chandpur",
     schoolNameEnglish: "Composite School Chandpur Tarhar",
     schoolNameHindi: "कम्पोजिट विद्यालय चांदपुर तरहर",
     schoolNameCombined:
