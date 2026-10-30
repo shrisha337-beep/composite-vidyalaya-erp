@@ -100,6 +100,20 @@ describe("Importer - Heuristic Column Mapping (Hindi & English Regex)", () => {
     // Registration No should not steal admissionNo because it's already assigned
     expect(mapping["Registration No"]).toBeUndefined();
   });
+
+  it("regression: word boundaries in s/o and d/o prevent greedy matching of DOB and Random Column", () => {
+    const headers = ["Random Column", "DOB", "D/O Name"];
+    const mapping = heuristicMapping(headers);
+
+    // 'Random Column' must NOT match fatherName (would match without word boundaries due to 'do' in Random)
+    expect(mapping["Random Column"]).toBeUndefined();
+
+    // 'DOB' must map to dob, NOT fatherName
+    expect(mapping["DOB"]).toBe("dob");
+
+    // Legitimate D/O header still correctly maps to fatherName
+    expect(mapping["D/O Name"]).toBe("fatherName");
+  });
 });
 
 describe("Importer - Gemini AI Route & Heuristic Fallback", () => {
@@ -247,7 +261,7 @@ describe("Importer - Zod Row Validation & Normalization", () => {
       dob: "12/04/2016",
       classNumber: "Class 4",
       category: "OBC",
-      mobile: "9876543210",
+      mobile: "9123456789",
       village: "Kalyanpur",
       district: "Lucknow",
     };

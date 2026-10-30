@@ -45,8 +45,8 @@ function downloadTemplate() {
     "15/08/2014",
     "5",
     "OBC",
-    "9876543210",
-    "Chandpur",
+    "9123456789",
+    "Shantinagar",
     "Bijnor",
   ];
   const ws = XLSX.utils.aoa_to_sheet([headers, example]);

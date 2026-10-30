@@ -12,12 +12,10 @@
  */
 
 import { Resend } from "resend";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { getSchoolBranding } from "@/lib/branding";
 
 // Update this once the school domain is verified on Resend
 const FROM_EMAIL = process.env.FROM_EMAIL ?? "onboarding@resend.dev";
-const SCHOOL_NAME = "Composite School Chandpur Tarhar";
 
 export async function sendPasswordResetEmail({
   toEmail,
@@ -28,15 +26,23 @@ export async function sendPasswordResetEmail({
   resetLink: string;
   recipientName: string;
 }): Promise<{ success: boolean; error?: string }> {
+  if (process.env.VERCEL_ENV !== "production") {
+    console.log("[skipped in non-production]", resetLink);
+    return { success: true };
+  }
+
+  const schoolName = getSchoolBranding().schoolNameEnglish;
+
   try {
+    const resend = new Resend(process.env.RESEND_API_KEY);
     await resend.emails.send({
       from: FROM_EMAIL,
       to: toEmail,
-      subject: `Password Reset Request — ${SCHOOL_NAME} ERP`,
+      subject: `Password Reset Request — ${schoolName} ERP`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; color: #1a1a1a;">
           <div style="background: #1e40af; padding: 24px 32px; border-radius: 8px 8px 0 0;">
-            <h1 style="margin: 0; color: #ffffff; font-size: 20px;">${SCHOOL_NAME}</h1>
+            <h1 style="margin: 0; color: #ffffff; font-size: 20px;">${schoolName}</h1>
             <p style="margin: 4px 0 0; color: #bfdbfe; font-size: 13px;">ERP Portal — Password Reset</p>
           </div>
 
@@ -66,7 +72,7 @@ export async function sendPasswordResetEmail({
             <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
 
             <p style="margin: 0; font-size: 11px; color: #9ca3af;">
-              This is an automated email from the ${SCHOOL_NAME} ERP Portal.
+              This is an automated email from the ${schoolName} ERP Portal.
               Please do not reply to this email.
             </p>
           </div>

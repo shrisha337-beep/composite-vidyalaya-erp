@@ -115,11 +115,15 @@ export function TcForm({
   student,
   decrypted,
   nextTcNumber,
+  defaultBlock = "",
+  defaultDistrict = "",
 }: {
   locale: string;
   student: any;
   decrypted: any;
   nextTcNumber: string;
+  defaultBlock?: string;
+  defaultDistrict?: string;
 }) {
   const searchParams = useSearchParams();
   const error = searchParams.get("error");
@@ -175,13 +179,13 @@ export function TcForm({
             label="School Block"
             labelHi="विकास खण्ड"
             name="schoolBlock"
-            defaultValue="Paraspur"
+            defaultValue={defaultBlock}
           />
           <Field
             label="School District"
             labelHi="जनपद"
             name="schoolDistrict"
-            defaultValue="Gonda"
+            defaultValue={defaultDistrict}
           />
         </div>
       </div>

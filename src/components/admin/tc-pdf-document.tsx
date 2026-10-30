@@ -1,6 +1,7 @@
 "use client";
 
 import { Document, Page, Text, View, StyleSheet, Font } from "@react-pdf/renderer";
+import type { SchoolBranding } from "@/lib/branding";
 
 // Register Noto Sans Devanagari font to support Hindi text rendering in PDF
 Font.register({
@@ -128,10 +129,13 @@ const styles = StyleSheet.create({
 export function TcPdfDocument({
   tc,
   student,
+  branding,
 }: {
   tc: any;
   student: any;
+  branding: SchoolBranding;
 }) {
+  const activeBranding = branding;
   const dob = new Date(tc.dobSnapshot);
   const dobFormatted = dob.toLocaleDateString("en-IN", {
     day: "2-digit",
@@ -167,15 +171,17 @@ export function TcPdfDocument({
           <View style={styles.header}>
             <Text style={styles.titleHindi}>स्थानान्तरण प्रमाण पत्र</Text>
             <Text style={styles.titleEnglish}>Transfer Certificate</Text>
-            <Text style={styles.schoolName}>कम्पोजिट विद्यालय चांदपुर तरहर (Composite Vidyalaya Chandpur Tarahar)</Text>
+            <Text style={styles.schoolName}>{activeBranding.schoolNameCombined}</Text>
             <Text style={styles.schoolMeta}>
-              ब्लॉक - परासपुर, तहसील - कर्नलगंज, जनपद - गोंडा
+              {activeBranding.tcAddressMeta}
             </Text>
           </View>
 
           {/* Top metadata */}
           <View style={styles.topMetadata}>
-            <Text style={styles.metaText}>U-DISE Code: {tc.udiseCode || "Pending Allotment"}</Text>
+            <Text style={styles.metaText}>
+              U-DISE Code: {activeBranding.isDemo ? activeBranding.udiseCode : (tc.udiseCode || "Pending Allotment")}
+            </Text>
             <Text style={styles.metaText}>Serial No / क्रम संख्या: {tc.tcNumber}</Text>
           </View>
 

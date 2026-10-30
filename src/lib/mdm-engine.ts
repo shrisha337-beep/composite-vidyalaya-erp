@@ -25,6 +25,9 @@ export const DEFAULT_MDM_RATES: MDMRates = {
   milkMlJunior: 200,
 };
 
+export const MILK_ML_PRIMARY = DEFAULT_MDM_RATES.milkMlPrimary;
+export const MILK_ML_JUNIOR = DEFAULT_MDM_RATES.milkMlJunior;
+
 export interface MDMItemsServed {
   rice: boolean;
   wheat: boolean;
@@ -151,6 +154,8 @@ export function calculateSchoolMDM(
   };
 }
 
+export const calculateMDMDayTotal = calculateSchoolMDM;
+
 export interface GrainLedger {
   openingBalanceKg: number;
   receivedKg: number;
@@ -178,3 +183,5 @@ export function calculateGrainStock(
     closingBalanceKg,
   };
 }
+
+export const calculateStockLedger = calculateGrainStock;

@@ -53,7 +53,7 @@ describe("RBAC Server Guard - requireRole", () => {
       user: {
         id: "usr-admin",
         role: "ADMIN",
-        phone: "9876543210",
+        phone: "9000000002",
       },
     };
 

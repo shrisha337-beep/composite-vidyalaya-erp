@@ -87,11 +87,11 @@ describe("Account Lockout & Credentials Authentication - Integration with Mocked
     (prisma.user.findUnique as any).mockResolvedValue(null);
 
     await expect(
-      authorize({ phone: "9876543210", password: "SecretPassword123" })
+      authorize({ phone: "9000000003", password: "SecretPassword123" })
     ).rejects.toThrow("INVALID_CREDENTIALS");
 
     expect(prisma.user.findUnique).toHaveBeenCalledWith({
-      where: { phone: "9876543210" },
+      where: { phone: "9000000003" },
     });
     expect(prisma.user.update).not.toHaveBeenCalled();
   });
@@ -99,40 +99,40 @@ describe("Account Lockout & Credentials Authentication - Integration with Mocked
   it("returns uniform INVALID_CREDENTIALS error when user is inactive or passwordHash missing", async () => {
     (prisma.user.findUnique as any).mockResolvedValue({
       id: "u-1",
-      phone: "9876543210",
+      phone: "9000000003",
       passwordHash: null,
       isActive: true,
       role: "TEACHER",
     });
 
     await expect(
-      authorize({ phone: "9876543210", password: "SecretPassword123" })
+      authorize({ phone: "9000000003", password: "SecretPassword123" })
     ).rejects.toThrow("INVALID_CREDENTIALS");
 
     (prisma.user.findUnique as any).mockResolvedValue({
       id: "u-1",
-      phone: "9876543210",
+      phone: "9000000003",
       passwordHash: "hash123",
       isActive: false,
       role: "TEACHER",
     });
 
     await expect(
-      authorize({ phone: "9876543210", password: "SecretPassword123" })
+      authorize({ phone: "9000000003", password: "SecretPassword123" })
     ).rejects.toThrow("INVALID_CREDENTIALS");
   });
 
   it("returns uniform INVALID_CREDENTIALS error when role is not ADMIN or TEACHER", async () => {
     (prisma.user.findUnique as any).mockResolvedValue({
       id: "u-1",
-      phone: "9876543210",
+      phone: "9000000003",
       passwordHash: "hash123",
       isActive: true,
       role: "STUDENT",
     });
 
     await expect(
-      authorize({ phone: "9876543210", password: "SecretPassword123" })
+      authorize({ phone: "9000000003", password: "SecretPassword123" })
     ).rejects.toThrow("INVALID_CREDENTIALS");
   });
 
@@ -140,7 +140,7 @@ describe("Account Lockout & Credentials Authentication - Integration with Mocked
     const lockedUntil = new Date(Date.now() + 10 * 60 * 1000);
     (prisma.user.findUnique as any).mockResolvedValue({
       id: "u-1",
-      phone: "9876543210",
+      phone: "9000000003",
       passwordHash: "hash123",
       isActive: true,
       role: "TEACHER",
@@ -149,7 +149,7 @@ describe("Account Lockout & Credentials Authentication - Integration with Mocked
     });
 
     await expect(
-      authorize({ phone: "9876543210", password: "SecretPassword123" })
+      authorize({ phone: "9000000003", password: "SecretPassword123" })
     ).rejects.toThrow("ACCOUNT_LOCKED");
 
     expect(bcrypt.compare).not.toHaveBeenCalled();
@@ -158,7 +158,7 @@ describe("Account Lockout & Credentials Authentication - Integration with Mocked
   it("increments failedLoginAttempts and throws uniform INVALID_CREDENTIALS on wrong password", async () => {
     (prisma.user.findUnique as any).mockResolvedValue({
       id: "u-1",
-      phone: "9876543210",
+      phone: "9000000003",
       passwordHash: "hash123",
       isActive: true,
       role: "TEACHER",
@@ -168,7 +168,7 @@ describe("Account Lockout & Credentials Authentication - Integration with Mocked
     (bcrypt.compare as any).mockResolvedValue(false);
 
     await expect(
-      authorize({ phone: "9876543210", password: "WrongPassword" })
+      authorize({ phone: "9000000003", password: "WrongPassword" })
     ).rejects.toThrow("INVALID_CREDENTIALS");
 
     expect(prisma.user.update).toHaveBeenCalledWith({
@@ -180,7 +180,7 @@ describe("Account Lockout & Credentials Authentication - Integration with Mocked
   it("locks account for 15 minutes when 5th failed password attempt occurs", async () => {
     (prisma.user.findUnique as any).mockResolvedValue({
       id: "u-1",
-      phone: "9876543210",
+      phone: "9000000003",
       passwordHash: "hash123",
       isActive: true,
       role: "TEACHER",
@@ -191,7 +191,7 @@ describe("Account Lockout & Credentials Authentication - Integration with Mocked
 
     const beforeTime = Date.now();
     await expect(
-      authorize({ phone: "9876543210", password: "WrongPassword" })
+      authorize({ phone: "9000000003", password: "WrongPassword" })
     ).rejects.toThrow("ACCOUNT_LOCKED");
 
     expect(prisma.user.update).toHaveBeenCalledWith({
@@ -210,7 +210,7 @@ describe("Account Lockout & Credentials Authentication - Integration with Mocked
   it("resets failedLoginAttempts and clears lockedUntil on successful password match", async () => {
     (prisma.user.findUnique as any).mockResolvedValue({
       id: "u-1",
-      phone: "9876543210",
+      phone: "9000000003",
       passwordHash: "correct_hash",
       isActive: true,
       role: "ADMIN",
@@ -220,12 +220,12 @@ describe("Account Lockout & Credentials Authentication - Integration with Mocked
     });
     (bcrypt.compare as any).mockResolvedValue(true);
 
-    const user = await authorize({ phone: "9876543210", password: "CorrectPassword123" });
+    const user = await authorize({ phone: "9000000003", password: "CorrectPassword123" });
 
     expect(user).toEqual({
       id: "u-1",
       role: "ADMIN",
-      phone: "9876543210",
+      phone: "9000000003",
       email: "admin@school.up.gov.in",
     });
 

@@ -197,7 +197,30 @@ describe("Marks Entry Action - saveStudentMarksAction Integration", () => {
     });
 
     expect(res.success).toBe(false);
-    expect(res.message).toContain("Invalid marks detected. Marks must be between 0 and the maximum limit of 30");
+    expect(res.message).toContain("exceed maximum limit of 30");
+  });
+
+  it("regression: rejects batch containing duplicate student IDs before transaction is opened", async () => {
+    (prisma.subject.findUnique as any).mockResolvedValue({
+      id: "sub-1",
+      class: { sessionId: "sess-1", name: "6" },
+    });
+    (prisma.teacher.findUnique as any).mockResolvedValue({ id: "t-1" });
+    (prisma.teacherSubject.findUnique as any).mockResolvedValue({ id: "ts-1" });
+
+    const res = await saveStudentMarksAction({
+      marksRecords: [
+        { studentId: "s-1", marksObtained: 8 },
+        { studentId: "s-1", marksObtained: 9 }, // duplicate studentId in same batch
+      ],
+      subjectId: "sub-1",
+      examTerm: "UNIT_TEST_1",
+      locale: "hi",
+    });
+
+    expect(res.success).toBe(false);
+    expect(res.message).toContain("Duplicate student entries detected in marks batch: s-1");
+    expect(prisma.$transaction).not.toHaveBeenCalled();
   });
 
   it("successfully persists marks in a single transaction when valid", async () => {

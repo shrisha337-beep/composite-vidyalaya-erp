@@ -2,6 +2,7 @@ import { requireRole } from "@/lib/rbac";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { PrintableTimetable } from "@/components/admin/printable-timetable";
+import { getSchoolBranding } from "@/lib/branding";
 
 export default async function AdminTimetablePage({
   params,
@@ -10,6 +11,7 @@ export default async function AdminTimetablePage({
 }) {
   await requireRole(["ADMIN"]);
   const { locale } = await params;
+  const branding = getSchoolBranding();
 
   return (
     <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-6xl w-full">
@@ -29,7 +31,10 @@ export default async function AdminTimetablePage({
         </div>
       </div>
 
-      <PrintableTimetable />
+      <PrintableTimetable
+        schoolNameHindi={branding.schoolNameHindi}
+        schoolNameEnglish={branding.schoolNameEnglish}
+      />
     </main>
   );
 }

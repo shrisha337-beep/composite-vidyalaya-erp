@@ -5,6 +5,9 @@ import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { Providers } from "@/components/provider";
+import { getSchoolBranding } from "@/lib/branding";
+import { isDemoMode } from "@/lib/demo-mode";
+import { DemoBanner } from "@/components/demo-banner";
 import "../globals.css";
 
 const notoSerifDisplay = Noto_Serif_Display({
@@ -14,12 +17,24 @@ const notoSerifDisplay = Noto_Serif_Display({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://cvchandpurtarhar.in"),
-  title: "Composite School Chandpur Tarhar - ERP",
-  description:
-    "Government school ERP portal for Composite School Chandpur Tarhar. Manage students, attendance, marks, mid-day meals, and more.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const branding = getSchoolBranding();
+  let metadataBase: URL | undefined = undefined;
+  const rawUrl = process.env.NEXT_PUBLIC_APP_URL;
+  if (rawUrl) {
+    try {
+      metadataBase = new URL(rawUrl);
+    } catch {
+      metadataBase = undefined;
+    }
+  }
+
+  return {
+    ...(metadataBase ? { metadataBase } : {}),
+    title: branding.metaTitle,
+    description: branding.metaDescription,
+  };
+}
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -44,6 +59,7 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} className="h-full antialiased">
       <body className={`min-h-full flex flex-col ${notoSerifDisplay.variable}`}>
+        <DemoBanner isDemo={isDemoMode()} />
         <NextIntlClientProvider locale={locale} messages={messages}>
           {/* SessionProvider must wrap all client components that call useSession / signIn */}
           <Providers>{children}</Providers>

@@ -18,6 +18,7 @@ import {
 import { requireRole } from "@/lib/rbac";
 import Link from "next/link";
 import { getSchoolSettings } from "@/lib/data/school-settings";
+import { getSchoolBranding } from "@/lib/branding";
 
 // --- Data fetching ---
 
@@ -105,6 +106,8 @@ export default async function AdminDashboardPage({
     year: "numeric",
   });
 
+  const branding = getSchoolBranding();
+
   return (
     <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
       {/* Header bar */}
@@ -112,9 +115,9 @@ export default async function AdminDashboardPage({
         <div>
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold uppercase tracking-widest text-[#6B1D30] bg-[#6B1D30]/10 px-2 py-0.5 rounded-sm">
-              UP Basic Shiksha
+              {branding.systemTag}
             </span>
-            <span className="text-xs text-[#7A7267]">Official ERP Portal</span>
+            <span className="text-xs text-[#7A7267]">{branding.isDemo ? "Demo School Portal" : "Official ERP Portal"}</span>
           </div>
           <h1 className="text-2xl font-bold text-[#2D2A26] tracking-tight mt-1">
             Admin Overview / प्रशासनिक डैशबोर्ड
@@ -140,10 +143,12 @@ export default async function AdminDashboardPage({
                 </div>
                 <div>
                   <h2 className="font-school-header text-lg font-semibold text-[#2D2A26] leading-tight">
-                    {stats.schoolSettings.schoolName || "Composite School Chandpur Tarhar"}
+                    {branding.isDemo
+                      ? branding.schoolNameEnglish
+                      : stats.schoolSettings.schoolName || branding.schoolNameEnglish}
                   </h2>
                   <p className="text-xs text-[#7A7267] font-medium mt-0.5">
-                    कम्पोजिट विद्यालय चांदपुर तरहर
+                    {branding.schoolNameHindi}
                   </p>
                 </div>
               </div>
@@ -156,19 +161,25 @@ export default async function AdminDashboardPage({
               <div className="p-2 bg-[#F3EDE4]/50 rounded-sm border border-[#E8E0D4]/60">
                 <p className="text-[10px] uppercase font-bold text-[#7A7267]">UDISE Code</p>
                 <p className="text-xs font-bold text-[#2D2A26] mt-0.5 font-mono">
-                  {stats.schoolSettings.udiseCode || "09530607202"}
+                  {branding.isDemo
+                    ? branding.udiseCode
+                    : stats.schoolSettings.udiseCode || branding.udiseCode}
                 </p>
               </div>
               <div className="p-2 bg-[#F3EDE4]/50 rounded-sm border border-[#E8E0D4]/60">
                 <p className="text-[10px] uppercase font-bold text-[#7A7267]">Block / ब्लॉक</p>
                 <p className="text-xs font-bold text-[#2D2A26] mt-0.5">
-                  {stats.schoolSettings.schoolBlock || "Paraspur"}
+                  {branding.isDemo
+                    ? branding.schoolBlock
+                    : stats.schoolSettings.schoolBlock || branding.schoolBlock}
                 </p>
               </div>
               <div className="p-2 bg-[#F3EDE4]/50 rounded-sm border border-[#E8E0D4]/60">
                 <p className="text-[10px] uppercase font-bold text-[#7A7267]">District / जनपद</p>
                 <p className="text-xs font-bold text-[#2D2A26] mt-0.5">
-                  {stats.schoolSettings.schoolDistrict || "Gonda"}
+                  {branding.isDemo
+                    ? branding.schoolDistrict
+                    : stats.schoolSettings.schoolDistrict || branding.schoolDistrict}
                 </p>
               </div>
               <div className="p-2 bg-[#F3EDE4]/50 rounded-sm border border-[#E8E0D4]/60">
@@ -179,7 +190,7 @@ export default async function AdminDashboardPage({
           </div>
 
           <div className="mt-4 pt-3 border-t border-[#E8E0D4] flex items-center justify-between text-xs text-[#7A7267]">
-            <span>Govt. of Uttar Pradesh - Basic Education Dept.</span>
+            <span>{branding.governanceShort}</span>
             <Link
               href={`/${locale}/admin/settings`}
               className="text-[#6B1D30] font-semibold hover:underline flex items-center gap-1"

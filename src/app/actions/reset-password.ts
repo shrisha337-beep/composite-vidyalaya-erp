@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/rbac";
+import { isDemoMode } from "@/lib/demo-mode";
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 
@@ -12,6 +13,10 @@ import { revalidatePath } from "next/cache";
  */
 export async function resetUserPassword(formData: FormData): Promise<void> {
   await requireRole(["ADMIN"]);
+
+  if (isDemoMode()) {
+    throw new Error("Password resets are disabled in the demo environment.");
+  }
 
   const userId = (formData.get("userId") as string)?.trim();
   const newPassword = (formData.get("newPassword") as string)?.trim();

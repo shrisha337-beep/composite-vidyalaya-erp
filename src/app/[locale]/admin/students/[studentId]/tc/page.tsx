@@ -6,6 +6,8 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { TcForm } from "@/components/admin/tc-form";
 import { TcEditForm } from "@/components/admin/tc-edit-form";
+import { getSchoolBranding } from "@/lib/branding";
+import { getSchoolSettings } from "@/lib/data/school-settings";
 
 async function getStudent(studentId: string) {
   return await prisma.student.findUnique({
@@ -114,6 +116,10 @@ export default async function IssueTcPage({
   };
 
   const nextTcNumber = await getNextTcNumber();
+  const branding = getSchoolBranding();
+  const settings = await getSchoolSettings();
+  const defaultBlock = settings.schoolBlock || branding.schoolBlock;
+  const defaultDistrict = settings.schoolDistrict || branding.schoolDistrict;
 
   return (
     <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-3xl">
@@ -138,6 +144,8 @@ export default async function IssueTcPage({
         student={student}
         decrypted={decrypted}
         nextTcNumber={nextTcNumber}
+        defaultBlock={defaultBlock}
+        defaultDistrict={defaultDistrict}
       />
     </main>
   );

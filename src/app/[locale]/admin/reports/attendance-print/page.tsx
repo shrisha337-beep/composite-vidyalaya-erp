@@ -8,6 +8,7 @@ import {
   SchoolInfo,
 } from "@/components/admin/printable-attendance-report";
 import { getSchoolSettings } from "@/lib/data/school-settings";
+import { getSchoolBranding } from "@/lib/branding";
 
 export default async function AttendancePrintPage({
   params,
@@ -52,12 +53,17 @@ export default async function AttendancePrintPage({
 
   // School settings
   const settings = await getSchoolSettings();
+  const branding = getSchoolBranding();
   const schoolInfo: SchoolInfo = {
-    schoolName: settings.schoolName || "Composite School Chandpur Tarhar",
+    schoolName: settings.schoolName || branding.schoolNameEnglish,
+    schoolNameHindi: branding.schoolNameHindi,
     address: settings.address || "",
-    udiseCode: settings.udiseCode || "09530607202",
-    schoolBlock: settings.schoolBlock || "Paraspur",
-    schoolDistrict: settings.schoolDistrict || "Gonda",
+    udiseCode: settings.udiseCode || branding.udiseCode,
+    schoolBlock: settings.schoolBlock || branding.schoolBlockHindi,
+    schoolDistrict: settings.schoolDistrict || branding.schoolDistrictHindi,
+    registerSubtitle: branding.isDemo
+      ? "छात्र-छात्रा उपस्थिति पंजीका"
+      : "आधिकारिक छात्र-छात्रा उपस्थिति पंजीका",
   };
 
   // Determine date bounds & label

@@ -137,10 +137,10 @@ export function AdmissionForm({
 }: {
   locale: string;
   sessionLabel: string;
-  schoolName?: string;
-  schoolDistrict?: string;
-  schoolBlock?: string;
-  udiseCode?: string;
+  schoolName: string;
+  schoolDistrict: string;
+  schoolBlock: string;
+  udiseCode: string;
   isEdit?: boolean;
   student?: any;
   decrypted?: any;
@@ -181,6 +181,11 @@ export function AdmissionForm({
   const father = decrypted?.guardians?.find((g: any) => g.relation === "FATHER") || student?.guardians?.find((g: any) => g.relation === "FATHER");
   const mother = decrypted?.guardians?.find((g: any) => g.relation === "MOTHER") || student?.guardians?.find((g: any) => g.relation === "MOTHER");
   const guardian = decrypted?.guardians?.find((g: any) => g.relation === "GUARDIAN") || student?.guardians?.find((g: any) => g.relation === "GUARDIAN");
+
+  const defaultSchoolName = schoolName;
+  const defaultBlock = schoolBlock;
+  const defaultDistrict = schoolDistrict;
+  const defaultUdise = udiseCode;
 
   return (
     <form action={isEdit ? updateStudent : createStudent}>
@@ -230,7 +235,7 @@ export function AdmissionForm({
             <input
               name="schoolName"
               type="text"
-              defaultValue={schoolName || "Composite School Chandpur Tarhar"}
+              defaultValue={defaultSchoolName}
               readOnly
               className="w-full border border-gray-200 rounded px-2.5 py-1.5 text-sm bg-gray-50 text-gray-600 cursor-not-allowed"
             />
@@ -239,7 +244,7 @@ export function AdmissionForm({
             <input
               name="block"
               type="text"
-              defaultValue={schoolBlock || "Paraspur"}
+              defaultValue={defaultBlock}
               readOnly
               className="w-full border border-gray-200 rounded px-2.5 py-1.5 text-sm bg-gray-50 text-gray-600 cursor-not-allowed"
             />
@@ -248,7 +253,7 @@ export function AdmissionForm({
             <input
               name="headerDistrict"
               type="text"
-              defaultValue={schoolDistrict || "Gonda"}
+              defaultValue={defaultDistrict}
               readOnly
               className="w-full border border-gray-200 rounded px-2.5 py-1.5 text-sm bg-gray-50 text-gray-600 cursor-not-allowed"
             />
@@ -256,7 +261,7 @@ export function AdmissionForm({
           <Field label="UDISE Code" labelHi="यू-डाइस कोड">
             <input
               type="text"
-              value={udiseCode || "09530607202"}
+              value={defaultUdise}
               readOnly
               className="w-full border border-gray-200 rounded px-2.5 py-1.5 text-sm bg-gray-50 text-gray-600 cursor-not-allowed font-mono"
             />
@@ -379,8 +384,8 @@ export function AdmissionForm({
           {/* Address */}
           <Field label="Village / Mohalla" labelHi="निवास स्थान ग्राम/मोहल्ला" name="villageOrMohalla" defaultValue={student?.villageOrMohalla || ""} />
           <Field label="Post Office" labelHi="पोस्ट" name="postOffice" defaultValue={student?.postOffice || ""} />
-          <Field label="Development Block" labelHi="विकास खण्ड/नगरखेड़ा" name="developmentBlock" defaultValue={student?.developmentBlock || "Paraspur"} />
-          <Field label="District" labelHi="जनपद" name="district" defaultValue={student?.district || "Gonda"} />
+          <Field label="Development Block" labelHi="विकास खण्ड/नगरखेड़ा" name="developmentBlock" defaultValue={student?.developmentBlock || defaultBlock} />
+          <Field label="District" labelHi="जनपद" name="district" defaultValue={student?.district || defaultDistrict} />
           <Field label="Pincode" labelHi="पिनकोड" name="pincode" type="text" placeholder="6 digits" defaultValue={student?.pincode || ""} />
           <Field label="Mobile Number" labelHi="मोबाइल नंबर" name="mobileNumber" type="tel" placeholder="10 digits" defaultValue={student?.mobileNumber || ""} />
           <Field label="WhatsApp Number" labelHi="व्हाट्सऐप नंबर" name="whatsappNumber" type="tel" placeholder="10 digits" defaultValue={student?.whatsappNumber || ""} />

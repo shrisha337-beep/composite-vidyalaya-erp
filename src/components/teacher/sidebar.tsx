@@ -70,7 +70,17 @@ function NavLink({
   );
 }
 
-function SidebarContent({ locale, onClose }: { locale: string; onClose?: () => void }) {
+function SidebarContent({
+  locale,
+  onClose,
+  schoolName = "Composite School",
+  location = "",
+}: {
+  locale: string;
+  onClose?: () => void;
+  schoolName?: string;
+  location?: string;
+}) {
   return (
     <div className="flex flex-col h-full bg-[#6B1D30]">
       {/* Header */}
@@ -81,10 +91,10 @@ function SidebarContent({ locale, onClose }: { locale: string; onClose?: () => v
           </div>
           <div>
             <p className="font-school-header text-[15px] font-semibold text-white tracking-wide leading-snug">
-              Composite School
+              {schoolName}
             </p>
             <p className="text-[10px] text-white/75 font-medium tracking-wider uppercase mt-0.5">
-              Teacher Portal · Chandpur Tarhar
+              Teacher Portal · {location}
             </p>
           </div>
         </div>
@@ -123,7 +133,15 @@ function SidebarContent({ locale, onClose }: { locale: string; onClose?: () => v
   );
 }
 
-export function TeacherSidebar({ locale }: { locale: string }) {
+export function TeacherSidebar({
+  locale,
+  schoolName = "Composite School",
+  location = "",
+}: {
+  locale: string;
+  schoolName?: string;
+  location?: string;
+}) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
@@ -136,7 +154,7 @@ export function TeacherSidebar({ locale }: { locale: string }) {
     <>
       {/* Desktop sidebar */}
       <aside className="hidden lg:flex flex-col w-64 shrink-0 sticky top-0 h-screen bg-[#6B1D30] z-20 shadow-md">
-        <SidebarContent locale={locale} />
+        <SidebarContent locale={locale} schoolName={schoolName} location={location} />
       </aside>
 
       {/* Mobile Top Header App Bar (Phone View) */}
@@ -154,9 +172,9 @@ export function TeacherSidebar({ locale }: { locale: string }) {
           </div>
           <div>
             <p className="font-school-header text-sm font-semibold text-white leading-tight">
-              Composite School
+              {schoolName}
             </p>
-            <p className="text-[10px] text-white/70 font-medium">Teacher Portal · Chandpur Tarhar</p>
+            <p className="text-[10px] text-white/70 font-medium">Teacher Portal · {location}</p>
           </div>
         </div>
         <div className="flex items-center gap-1.5">

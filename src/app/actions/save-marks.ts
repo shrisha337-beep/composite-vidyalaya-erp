@@ -4,19 +4,14 @@ import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/rbac";
 import { revalidatePath } from "next/cache";
 
-type ExamTerm = "UNIT_TEST_1" | "UNIT_TEST_2" | "HALF_YEARLY" | "ANNUAL";
+import {
+  validateMarksBatch,
+  getMaxMarksForTerm,
+  type ExamTerm,
+  type StudentMarkEntry,
+} from "@/lib/marks-validation";
 
-interface StudentMarkRecord {
-  studentId: string;
-  marksObtained: number;
-}
-
-const TERM_MAX_MARKS: Record<ExamTerm, number> = {
-  UNIT_TEST_1: 10,
-  UNIT_TEST_2: 10,
-  HALF_YEARLY: 30,
-  ANNUAL: 50,
-};
+type StudentMarkRecord = StudentMarkEntry;
 
 export async function saveStudentMarksAction({
   marksRecords,
@@ -36,7 +31,7 @@ export async function saveStudentMarksAction({
     return { success: false, message: "Missing required parameters." };
   }
 
-  const maxMarks = TERM_MAX_MARKS[examTerm];
+  const maxMarks = getMaxMarksForTerm(examTerm);
 
   // 1. Fetch active session and verify subject
   const subject = await prisma.subject.findUnique({
@@ -76,14 +71,13 @@ export async function saveStudentMarksAction({
 
   const activeSessionId = subject.class.sessionId;
 
-  // 2. Validate marks range
-  for (const rec of marksRecords) {
-    if (rec.marksObtained < 0 || rec.marksObtained > maxMarks) {
-      return {
-        success: false,
-        message: `Invalid marks detected. Marks must be between 0 and the maximum limit of ${maxMarks} for ${examTerm.replace(/_/g, " ")}.`,
-      };
-    }
+  // 2. Validate marks range and reject duplicate student entries before transaction
+  const batchValidation = validateMarksBatch(marksRecords, examTerm);
+  if (!batchValidation.valid) {
+    return {
+      success: false,
+      message: batchValidation.error || "Invalid marks batch.",
+    };
   }
 
   try {

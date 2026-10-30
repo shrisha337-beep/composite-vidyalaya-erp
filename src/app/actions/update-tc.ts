@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/rbac";
+import { isDemoMode } from "@/lib/demo-mode";
 import { revalidatePath } from "next/cache";
 
 /**
@@ -184,6 +185,13 @@ export async function deleteTransferCertificateAction({
 
   if (!tcId) {
     return { success: false, message: "TC ID is required." };
+  }
+
+  if (isDemoMode()) {
+    return {
+      success: false,
+      message: "Destructive actions are disabled in the demo environment.",
+    };
   }
 
   const existingTc = await prisma.transferCertificate.findUnique({

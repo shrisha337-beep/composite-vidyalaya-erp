@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { LoginForm } from "@/components/auth/login-form";
+import { getSchoolBranding } from "@/lib/branding";
 
 export async function generateMetadata({
   params,
@@ -9,12 +10,15 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "login" });
+  const branding = getSchoolBranding();
   return {
-    title: `${t("heading")} - Composite School Chandpur Tarhar`,
+    title: `${t("heading")} - ${branding.schoolNameEnglish}`,
   };
 }
 
 export default function LoginPage() {
+  const branding = getSchoolBranding();
+
   return (
     <main className="flex min-h-screen bg-[#F3EDE4]">
       {/*
@@ -44,22 +48,28 @@ export default function LoginPage() {
           </div>
 
           <h1 className="font-school-header text-3xl xl:text-4xl font-semibold leading-tight text-white mb-2 tracking-wide">
-            Composite School
-            <br />
-            <span className="text-2xl xl:text-3xl font-normal text-white/90">Chandpur Tarhar</span>
+            {branding.schoolTitleLine1}
+            {branding.schoolTitleLine2 ? (
+              <>
+                <br />
+                <span className="text-2xl xl:text-3xl font-normal text-white/90">
+                  {branding.schoolTitleLine2}
+                </span>
+              </>
+            ) : null}
           </h1>
           <p className="text-sm text-white/80 font-medium">
-            कम्पोजिट विद्यालय चांदपुर तरहर
+            {branding.schoolNameHindi}
           </p>
         </div>
 
         <div>
           <div className="w-12 h-1 bg-white/30 rounded-none mb-3" />
           <p className="text-xs text-white/60">
-            Government of Uttar Pradesh · Basic Education Department
+            {branding.governanceLine}
           </p>
           <p className="text-xs text-white/40 mt-1">
-            Official Administrative Portal for Teachers & Authorities
+            {branding.portalSubtitle}
           </p>
         </div>
       </div>
@@ -74,12 +84,14 @@ export default function LoginPage() {
             CV
           </div>
           <p className="text-xs font-bold uppercase tracking-widest text-[#7A7267] mb-1">
-            Government School Portal
+            {branding.portalCategory}
           </p>
           <h1 className="font-school-header text-2xl font-semibold text-[#6B1D30]">
-            Composite School
+            {branding.schoolTitleLine1}
           </h1>
-          <p className="text-xs text-[#7A7267]">Chandpur Tarhar · कम्पोजिट विद्यालय</p>
+          <p className="text-xs text-[#7A7267]">
+            {branding.loginMobileSubtitle}
+          </p>
         </div>
 
         <div className="w-full max-w-md bg-white p-8 sm:p-10 rounded-sm border border-[#E8E0D4] shadow-xs">

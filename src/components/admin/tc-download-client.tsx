@@ -6,6 +6,7 @@ import { ArrowLeft, Download, Eye, Loader, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { TcPdfDocument } from "@/components/admin/tc-pdf-document";
 import { pdf } from "@react-pdf/renderer";
+import type { SchoolBranding } from "@/lib/branding";
 
 // Dynamically import PDFDownloadLink with SSR disabled
 const PDFDownloadLink = dynamic(
@@ -17,10 +18,12 @@ export function TcDownloadClient({
   locale,
   student,
   tc,
+  branding,
 }: {
   locale: string;
   student: any;
   tc: any;
+  branding: SchoolBranding;
 }) {
   const [mounted, setMounted] = useState(false);
   const [pdfDataUrl, setPdfDataUrl] = useState<string | null>(null);
@@ -31,7 +34,7 @@ export function TcDownloadClient({
     setGenerating(true);
     setPdfError(false);
     try {
-      const doc = <TcPdfDocument tc={tc} student={student} />;
+      const doc = <TcPdfDocument tc={tc} student={student} branding={branding} />;
       const blob = await pdf(doc).toBlob();
       const url = URL.createObjectURL(blob);
       setPdfDataUrl(url);
@@ -41,7 +44,7 @@ export function TcDownloadClient({
     } finally {
       setGenerating(false);
     }
-  }, [tc, student]);
+  }, [tc, student, branding]);
 
   useEffect(() => {
     setMounted(true);
@@ -87,7 +90,7 @@ export function TcDownloadClient({
 
           <div className="flex items-center gap-3">
             <PDFDownloadLink
-              document={<TcPdfDocument tc={tc} student={student} />}
+              document={<TcPdfDocument tc={tc} student={student} branding={branding} />}
               fileName={documentName}
             >
               {({ loading }) => (
