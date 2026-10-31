@@ -510,7 +510,7 @@ The portal is built with `next-intl` to support seamless dual-language usage, re
 ```text
 composite-vidyalaya-erp/
 ├── prisma/
-│   ├── migrations/            # Versioned SQL migrations (0_init, add_enrollment_history)
+│   ├── migrations/            # Versioned SQL migrations (0_init)
 │   ├── schema.prisma          # Domain model with 41 Prisma models
 │   └── seed.ts                # Database seed script for test session, admin, and teacher
 ├── public/                    # Static public assets (favicons, logos)
@@ -587,6 +587,7 @@ composite-vidyalaya-erp/
    ```bash
    npx prisma migrate deploy
    ```
+   > Use a direct (non-pooled) Neon connection string for migration commands. Never run `prisma migrate dev` against the production database. If a database was created earlier with `db push` and has no migration history, first run `npx prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code`; only if it prints "No difference detected.", run `npx prisma migrate resolve --applied 0_init` once, then `migrate deploy`.
 
 6. **Seed baseline demonstration data:**
    ```bash
@@ -668,10 +669,11 @@ All available scripts defined in `package.json`:
    - Add `GEMINI_API_KEY` (from Google AI Studio).
 
 5. **Deploy Database Migrations:**
-   - Run production migrations:
+   - Run production migrations (existing production database only):
      ```bash
      npx prisma migrate deploy
      ```
+   - Use a direct (non-pooled) Neon connection string for migration commands. Never run `prisma migrate dev` against the production database.
    - Note: Database seeding (`npx prisma db seed`) is for local and demo environments only; do not run seed scripts in production.
 
 6. **Trigger Deployment:**

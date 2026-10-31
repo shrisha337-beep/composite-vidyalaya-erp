@@ -69,6 +69,7 @@ Run the following commands locally pointing `DATABASE_URL` to the demo database 
    ```bash
    npx prisma migrate deploy
    ```
+   > Use a direct (non-pooled) Neon connection string for migration commands. Never run `prisma migrate dev` against the production database. If a database was created earlier with `db push` and has no migration history, first run `npx prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code`; only if it prints "No difference detected.", run `npx prisma migrate resolve --applied 0_init` once, then `migrate deploy`.
 
 2. **Run Safe Synthetic Seed:**
    Ensure `ALLOW_SEED=true`, `DEMO_MODE=true`, and `NODE_ENV!=production` are set in your local `.env`:
