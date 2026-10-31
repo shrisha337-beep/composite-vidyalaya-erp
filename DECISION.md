@@ -480,8 +480,13 @@ Below is the chronological log of all critical architectural decisions made duri
    # Generate Prisma Client (outputs to src/generated/prisma)
    npx prisma generate
 
-   # Push schema modifications to database
-   npx prisma db push
+   # Apply migrations (use a direct, non-pooled Neon connection string).
+   # Never run `prisma migrate dev` against the production database.
+   # Database created earlier with `db push` and no migration history?
+   # 1. Run: npx prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code
+   # 2. Only if it prints "No difference detected.", run once:
+   #    npx prisma migrate resolve --applied 0_init
+   npx prisma migrate deploy
 
    # Seed default administrative credentials
    npx prisma db seed
