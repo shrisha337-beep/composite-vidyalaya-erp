@@ -4,6 +4,10 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { validateImportRow, parseDDMMYYYY } from "@/lib/importer-validation";
+import {
+  generateInitialStudentPassword,
+  isValidAdmissionNo,
+} from "@/lib/student-credentials";
 
 interface ImportRow {
   admissionNo?: string;
@@ -93,6 +97,10 @@ export async function POST(req: NextRequest) {
     if (!admissionNo) {
       admissionNo = String(autoCounter++).padStart(3, "0");
     }
+    if (!isValidAdmissionNo(admissionNo)) {
+      results.push({ row: rowNum, name: validatedRow.fullName, status: "error", reason: `Admission number "${admissionNo}" cannot be a 10-digit mobile number` });
+      continue;
+    }
     if (existingAdmNos.has(admissionNo)) {
       results.push({ row: rowNum, name: validatedRow.fullName, status: "error", reason: `Admission number "${admissionNo}" already exists` });
       continue;
@@ -120,8 +128,9 @@ export async function POST(req: NextRequest) {
         ? validatedRow.mobile.trim()
         : `IMPORT-${admissionNo}-${Date.now()}`;
 
-      // Temporary password hash (student changes on first login)
-      const passwordHash = await bcrypt.hash("School@123", 10);
+      // Unique random initial password (student changes on first login)
+      const initialPassword = generateInitialStudentPassword();
+      const passwordHash = await bcrypt.hash(initialPassword, 10);
 
       await prisma.$transaction(async (tx) => {
         const user = await tx.user.create({
@@ -129,6 +138,7 @@ export async function POST(req: NextRequest) {
             role: "STUDENT",
             phone,
             passwordHash,
+            mustChangePassword: true,
             isActive: true,
           },
         });

@@ -178,6 +178,7 @@ model User {
   email         String?  @unique
   phone         String   @unique // primary login + SMS OTP target
   passwordHash  String?
+  mustChangePassword Boolean @default(false)
   isActive      Boolean  @default(true)
   lastLoginAt   DateTime?
   failedLoginAttempts Int @default(0)
@@ -938,6 +939,7 @@ model SchoolSettings {
   logoUrlSamagra String?
   logoUrlSarvaShiksha String?
   defaultLocale String  @default("hi") // "hi" | "en"
+  studentPortalEnabled Boolean @default(false)
   themeConfig   Json?
 
   // MDM conversion cost per student (₹), admin-editable

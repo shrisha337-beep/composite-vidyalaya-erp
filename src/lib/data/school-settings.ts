@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import type { SchoolSettings } from "@/generated/prisma/client";
 import { getSchoolBranding } from "@/lib/branding";
@@ -13,6 +14,7 @@ export interface SchoolSettingsData {
   logoUrlSarvaShiksha: string | null;
   logoUrlSamagra: string | null;
   defaultLocale: string;
+  studentPortalEnabled: boolean;
   conversionCostPrimary: number;
   conversionCostJunior: number;
   fruitCostPerStudent: number;
@@ -32,6 +34,7 @@ export const DEFAULT_SETTINGS = {
   logoUrlSarvaShiksha: "/images/logo-sarva-shiksha.jpg",
   logoUrlSamagra: "/images/logo-samagra-shiksha.png",
   defaultLocale: "hi",
+  studentPortalEnabled: false,
   conversionCostPrimary: 6.78,
   conversionCostJunior: 10.17,
   fruitCostPerStudent: 4.0,
@@ -62,6 +65,7 @@ function toSettingsData(row: SettingsRow): SchoolSettingsData {
       logoUrlSarvaShiksha: row.logoUrlSarvaShiksha,
       logoUrlSamagra: row.logoUrlSamagra,
       defaultLocale: row.defaultLocale,
+      studentPortalEnabled: row.studentPortalEnabled,
       conversionCostPrimary: row.conversionCostPrimary,
       conversionCostJunior: row.conversionCostJunior,
       fruitCostPerStudent: row.fruitCostPerStudent,
@@ -83,6 +87,7 @@ function toSettingsData(row: SettingsRow): SchoolSettingsData {
     logoUrlSarvaShiksha: row.logoUrlSarvaShiksha,
     logoUrlSamagra: row.logoUrlSamagra,
     defaultLocale: row.defaultLocale,
+    studentPortalEnabled: row.studentPortalEnabled,
     conversionCostPrimary: row.conversionCostPrimary,
     conversionCostJunior: row.conversionCostJunior,
     fruitCostPerStudent: row.fruitCostPerStudent,
@@ -114,3 +119,21 @@ export const getSchoolSettings = cache(async (): Promise<SchoolSettingsData> => 
   });
   return toSettingsData(created);
 });
+
+/**
+ * Cross-request cached check for whether the student portal is enabled.
+ * Bounded to a 120-second TTL and tagged with "school-settings" so turning
+ * the switch off blocks already-signed-in students within <= 2 minutes
+ * without per-request database reads.
+ */
+export const isStudentPortalEnabled = unstable_cache(
+  async (): Promise<boolean> => {
+    const row = await prisma.schoolSettings.findUnique({
+      where: { id: "singleton" },
+      select: { studentPortalEnabled: true },
+    });
+    return row?.studentPortalEnabled ?? false;
+  },
+  ["student-portal-enabled"],
+  { tags: ["school-settings"], revalidate: 120 }
+);

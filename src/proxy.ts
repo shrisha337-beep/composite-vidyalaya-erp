@@ -10,6 +10,52 @@ const intlMiddleware = createMiddleware(routing);
 // redirect instead of waiting for the page to render and bounce them.
 export default withAuth(
   function middleware(req) {
+    const token = req.nextauth.token;
+    const path = req.nextUrl.pathname;
+    const localeMatch = path.match(/^\/(en|hi)(?:\/|$)/);
+    const locale = localeMatch ? localeMatch[1] : routing.defaultLocale;
+
+    if (token?.mustChangePassword) {
+      const isChangePasswordPath =
+        path === "/change-password" ||
+        /^\/(en|hi)\/change-password(?:\/|$)/.test(path);
+      const isLoginPath =
+        path === "/login" || /^\/(en|hi)\/login(?:\/|$)/.test(path);
+
+      if (!isChangePasswordPath && !isLoginPath) {
+        return NextResponse.redirect(
+          new URL(`/${locale}/change-password`, req.url)
+        );
+      }
+    }
+
+    if (token) {
+      if (
+        /^\/(en|hi)\/admin(?:\/|$)/.test(path) &&
+        token.role !== "ADMIN"
+      ) {
+        return NextResponse.redirect(
+          new URL(`/${locale}/unauthorized`, req.url)
+        );
+      }
+      if (
+        /^\/(en|hi)\/teacher(?:\/|$)/.test(path) &&
+        token.role !== "TEACHER"
+      ) {
+        return NextResponse.redirect(
+          new URL(`/${locale}/unauthorized`, req.url)
+        );
+      }
+      if (
+        /^\/(en|hi)\/student(?:\/|$)/.test(path) &&
+        token.role !== "STUDENT"
+      ) {
+        return NextResponse.redirect(
+          new URL(`/${locale}/unauthorized`, req.url)
+        );
+      }
+    }
+
     return intlMiddleware(req);
   },
   {

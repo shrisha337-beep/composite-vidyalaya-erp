@@ -7,6 +7,11 @@ import {
   evaluateFailedAttempt,
   evaluateSuccessfulLogin,
 } from "@/lib/auth-lockout";
+import { isStudentPortalEnabled } from "@/lib/data/school-settings";
+import {
+  isStaffPhoneIdentifier,
+  LEGACY_SHARED_STUDENT_PASSWORD,
+} from "@/lib/student-credentials";
 
 // Session lifetime — NextAuth's default is 30 days, which is way too long
 // for a portal holding minors' Aadhaar/bank data. 8h covers a school day;
@@ -16,8 +21,10 @@ const SESSION_MAX_AGE = 8 * 60 * 60; // seconds
 const SESSION_UPDATE_AGE = 30 * 60; // seconds
 
 /**
- * Phone + password credentials login for Admin and Teacher roles only.
- * Students and parents do not have portal access.
+ * Credentials login:
+ * - 10-digit mobile number -> ADMIN / TEACHER lookup via User.phone
+ * - Non-10-digit identifier -> STUDENT lookup via Student.admissionNo
+ *   (accepted only while studentPortalEnabled is true).
  */
 export const authOptions: NextAuthOptions = {
   session: {
@@ -39,23 +46,79 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.phone || !credentials?.password) {
+        const identifier = credentials?.phone?.trim();
+        const password = credentials?.password;
+
+        if (!identifier || !password) {
           throw new Error("INVALID_CREDENTIALS");
         }
 
-        const user = await prisma.user.findUnique({
-          where: { phone: credentials.phone },
-        });
+        let user: {
+          id: string;
+          role: "ADMIN" | "TEACHER" | "STUDENT" | "PARENT";
+          phone: string;
+          email: string | null;
+          passwordHash: string | null;
+          mustChangePassword: boolean;
+          isActive: boolean;
+          failedLoginAttempts: number;
+          lockedUntil: Date | null;
+        } | null = null;
+
+        if (isStaffPhoneIdentifier(identifier)) {
+          // 10-digit mobile numbers are exclusively for ADMIN and TEACHER accounts.
+          const staffUser = await prisma.user.findUnique({
+            where: { phone: identifier },
+          });
+
+          if (
+            !staffUser ||
+            (staffUser.role !== "ADMIN" && staffUser.role !== "TEACHER")
+          ) {
+            throw new Error("INVALID_CREDENTIALS");
+          }
+
+          user = staffUser;
+        } else {
+          // Non-10-digit identifiers resolve a STUDENT by admission number.
+          const portalOpen = await isStudentPortalEnabled();
+          if (!portalOpen) {
+            throw new Error("INVALID_CREDENTIALS");
+          }
+
+          // Never allow the legacy shared default password to authenticate a student.
+          if (
+            password.toLowerCase() ===
+            LEGACY_SHARED_STUDENT_PASSWORD.toLowerCase()
+          ) {
+            throw new Error("INVALID_CREDENTIALS");
+          }
+
+          const student = await prisma.student.findUnique({
+            where: { admissionNo: identifier },
+            select: {
+              id: true,
+              isActive: true,
+              user: true,
+            },
+          });
+
+          if (
+            !student ||
+            !student.isActive ||
+            !student.user ||
+            student.user.role !== "STUDENT"
+          ) {
+            throw new Error("INVALID_CREDENTIALS");
+          }
+
+          user = student.user;
+        }
 
         // Same generic error whether the phone doesn't exist or the
         // password is wrong — don't let the error reveal which one,
         // that's an account-enumeration leak.
         if (!user || !user.passwordHash || !user.isActive) {
-          throw new Error("INVALID_CREDENTIALS");
-        }
-
-        // Only admin and teacher roles can access the portal.
-        if (user.role !== "ADMIN" && user.role !== "TEACHER") {
           throw new Error("INVALID_CREDENTIALS");
         }
 
@@ -65,7 +128,7 @@ export const authOptions: NextAuthOptions = {
           throw new Error("ACCOUNT_LOCKED");
         }
 
-        const isValid = await bcrypt.compare(credentials.password, user.passwordHash);
+        const isValid = await bcrypt.compare(password, user.passwordHash);
 
         if (!isValid) {
           const evalResult = evaluateFailedAttempt(user.failedLoginAttempts);
@@ -93,6 +156,7 @@ export const authOptions: NextAuthOptions = {
         return {
           id: user.id,
           role: user.role,
+          mustChangePassword: user.mustChangePassword,
           phone: user.phone,
           email: user.email ?? undefined,
         };
@@ -102,10 +166,19 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     // Role gets baked into the JWT so every server component / API route
     // can read it from the token without an extra DB round-trip.
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id;
         token.role = user.role;
+        token.mustChangePassword = Boolean(user.mustChangePassword);
+      } else if (trigger === "update" && token.id) {
+        const freshUser = await prisma.user.findUnique({
+          where: { id: token.id },
+          select: { mustChangePassword: true, isActive: true },
+        });
+        if (freshUser && freshUser.isActive) {
+          token.mustChangePassword = freshUser.mustChangePassword;
+        }
       }
       return token;
     },
@@ -113,6 +186,7 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = token.id;
         session.user.role = token.role;
+        session.user.mustChangePassword = Boolean(token.mustChangePassword);
       }
       return session;
     },
