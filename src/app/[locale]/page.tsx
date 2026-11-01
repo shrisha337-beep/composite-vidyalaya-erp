@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 const dashboardByRole: Record<string, string> = {
   ADMIN: "admin/dashboard",
   TEACHER: "teacher/dashboard",
+  STUDENT: "student/dashboard",
 };
 
 export default async function Home({
@@ -19,5 +20,14 @@ export default async function Home({
     redirect(`/${locale}/login`);
   }
 
-  redirect(`/${locale}/${dashboardByRole[session.user.role]}`);
+  if (session.user.mustChangePassword) {
+    redirect(`/${locale}/change-password`);
+  }
+
+  const target = dashboardByRole[session.user.role];
+  if (!target) {
+    redirect(`/${locale}/login`);
+  }
+
+  redirect(`/${locale}/${target}`);
 }

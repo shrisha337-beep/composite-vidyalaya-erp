@@ -6,6 +6,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { put } from "@vercel/blob";
 import { encrypt, encryptOptional } from "@/lib/encryption";
+import {
+  generateInitialStudentPassword,
+  isValidAdmissionNo,
+} from "@/lib/student-credentials";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -74,6 +78,14 @@ export async function createStudent(formData: FormData): Promise<void> {
     });
     const lastNum = last ? parseInt(last.admissionNo, 10) || 0 : 0;
     admissionNo = String(lastNum + 1).padStart(4, "0");
+  }
+
+  if (!isValidAdmissionNo(admissionNo)) {
+    redirect(
+      `/${locale}/admin/students/new?error=${encodeURIComponent(
+        "Admission number cannot be a 10-digit mobile number."
+      )}`
+    );
   }
 
   // ── Duplicate checks (run in parallel) ────────────────────────────────────
@@ -270,13 +282,20 @@ export async function createStudent(formData: FormData): Promise<void> {
   // ── Create records in a transaction ──────────────────────────────────────
   const phone = mobileNumber ?? `NOPHONE-${admissionNo}-${Date.now()}`; // admissionNo guaranteed non-null by this point
   const bcrypt = await import("bcryptjs");
-  const passwordHash = await bcrypt.hash("School@123", 10);
+  const initialPassword = generateInitialStudentPassword();
+  const passwordHash = await bcrypt.hash(initialPassword, 10);
 
   let studentId: string;
 
   await prisma.$transaction(async (tx) => {
     const user = await tx.user.create({
-      data: { role: "STUDENT", phone, passwordHash, isActive: true },
+      data: {
+        role: "STUDENT",
+        phone,
+        passwordHash,
+        mustChangePassword: true,
+        isActive: true,
+      },
     });
 
     const student = await tx.student.create({

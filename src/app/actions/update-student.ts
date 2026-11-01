@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/rbac";
 import { decrypt, encrypt, encryptOptional } from "@/lib/encryption";
+import { isValidAdmissionNo } from "@/lib/student-credentials";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -27,6 +28,14 @@ export async function updateStudent(formData: FormData): Promise<void> {
     redirect(
       `/${locale}/admin/students/${studentId}/edit?error=${encodeURIComponent(
         "Name, admission number, class, date of birth and gender are required."
+      )}`
+    );
+  }
+
+  if (!isValidAdmissionNo(admissionNo)) {
+    redirect(
+      `/${locale}/admin/students/${studentId}/edit?error=${encodeURIComponent(
+        "Admission number cannot be a 10-digit mobile number."
       )}`
     );
   }

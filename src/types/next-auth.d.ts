@@ -1,12 +1,13 @@
 import "next-auth";
 
-// Module augmentation — adds `id` and `role` onto the default Session/User
-// shapes so `session.user.role` is typed everywhere instead of `any`.
+// Module augmentation — adds `id`, `role`, and `mustChangePassword` onto the
+// default Session/User/JWT shapes so they are typed everywhere instead of `any`.
 declare module "next-auth" {
   interface Session {
     user: {
       id: string;
       role: "ADMIN" | "TEACHER" | "STUDENT" | "PARENT";
+      mustChangePassword?: boolean;
       phone?: string;
       email?: string | null;
     };
@@ -14,6 +15,7 @@ declare module "next-auth" {
   interface User {
     id: string;
     role: "ADMIN" | "TEACHER" | "STUDENT" | "PARENT";
+    mustChangePassword?: boolean;
   }
 }
 
@@ -21,5 +23,6 @@ declare module "next-auth/jwt" {
   interface JWT {
     id: string;
     role: "ADMIN" | "TEACHER" | "STUDENT" | "PARENT";
+    mustChangePassword?: boolean;
   }
 }
