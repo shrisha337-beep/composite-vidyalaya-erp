@@ -5,9 +5,12 @@ import Link from "next/link";
 import {
   ArrowLeft, Edit2, Eye, EyeOff, FileText,
   User, Users, Home, BookOpen, CreditCard,
-  Paperclip, KeyRound, ShieldAlert
+  Paperclip, KeyRound, ShieldAlert, Unlock
 } from "lucide-react";
-import { resetUserPassword } from "@/app/actions/reset-password";
+import {
+  resetStudentPasswordAction,
+  unlockStudentAccountAction,
+} from "@/app/actions/student-credentials";
 
 // ── Types (matching Prisma includes in the page) ──────────────────────────────
 
@@ -55,6 +58,7 @@ interface StudentUser {
   phone: string;
   isActive: boolean;
   lockedUntil: Date | null;
+  credentialsIssuedAt?: Date | null;
 }
 
 interface Student {
@@ -162,100 +166,139 @@ function MaskedField({ label, value }: { label: string; value: string | null }) 
   );
 }
 
-// Password reset form
-function ResetPasswordForm({ userId }: { userId: string }) {
-  const [open, setOpen] = useState(false);
+// One-time student portal credential reset & account unlock controls
+function StudentPortalAccessControls({
+  studentId,
+  admissionNo,
+  isLocked,
+}: {
+  studentId: string;
+  admissionNo: string;
+  isLocked: boolean;
+}) {
+  const [confirmReset, setConfirmReset] = useState(false);
+  const [loadingReset, setLoadingReset] = useState(false);
+  const [loadingUnlock, setLoadingUnlock] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [unlockedMsg, setUnlockedMsg] = useState("");
+  const [issuedPassword, setIssuedPassword] = useState<string | null>(null);
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  async function handleReset() {
     setError("");
-    setLoading(true);
-    const fd = new FormData(e.currentTarget);
+    setLoadingReset(true);
     try {
-      await resetUserPassword(fd);
-      setSuccess(true);
-      setOpen(false);
+      const res = await resetStudentPasswordAction(studentId);
+      if (!res.ok || !res.initialPassword) {
+        setError(res.error ?? "Failed to reset student password.");
+      } else {
+        setIssuedPassword(res.initialPassword);
+        setConfirmReset(false);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to reset password.");
     } finally {
-      setLoading(false);
+      setLoadingReset(false);
     }
   }
 
-  if (success) {
-    return (
-      <p className="text-sm text-green-600 font-medium">
-        ✓ Password reset successfully. Student can now log in with the new password.
-      </p>
-    );
+  async function handleUnlock() {
+    setError("");
+    setUnlockedMsg("");
+    setLoadingUnlock(true);
+    try {
+      const res = await unlockStudentAccountAction(studentId);
+      if (!res.ok) {
+        setError(res.error ?? "Failed to unlock student account.");
+      } else {
+        setUnlockedMsg("Account unlocked.");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to unlock account.");
+    } finally {
+      setLoadingUnlock(false);
+    }
   }
 
   return (
-    <div>
-      {!open ? (
-        <button
-          onClick={() => setOpen(true)}
-          className="flex items-center gap-2 px-3 py-2 rounded-md border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50"
-        >
-          <KeyRound className="h-4 w-4" />
-          Reset Portal Password
-        </button>
-      ) : (
-        <form onSubmit={handleSubmit} className="space-y-3 max-w-sm">
-          <input type="hidden" name="userId" value={userId} />
-          {error && (
-            <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded px-2 py-1.5">
-              {error}
-            </p>
-          )}
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">
-              New password
-            </label>
-            <input
-              name="newPassword"
-              type="password"
-              required
-              minLength={8}
-              placeholder="Min. 8 characters"
-              className="w-full border border-gray-300 rounded px-2.5 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-[hsl(var(--ring))]"
-            />
+    <div className="space-y-3">
+      {error && (
+        <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded px-2.5 py-1.5">
+          {error}
+        </p>
+      )}
+      {unlockedMsg && (
+        <p className="text-xs text-green-700 bg-green-50 border border-green-200 rounded px-2.5 py-1.5 font-medium">
+          {unlockedMsg}
+        </p>
+      )}
+      {issuedPassword && (
+        <div className="rounded border border-amber-300 bg-amber-50 p-3 space-y-1.5">
+          <p className="text-xs font-semibold text-amber-900">
+            One-time Initial Password Generated (shown only once — write down or print now):
+          </p>
+          <div className="flex flex-wrap items-center gap-4 text-sm">
+            <span>
+              Admission No: <strong className="font-mono">{admissionNo}</strong>
+            </span>
+            <span>
+              Initial Password:{" "}
+              <strong className="font-mono bg-white px-2 py-0.5 border border-amber-300 rounded">
+                {issuedPassword}
+              </strong>
+            </span>
           </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">
-              Confirm password
-            </label>
-            <input
-              name="confirmPassword"
-              type="password"
-              required
-              minLength={8}
-              placeholder="Repeat password"
-              className="w-full border border-gray-300 rounded px-2.5 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-[hsl(var(--ring))]"
-            />
-          </div>
-          <div className="flex gap-2">
+          <p className="text-[11px] text-amber-800">
+            This password is never stored in plaintext. If lost, click Reset Portal Password again.
+          </p>
+        </div>
+      )}
+
+      <div className="flex flex-wrap items-center gap-2">
+        {!confirmReset ? (
+          <button
+            type="button"
+            onClick={() => setConfirmReset(true)}
+            className="flex items-center gap-2 px-3 py-2 rounded-md border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            <KeyRound className="h-4 w-4" />
+            Reset Portal Password
+          </button>
+        ) : (
+          <div className="flex flex-wrap items-center gap-2 bg-gray-50 border border-gray-200 rounded-md p-2">
+            <span className="text-xs text-gray-700">
+              Generate a new one-time password and invalidate the previous password?
+            </span>
             <button
-              type="submit"
-              disabled={loading}
-              className="px-4 py-1.5 rounded-md text-sm font-medium text-white disabled:opacity-60"
-              style={{ background: "hsl(var(--primary))" }}
+              type="button"
+              onClick={handleReset}
+              disabled={loadingReset}
+              className="px-3 py-1 rounded text-xs font-semibold text-white bg-[#6B1D30] hover:bg-[#541624] disabled:opacity-60"
             >
-              {loading ? "Saving…" : "Save new password"}
+              {loadingReset ? "Generating…" : "Confirm Reset"}
             </button>
             <button
               type="button"
-              onClick={() => setOpen(false)}
-              className="px-4 py-1.5 rounded-md border border-gray-300 text-sm text-gray-600 hover:bg-gray-50"
+              onClick={() => setConfirmReset(false)}
+              disabled={loadingReset}
+              className="px-2.5 py-1 rounded border border-gray-300 text-xs text-gray-600 hover:bg-white"
             >
               Cancel
             </button>
           </div>
-        </form>
-      )}
+        )}
+
+        {(isLocked || unlockedMsg === "") && isLocked && (
+          <button
+            type="button"
+            onClick={handleUnlock}
+            disabled={loadingUnlock}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-md border border-amber-300 bg-amber-50 text-sm font-medium text-amber-800 hover:bg-amber-100 disabled:opacity-60"
+          >
+            <Unlock className="h-4 w-4" />
+            {loadingUnlock ? "Unlocking…" : "Unlock Account"}
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -532,8 +575,16 @@ export function StudentDetailView({
       <SectionCard title="Portal Access" icon={KeyRound}>
         <div className="space-y-3">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pb-4 border-b border-gray-100">
-            <InfoRow label="Login Phone" value={student.user.phone.startsWith("NOPHONE-") ? "Not set" : student.user.phone} />
+            <InfoRow label="Login ID (Admission No.)" value={student.admissionNo} />
             <InfoRow label="Account Status" value={student.user.isActive ? "Active" : "Inactive"} />
+            <InfoRow
+              label="Credentials Issued"
+              value={
+                student.user.credentialsIssuedAt
+                  ? new Date(student.user.credentialsIssuedAt).toLocaleString("en-IN")
+                  : "Not issued yet"
+              }
+            />
             {isLocked && (
               <InfoRow
                 label="Locked Until"
@@ -541,7 +592,11 @@ export function StudentDetailView({
               />
             )}
           </div>
-          <ResetPasswordForm userId={student.user.id} />
+          <StudentPortalAccessControls
+            studentId={student.id}
+            admissionNo={student.admissionNo}
+            isLocked={Boolean(isLocked)}
+          />
         </div>
       </SectionCard>
     </div>

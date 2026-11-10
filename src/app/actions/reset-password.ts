@@ -36,11 +36,15 @@ export async function resetUserPassword(formData: FormData): Promise<void> {
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { id: true, isActive: true },
+    select: { id: true, role: true, isActive: true },
   });
 
   if (!user || !user.isActive) {
     throw new Error("User not found or inactive.");
+  }
+
+  if (user.role !== "TEACHER") {
+    throw new Error("Only teacher passwords can be reset with this action.");
   }
 
   const passwordHash = await bcrypt.hash(newPassword, 10);

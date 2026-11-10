@@ -18,7 +18,7 @@ async function getStudent(studentId: string) {
         where: { status: "ISSUED" },
         take: 1,
       },
-      user: { select: { phone: true, isActive: true, lockedUntil: true, id: true } },
+      user: { select: { phone: true, isActive: true, lockedUntil: true, credentialsIssuedAt: true, id: true } },
     },
   });
   return student;

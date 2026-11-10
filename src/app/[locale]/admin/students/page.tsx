@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/rbac";
 import Link from "next/link";
-import { Users, Upload, Plus, Search, ArrowUpCircle } from "lucide-react";
+import { Users, Upload, Plus, Search, ArrowUpCircle, KeyRound } from "lucide-react";
 
 const PAGE_SIZE = 25;
 
@@ -87,6 +87,13 @@ export default async function StudentsPage({
         <div className="flex flex-wrap items-center gap-2">
           {hasSession && (
             <>
+              <Link
+                href="students/credentials"
+                className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-sm border border-[#E8E0D4] bg-white text-xs font-semibold text-[#2D2A26] hover:bg-[#F3EDE4] transition-colors shadow-xs"
+              >
+                <KeyRound className="h-4 w-4 text-[#6B1D30]" />
+                <span>Credential Slips</span>
+              </Link>
               <Link
                 href="students/promote"
                 className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-sm border border-[#E8E0D4] bg-white text-xs font-semibold text-[#2D2A26] hover:bg-[#F3EDE4] transition-colors shadow-xs"
